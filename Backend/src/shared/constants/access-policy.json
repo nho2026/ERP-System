@@ -1333,36 +1333,6 @@
       "name": "View hr / salaries"
     },
     {
-      "key": "hr.teams.create",
-      "module": "hr.teams",
-      "name": "Create hr / teams"
-    },
-    {
-      "key": "hr.teams.delete",
-      "module": "hr.teams",
-      "name": "Delete hr / teams"
-    },
-    {
-      "key": "hr.teams.export",
-      "module": "hr.teams",
-      "name": "Export hr / teams"
-    },
-    {
-      "key": "hr.teams.print",
-      "module": "hr.teams",
-      "name": "Print hr / teams"
-    },
-    {
-      "key": "hr.teams.update",
-      "module": "hr.teams",
-      "name": "Update hr / teams"
-    },
-    {
-      "key": "hr.teams.view",
-      "module": "hr.teams",
-      "name": "View hr / teams"
-    },
-    {
       "key": "hr.warnings.create",
       "module": "hr.warnings",
       "name": "Create hr / warnings"
@@ -2997,7 +2967,6 @@
       "update",
       "view"
     ],
-    "hr.teams": ["create", "delete", "export", "print", "update", "view"],
     "attendance.devices": [
       "create",
       "delete",
@@ -3316,7 +3285,6 @@
     "/targets": "targets",
     "/feedback": "healthcare.feedback",
     "/employees": "hr.employees",
-    "/teams": "hr.teams",
     "/positions": "hr.positions",
     "/salaries": "hr.salaries",
     "/hr-attendance": "hr.attendance",
@@ -3717,10 +3685,6 @@
     {
       "pattern": "^/employee-portal(?:/|$)",
       "resource": "employee-portal"
-    },
-    {
-      "pattern": "^/employees/teams(?:/|$)",
-      "resource": "hr.teams"
     },
     {
       "pattern": "^/inventory/picu(?:/|$)",

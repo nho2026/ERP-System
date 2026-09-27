@@ -7,9 +7,7 @@ const recordInclude = {
     select: { id: true, username: true, email: true, name: true, status: true, roles: { select: { role: { select: { id: true, name: true } } } } },
   },
   position: true,
-  department: true,
-  team: { include: { leader: { select: { id: true, firstName: true, lastName: true } } } },
-  ledTeams: { select: { id: true, name: true } },
+  department: { include: { manager: { select: { id: true, firstName: true, lastName: true } } } },
   _count: {
     select: {
       salaries: true,
@@ -21,7 +19,7 @@ const recordInclude = {
 };
 
 const employeeData = (input, updating = false) => {
-  const { userId, departmentId, positionId, teamId, ...data } = input;
+  const { userId, departmentId, positionId, ...data } = input;
   const relation = (id) =>
     id
       ? { connect: { id } }
@@ -33,7 +31,6 @@ const employeeData = (input, updating = false) => {
     ...(userId !== undefined && { user: relation(userId) }),
     ...(departmentId !== undefined && { department: relation(departmentId) }),
     ...(positionId !== undefined && { position: relation(positionId) }),
-    ...(teamId !== undefined && { team: relation(teamId) }),
   };
 };
 

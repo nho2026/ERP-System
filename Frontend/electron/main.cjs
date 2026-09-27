@@ -14,7 +14,7 @@ const { spawn } = require("node:child_process");
 
 const isDevelopment = !app.isPackaged;
 const appIcon = isDevelopment
-  ? path.join(__dirname, "..", "src", "assets", "icons", "nho-app.png")
+  ? path.join(__dirname, "..", "src", "assets", "icons", "logo.png")
   : path.join(process.resourcesPath, "icon.png");
 const appIconImage = nativeImage.createFromPath(appIcon).resize({
   width: 256,

@@ -4,6 +4,7 @@ import { PurchaseFilters, type PurchaseExtraFilters } from "../components/Purcha
 import { hasPermission } from "@/features/auth/access";
 import { randomId } from "@/shared/lib/random-id";
 import { Card } from "@/shared/components/ui/card";
+import { settingsSnapshot } from "@/features/settings/settings";
 
 import {
   Table,
@@ -192,14 +193,14 @@ export default function BuyDebtsPage() {
       <head><meta charset="utf-8"><title>${heading("warehouseModule.buyDebts")}${row ? ` · ${esc(row.invoiceNumber)}` : ""}</title><style>${debtPrintStyles}</style></head>
       <body>
         <header>
-          <div><span class="brand">NHO ERP</span><h1>${heading("warehouseModule.buyDebts")}</h1></div>
+          <div><span class="brand">${esc(settingsSnapshot()?.organization.name || "")}</span><h1>${heading("warehouseModule.buyDebts")}</h1></div>
           <div class="report-meta"><strong>${reportReference}</strong><p class="muted">${esc(new Date().toLocaleString(i18n.language))}</p></div>
         </header>
         <h2>${heading("buyDebts.summary")}</h2>
         ${row ? "" : `<p class="muted">${heading("buyDebts.filteredTotal")}</p>`}
         <section class="overview">${metric("buyProductForm.totalPrice", total)}${metric("buyDebts.paid", paid)}${metric("buyDebts.remaining", remaining, true)}</section>
         ${metadata}${itemTable}${payments}
-        <footer><strong>NHO ERP</strong><span>${row ? reportReference : esc(t("buyHistory.pagination", { page, pages: result.data?.pagination.totalPages ?? 1, total: result.data?.pagination.total ?? 0 }))}</span></footer>
+        <footer><strong>${esc(settingsSnapshot()?.organization.name || "")}</strong><span>${row ? reportReference : esc(t("buyHistory.pagination", { page, pages: result.data?.pagination.totalPages ?? 1, total: result.data?.pagination.total ?? 0 }))}</span></footer>
       </body></html>`);
     win.document.close();
     win.focus();

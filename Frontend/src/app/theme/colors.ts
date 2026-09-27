@@ -1,4 +1,4 @@
-/** Nadir Health Organization color tokens. CSS equivalents live in index.css. */
+/** color tokens. CSS equivalents live in index.css. */
 export const brandColors = {
   green: "#1C9B49",
   greenBright: "#29AD49",

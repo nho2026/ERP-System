@@ -28,7 +28,6 @@ const endpoints: Record<string, string> = {
   "/warehouses/buy/product": "/inventory/purchases",
   "/warehouses/buy/order": "/inventory/orders",
   "/employees": "/employees",
-  "/teams": "/employees/teams",
   "/positions": "/employees/positions",
   "/salaries": "/employees/records/salaries",
   "/payrolls": "/employees/records/payrolls",

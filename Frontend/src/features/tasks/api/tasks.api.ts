@@ -1,13 +1,13 @@
 import { apiClient } from "@/shared/api/client";
 export type TaskEmployee = {
   id: string;
+  departmentId?: string | null;
   employeeCode: string;
   firstName: string;
   lastName: string;
   hireDate: string;
   status: string;
-  isTeamLeader?: boolean;
-  team?: { id?: string; name?: string; leaderId: string | null } | null;
+  isDepartmentLeader?: boolean;
   position?: { name: string };
   department?: { name: string };
   user?: { id: string; name: string; email: string };
@@ -15,8 +15,8 @@ export type TaskEmployee = {
 export type TaskItem = {
   id: string;
   title: string;
+  project?: { id: string; name: string; department: { id: string; name: string } } | null;
   description: string;
-  team: string | null;
   priority: string;
   status: string;
   startDate: string | null;
@@ -53,6 +53,8 @@ export type TaskItem = {
   createdAt: string;
   updatedAt: string;
 };
+export type TaskDepartment = { id: string; name: string; projects: TaskProject[] };
+export type TaskProject = { id: string; name: string; description?: string | null; departmentId: string; department?: { id: string; name: string }; _count?: { tasks: number } };
 export type TaskPage = {
   items: TaskItem[];
   pagination: {
@@ -79,14 +81,11 @@ export type TaskReport = {
     minutes: number;
     entries: number;
   }[];
-  teams: {
-    team: string;
-    assigned: number;
-    completed: number;
-    minutes: number;
-  }[];
 };
 export const tasksApi = {
+  departments: () => apiClient.get<TaskDepartment[]>("/tasks/departments").then((r) => r.data),
+  projects: (departmentId: string) => apiClient.get<TaskProject[]>("/tasks/projects", { params: { departmentId } }).then((r) => r.data),
+  createProject: (data: { name: string; description?: string; departmentId: string }) => apiClient.post<TaskProject>("/tasks/projects", data).then((r) => r.data),
   list: (params: Record<string, string | number | undefined>) =>
     apiClient.get<TaskPage>("/tasks", { params }).then((r) => r.data),
   get: (id: string) =>

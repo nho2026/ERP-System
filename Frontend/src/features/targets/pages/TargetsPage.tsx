@@ -52,7 +52,7 @@ export default function TargetsPage() {
   const { t } = useTranslation();
   const user = storedUser();
   const manager = hasPermission(user, "targets.manage_all");
-  const canAssign = manager || Boolean(user?.employee?.isTeamLeader);
+  const canAssign = manager || Boolean(user?.employee?.isDepartmentLeader);
   const [targets, setTargets] = useState<EmployeeTarget[]>([]);
   const [employees, setEmployees] = useState<TargetEmployee[]>([]);
   const [open, setOpen] = useState(false);
@@ -183,7 +183,7 @@ export default function TargetsPage() {
                         {employees.map((x) => (
                           <SelectItem key={x.id} value={x.id}>
                             {x.firstName} {x.lastName}
-                            {x.ledTeams?.length ? " (Team leader)" : ""}
+                            {x.department?.managerId === x.id ? " (Department leader)" : ""}
                           </SelectItem>
                         ))}
                       </SelectContent>

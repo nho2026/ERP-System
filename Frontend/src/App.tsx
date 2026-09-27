@@ -145,10 +145,6 @@ export default function App() {
             element={secured(<HrPage resource="employees" />)}
           />
           <Route
-            path="/teams"
-            element={secured(<HrPage resource="teams" />)}
-          />
-          <Route
             path="/positions"
             element={secured(<HrPage resource="positions" />)}
           />

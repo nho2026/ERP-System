@@ -27,6 +27,7 @@ model User {
   updatedAt         DateTime             @updatedAt
   employee          Employee?
   createdTasks      Task[]               @relation("TaskCreator")
+  createdProjects   Project[]            @relation("ProjectCreator")
   reviewedTasks     Task[]               @relation("TaskReviewer")
   taskComments      TaskComment[]
   recordedTaskTime  TaskTimeEntry[]
@@ -252,6 +253,8 @@ model Task {
   title            String
   description      String           @db.Text
   team             String?
+  projectId        String?
+  project          Project?         @relation(fields: [projectId], references: [id], onDelete: SetNull)
   priority         String           @default("medium")
   status           String           @default("todo")
   startDate        DateTime?
@@ -274,8 +277,26 @@ model Task {
 
   @@index([status], map: "Task_status_idx")
   @@index([team], map: "Task_team_idx")
+  @@index([projectId], map: "Task_projectId_idx")
   @@index([dueDate], map: "Task_dueDate_idx")
   @@map("tasks_Task")
+}
+
+model Project {
+  id           String     @id @default(cuid())
+  name         String
+  description  String?    @db.Text
+  status       String     @default("active")
+  departmentId String
+  createdById  String
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  createdBy    User       @relation("ProjectCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  tasks        Task[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([departmentId, status])
+  @@map("tasks_Project")
 }
 
 model Notification {
@@ -420,6 +441,7 @@ model Department {
   appointments    Appointment[]
   serviceAdvances ServiceAdvance[]
   meetings        Meeting[]
+  projects        Project[]
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 

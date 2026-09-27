@@ -6,7 +6,6 @@ export const employeeSchema = z.object({
   lastName: z.string().trim().min(1),
   departmentId: z.string().trim().min(1, "Department is required"),
   positionId: z.string().trim().nullable().optional(),
-  teamId: z.string().trim().min(1).nullable().optional(),
   hireDate: z.coerce.date(),
   scheduleType: z.enum(["static", "dynamic"]).optional(),
   workSchedule: z

@@ -12,10 +12,8 @@ const profileInclude = {
   ...roles,
   employee: {
     include: {
-      ledTeams: { select: { id: true } },
-      team: { select: { id: true, name: true, leaderId: true } },
       position: true,
-      department: true,
+      department: { include: { manager: { select: { id: true } } } },
       devicePeople: {
         select: {
           id: true,
@@ -35,8 +33,7 @@ const loginInclude = {
       firstName: true,
       lastName: true,
       departmentId: true,
-      ledTeams: { select: { id: true } },
-      team: { select: { id: true, name: true, leaderId: true } },
+      department: { select: { managerId: true } },
       status: true,
     },
   },

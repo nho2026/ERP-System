@@ -158,9 +158,6 @@ export default function TaskDetailPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Badge variant="secondary">
-            {t(`tasks.teams.${task.team ?? "other"}`)}
-          </Badge>
           <Badge>{t(`tasks.priorities.${task.priority}`)}</Badge>
           <Badge variant="outline">{t(`tasks.statuses.${task.status}`)}</Badge>
         </div>
@@ -195,11 +192,6 @@ export default function TaskDetailPage() {
                   icon={<Clock3 />}
                   label={t("tasks.trackedHours")}
                   value={hours(trackedMinutes)}
-                />
-                <Info
-                  icon={<BriefcaseBusiness />}
-                  label={t("tasks.fields.team")}
-                  value={t(`tasks.teams.${task.team ?? "other"}`)}
                 />
               </div>
             </CardContent>

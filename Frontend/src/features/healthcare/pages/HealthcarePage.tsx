@@ -107,8 +107,9 @@ const configs: Record<
       },
       {
         name: "managerId",
-        label: "Department manager",
+        label: "Department team leader",
         type: "employee",
+        required: true,
       },
       {
         name: "status",
@@ -121,7 +122,7 @@ const configs: Record<
       ["code", "Code"],
       ["name", "Department"],
       ["type", "Department type"],
-      ["manager", "Manager"],
+      ["manager", "Department team leader"],
       ["employeeCount", "Employees"],
       ["staffCount", "Health staff"],
       ["status", "Status"],

@@ -188,8 +188,7 @@ export default function PatientProductsReportPage() {
   const tr = (key: string) => t(`patientReport.${key}`);
   const organization = useSettings()?.organization;
   const logo = organization?.logo || defaultLogo;
-  const organizationName =
-    organization?.name || t("accounting.organizationName");
+  const organizationName = organization?.name || "";
   const language = i18n.language.split("-")[0];
   const reportFont =
     language === "ar"

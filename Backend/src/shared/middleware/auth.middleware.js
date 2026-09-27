@@ -19,8 +19,7 @@ export async function requireAuth(req, res, next) {
           select: {
             id: true,
             departmentId: true,
-            ledTeams: { select: { id: true } },
-            team: { select: { id: true, name: true, leaderId: true } },
+            department: { select: { managerId: true } },
           },
         },
         roles: {
@@ -34,7 +33,7 @@ export async function requireAuth(req, res, next) {
     });
     if (!user || user.status !== "active")
       return res.status(401).json({ message: "Account is unavailable." });
-    if (user.employee) user.employee.isTeamLeader = Boolean(user.employee.ledTeams?.length);
+    if (user.employee) user.employee.isDepartmentLeader = user.employee.department?.managerId === user.employee.id;
     req.user = user;
     req.permissionKeys = new Set(
       user.roles.flatMap(({ role }) =>

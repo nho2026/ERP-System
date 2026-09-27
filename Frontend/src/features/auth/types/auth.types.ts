@@ -33,8 +33,7 @@ export type AuthUser = {
     hireDate: string;
     status: string;
     departmentId?: string | null;
-    isTeamLeader?: boolean;
-    team?: { id?: string; name?: string; leaderId: string | null } | null;
+    isDepartmentLeader?: boolean;
     position?: { name: string } | null;
     department?: { name: string } | null;
     devicePeople?: {

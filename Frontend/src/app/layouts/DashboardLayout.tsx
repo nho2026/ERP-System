@@ -183,11 +183,6 @@ const hrNavigation = [
     icon: UsersRound,
   },
   {
-    to: "/teams",
-    label: "navigation.teams",
-    icon: BriefcaseBusiness,
-  },
-  {
     to: "/positions",
     label: "navigation.positions",
     icon: BriefcaseBusiness,
@@ -626,7 +621,7 @@ function LiveDateTime({
       </div>
     );
   return (
-    <div className="hidden h-10 items-center overflow-hidden rounded-xl border border-primary/15 bg-gradient-to-r from-primary/8 via-card to-card shadow-sm lg:flex">
+    <div className="hidden h-10 items-center overflow-hidden rounded-xl border border-primary/15 bg-linear-to-r from-primary/8 via-card to-card shadow-sm lg:flex">
       <time
         className="flex h-full items-center gap-2 border-e border-primary/12 px-3"
         dateTime={now.toISOString()}
@@ -691,6 +686,16 @@ export default function DashboardLayout() {
   const [hrExpanded, setHrExpanded] = useState(true);
   const [attendanceExpanded, setAttendanceExpanded] = useState(true);
   const [laboratoryExpanded, setLaboratoryExpanded] = useState(true);
+
+  useEffect(() => {
+    const preventControlDrag = (event: DragEvent) => {
+      if (event.target instanceof Element && event.target.closest("a, button")) {
+        event.preventDefault();
+      }
+    };
+    document.addEventListener("dragstart", preventControlDrag, true);
+    return () => document.removeEventListener("dragstart", preventControlDrag, true);
+  }, []);
   const [healthcareExpanded, setHealthcareExpanded] = useState(true);
   const [crmExpanded, setCrmExpanded] = useState(true);
   const [accountingExpanded, setAccountingExpanded] = useState(true);
@@ -771,7 +776,7 @@ export default function DashboardLayout() {
                       notification.warning?.title ??
                       notification.meeting?.title ??
                       notification.task?.title ??
-                      "NHO ERP",
+                      (settingsSnapshot()?.organization.name || ""),
                     body:
                       notification.body ??
                       (notification.warning
@@ -874,7 +879,7 @@ export default function DashboardLayout() {
     if (location.pathname === "/settings") return t("navigation.settings");
     return item
       ? t(item.label)
-      : systemSettings?.organization.name || "NHO Workspace";
+      : systemSettings?.organization.name || "";
   })();
   const normalizedNavigationSearch = navigationSearch
     .trim()
@@ -901,7 +906,7 @@ export default function DashboardLayout() {
           }
         >
           <Icon
-            className={`size-[18px] shrink-0 stroke-[1.8] transition-transform group-hover:scale-105`}
+            className={`size-4.5 shrink-0 stroke-[1.8] transition-transform group-hover:scale-105`}
           />
           <span className={collapsed ? "lg:hidden" : ""}>{t(label)}</span>
         </NavLink>
@@ -1058,21 +1063,21 @@ export default function DashboardLayout() {
     <div className="h-svh w-full overflow-hidden bg-muted/45">
       {!panelMode && (
         <aside
-          className={`fixed inset-y-0 inset-s-0 z-50 flex w-[286px] flex-col border-e border-primary/10 bg-card px-[15px] shadow-[8px_0_30px_-25px_rgba(15,23,42,.45)] transition-[width,transform] duration-300 lg:translate-x-0! ${collapsed ? "lg:w-20 lg:px-3" : ""} ${open ? "translate-x-0" : "ltr:-translate-x-full rtl:translate-x-full"}`}
+          className={`fixed inset-y-0 inset-s-0 z-50 flex w-71.5 flex-col border-e border-primary/10 bg-card px-3.75 shadow-[8px_0_30px_-25px_rgba(15,23,42,.45)] transition-[width,transform] duration-300 lg:translate-x-0! ${collapsed ? "lg:w-20 lg:px-3" : ""} ${open ? "translate-x-0" : "ltr:-translate-x-full rtl:translate-x-full"}`}
         >
           <div
-            className={`flex h-[87px] items-center gap-3 border-b border-primary/15 px-1 ${collapsed ? "lg:justify-center" : ""}`}
+            className={`flex h-21.75 items-center gap-3 border-b border-primary/15 px-1 ${collapsed ? "lg:justify-center" : ""}`}
           >
-            <span className="grid size-12 shrink-0 place-items-center overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-black/10">
+            <span className="grid size-12 shrink-0 place-items-center overflow-hidden rounded-xl border border-primary/25 bg-card">
               <img
                 className="block size-full object-contain"
                 src={systemSettings?.organization.logo || logo}
-                alt={systemSettings?.organization.name || "NHO"}
+                alt={systemSettings?.organization.name || ""}
               />
             </span>
             <div className={`min-w-0 flex-1 ${collapsed ? "lg:hidden" : ""}`}>
               <strong className="block truncate text-[12px] font-bold leading-4 tracking-wide">
-                {systemSettings?.organization.name || "NHO Workspace"}
+                {systemSettings?.organization.name || ""}
               </strong>
               <span className="mt-0.5 block truncate text-[9px] font-medium text-muted-foreground">
                 Management system
@@ -1092,7 +1097,7 @@ export default function DashboardLayout() {
               <Search className="absolute inset-s-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
               <input
                 ref={navigationSearchRef}
-                className="h-10 w-full rounded-xl border border-primary/20 bg-primary/[.025] ps-9 pe-10 text-xs font-medium outline-none transition placeholder:text-muted-foreground/75 focus:border-primary/45 focus:bg-card focus:ring-3 focus:ring-primary/8 dark:bg-slate-950"
+                className="h-10 w-full rounded-xl border border-primary/20 bg-primary/2.5 ps-9 pe-10 text-xs font-medium outline-none transition placeholder:text-muted-foreground/75 focus:border-primary/45 focus:bg-card focus:ring-3 focus:ring-primary/8 dark:bg-slate-950"
                 placeholder={t("navigation.search")}
                 value={navigationSearch}
                 onChange={(event) => setNavigationSearch(event.target.value)}
@@ -1135,7 +1140,7 @@ export default function DashboardLayout() {
                   `group flex h-11 items-center gap-3 rounded-xl px-3 text-[13px] font-semibold outline-none transition-all ${isActive ? "bg-primary/10 text-primary shadow-[inset_3px_0_0_var(--primary)] rtl:shadow-[inset_-3px_0_0_var(--primary)]" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`
                 }
               >
-                <Lightbulb className="size-[18px] stroke-[1.8] transition-transform group-hover:scale-105" />
+                <Lightbulb className="size-4.5 stroke-[1.8] transition-transform group-hover:scale-105" />
                 <span className={collapsed ? "lg:hidden" : ""}>
                   {t("employeePortal.title")}
                 </span>
@@ -1171,7 +1176,7 @@ export default function DashboardLayout() {
                       />
                     </button>
                     {(tasksExpanded || Boolean(normalizedNavigationSearch)) && (
-                      <div className="ms-[18px] space-y-0.5 border-s border-primary/20 ps-3">
+                      <div className="ms-4.5 space-y-0.5 border-s border-primary/20 ps-3">
                         {navItems(taskNavigation)}
                       </div>
                     )}
@@ -1207,7 +1212,7 @@ export default function DashboardLayout() {
                     </button>
                     {(attendanceExpanded ||
                       Boolean(normalizedNavigationSearch)) && (
-                      <div className="ms-[18px] space-y-0.5 border-s border-primary/20 ps-3">
+                      <div className="ms-4.5 space-y-0.5 border-s border-primary/20 ps-3">
                         {navItems(attendanceNavigation)}
                       </div>
                     )}
@@ -1252,7 +1257,7 @@ export default function DashboardLayout() {
                     </button>
                     {(inventoryExpanded ||
                       Boolean(normalizedNavigationSearch)) && (
-                      <div className="ms-[18px] space-y-0.5 border-s border-primary/20 ps-3">
+                      <div className="ms-4.5 space-y-0.5 border-s border-primary/20 ps-3">
                         {navItems(warehouseDashboardNavigation)}
                         {hasPermission(user, "inventory.warehouses.view") && (
                           <>
@@ -1277,7 +1282,7 @@ export default function DashboardLayout() {
                               Boolean(normalizedNavigationSearch)) && (
                               <div
                                 id="warehouse-buy-navigation"
-                                className="ms-[18px] space-y-0.5 border-s border-primary/20 ps-3"
+                                className="ms-4.5 space-y-0.5 border-s border-primary/20 ps-3"
                               >
                                 {navItems(buyNavigation)}
                               </div>
@@ -1311,7 +1316,7 @@ export default function DashboardLayout() {
                               Boolean(normalizedNavigationSearch)) && (
                               <div
                                 id="warehouse-product-navigation"
-                                className="ms-[18px] space-y-0.5 border-s border-primary/20 ps-3"
+                                className="ms-4.5 space-y-0.5 border-s border-primary/20 ps-3"
                               >
                                 {navItems(productNavigation)}
                               </div>
@@ -1345,7 +1350,7 @@ export default function DashboardLayout() {
                               Boolean(normalizedNavigationSearch)) && (
                               <div
                                 id="warehouse-storage-navigation"
-                                className="ms-[18px] space-y-0.5 border-s border-primary/20 ps-3"
+                                className="ms-4.5 space-y-0.5 border-s border-primary/20 ps-3"
                               >
                                 {navItems(storageNavigation)}
                               </div>
@@ -1390,7 +1395,7 @@ export default function DashboardLayout() {
                               {expanded && (
                                 <div
                                   id={`warehouse-${key}-navigation`}
-                                  className="ms-[18px] space-y-0.5 border-s border-primary/20 ps-3"
+                                  className="ms-4.5 space-y-0.5 border-s border-primary/20 ps-3"
                                 >
                                   {navItems(items)}
                                 </div>
@@ -1430,7 +1435,7 @@ export default function DashboardLayout() {
                       />
                     </button>
                     {(posExpanded || Boolean(normalizedNavigationSearch)) && (
-                      <div className="ms-[18px] space-y-0.5 border-s border-primary/20 ps-3">
+                      <div className="ms-4.5 space-y-0.5 border-s border-primary/20 ps-3">
                         {navItems(posNavigation)}
                       </div>
                     )}
@@ -1466,7 +1471,7 @@ export default function DashboardLayout() {
                     </button>
                     {(laboratoryExpanded ||
                       Boolean(normalizedNavigationSearch)) && (
-                      <div className="ms-[18px] space-y-0.5 border-s border-primary/20 ps-3">
+                      <div className="ms-4.5 space-y-0.5 border-s border-primary/20 ps-3">
                         {navItems(laboratoryNavigation)}
                       </div>
                     )}
@@ -1502,7 +1507,7 @@ export default function DashboardLayout() {
                     </button>
                     {(healthcareExpanded ||
                       Boolean(normalizedNavigationSearch)) && (
-                      <div className="ms-[18px] space-y-0.5 border-s border-primary/20 ps-3">
+                      <div className="ms-4.5 space-y-0.5 border-s border-primary/20 ps-3">
                         {navItems(healthcareNavigation)}
                       </div>
                     )}
@@ -1535,7 +1540,7 @@ export default function DashboardLayout() {
                       />
                     </button>
                     {(crmExpanded || Boolean(normalizedNavigationSearch)) && (
-                      <div className="ms-[18px] space-y-0.5 border-s border-primary/20 ps-3">
+                      <div className="ms-4.5 space-y-0.5 border-s border-primary/20 ps-3">
                         {navItems(crmNavigation)}
                       </div>
                     )}
@@ -1570,7 +1575,7 @@ export default function DashboardLayout() {
                       />
                     </button>
                     {(hrExpanded || Boolean(normalizedNavigationSearch)) && (
-                      <div className="ms-[18px] space-y-0.5 border-s border-primary/20 ps-3">
+                      <div className="ms-4.5 space-y-0.5 border-s border-primary/20 ps-3">
                         {navItems(hrNavigation)}
                       </div>
                     )}
@@ -1606,7 +1611,7 @@ export default function DashboardLayout() {
                     </button>
                     {(accountingExpanded ||
                       Boolean(normalizedNavigationSearch)) && (
-                      <div className="ms-[18px] space-y-0.5 border-s border-primary/20 ps-3">
+                      <div className="ms-4.5 space-y-0.5 border-s border-primary/20 ps-3">
                         {navItems(accountingNavigation)}
                       </div>
                     )}
@@ -1642,7 +1647,7 @@ export default function DashboardLayout() {
                     </button>
                     {(financeExpanded ||
                       Boolean(normalizedNavigationSearch)) && (
-                      <div className="ms-[18px] space-y-0.5 border-s border-primary/20 ps-3">
+                      <div className="ms-4.5 space-y-0.5 border-s border-primary/20 ps-3">
                         {navItems(financeNavigation)}
                       </div>
                     )}
@@ -1743,7 +1748,7 @@ export default function DashboardLayout() {
         </aside>
       )}
       <div
-        className={`flex h-svh min-w-0 flex-col overflow-hidden transition-[padding] duration-300 ${panelMode ? "" : collapsed ? "lg:ps-20" : "lg:ps-[286px]"}`}
+        className={`flex h-svh min-w-0 flex-col overflow-hidden transition-[padding] duration-300 ${panelMode ? "" : collapsed ? "lg:ps-20" : "lg:ps-71.5"}`}
       >
         <header className="electron-titlebar relative z-40 flex min-h-16 shrink-0 flex-wrap items-center gap-2 border-b border-border/60 bg-card/92 px-3 py-2 backdrop-blur-xl sm:flex-nowrap sm:gap-3 md:px-6">
           {!panelMode && (
@@ -1770,17 +1775,7 @@ export default function DashboardLayout() {
               )}
             </button>
           )}
-          <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
-            <img
-              src={systemSettings?.organization.logo || logo}
-              alt=""
-              className="size-8 shrink-0 rounded-lg object-contain sm:size-10"
-            />
-            <p className="truncate text-sm font-bold leading-relaxed sm:text-base md:text-lg">
-              {systemSettings?.organization.name || "NHO ERP"}
-            </p>
-          </div>
-          <div className="ms-auto shrink-0 lg:absolute lg:start-1/2 lg:-translate-x-1/2 lg:rtl:translate-x-1/2">
+          <div className="min-w-0 flex-1 lg:absolute lg:inset-s-1/2 lg:w-auto lg:-translate-x-1/2 lg:rtl:translate-x-1/2">
             <HeaderSearch
               menus={Array.from(
                 new Map(
@@ -1796,6 +1791,7 @@ export default function DashboardLayout() {
               }}
             />
           </div>
+          <div className="ml-auto flex shrink-0 items-center gap-2">
           <Select
             value={i18n.resolvedLanguage?.split("-")[0] ?? "en"}
             onValueChange={(v) => void i18n.changeLanguage(v)}
@@ -1874,7 +1870,7 @@ export default function DashboardLayout() {
               >
                 <Bell className="size-4 fill-red-500 text-red-500 dark:text-red-700" />
                 {unreadCount > 0 && (
-                  <span className="absolute -end-1.5 -top-1.5 grid min-w-4.5 place-items-center rounded-full bg-destructive px-1 text-[10px] font-bold leading-4 text-destructive-foreground">
+                  <span className="absolute -inset-e-1.5 -top-1.5 grid min-w-4.5 place-items-center rounded-full bg-destructive px-1 text-[10px] font-bold leading-4 text-destructive-foreground">
                     {unreadCount > 99 ? "99+" : unreadCount}
                   </span>
                 )}
@@ -1938,6 +1934,7 @@ export default function DashboardLayout() {
             </DropdownMenuContent>
           </DropdownMenu>
           <WindowControls />
+          </div>
         </header>
         {panelMode && (
           <nav
@@ -2000,12 +1997,12 @@ export default function DashboardLayout() {
                   className="mx-auto max-w-7xl space-y-6 py-3 md:py-6"
                   dir={i18n.dir()}
                 >
-                  <div className="relative flex flex-wrap items-center justify-between gap-4 overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#126A31] via-primary to-brand-bright p-4 text-white shadow-lg shadow-primary/10 md:px-6 md:py-5">
+                  <div className="relative flex flex-wrap items-center justify-between gap-4 overflow-hidden rounded-2xl border border-white/10 bg-linear-to-br from-teal-700 via-primary to-brand-bright p-4 text-white shadow-lg shadow-primary/10 md:px-6 md:py-5">
                     <div>
                       <p className="mb-2 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-teal-100">
-                        {systemSettings?.organization.name || "NHO ERP"}
+                        {systemSettings?.organization.name || ""}
                       </p>
-                      <h1 className="max-w-2xl break-words text-lg font-bold leading-relaxed sm:text-xl md:text-2xl">
+                      <h1 className="max-w-2xl warp-break-words text-lg font-bold leading-relaxed sm:text-xl md:text-2xl">
                         {t("controlPanel.welcome", { name: user?.name || "" })}
                       </h1>
                       <p className="mt-1 text-sm text-teal-100/85">
@@ -2018,7 +2015,7 @@ export default function DashboardLayout() {
                         banner
                       />
                       <div className="relative">
-                        <Search className="pointer-events-none absolute start-4 top-1/2 z-10 size-4 -translate-y-1/2 text-muted-foreground" />
+                        <Search className="pointer-events-none absolute inset-s-4 top-1/2 z-10 size-4 -translate-y-1/2 text-muted-foreground" />
                         <Input
                           className="h-10 rounded-lg border-white/20 bg-background ps-11 pe-11 text-sm font-normal text-foreground shadow-sm placeholder:text-muted-foreground focus-visible:border-teal-300 focus-visible:ring-2 focus-visible:ring-teal-300/30"
                           value={panelSearch}
@@ -2033,7 +2030,7 @@ export default function DashboardLayout() {
                             type="button"
                             variant="ghost"
                             size="icon"
-                            className="absolute end-2 top-1/2 size-8 -translate-y-1/2 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary"
+                            className="absolute inset-e-2 top-1/2 size-8 -translate-y-1/2 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary"
                             aria-label={t("controlPanel.clearSearch")}
                             onClick={() => setPanelSearch("")}
                           >

@@ -9,11 +9,11 @@ const canSee = (task, user, permissions) =>
   task.assignees.some(
     ({ employeeId, employee }) =>
       employeeId === user.employee?.id ||
-      (Boolean(user.employee?.id) && employee.team?.leaderId === user.employee.id),
+      (Boolean(user.employee?.id) && employee.department?.managerId === user.employee.id),
   );
 const ensureLeader = (user, permissions) => {
-  if (!isHr(permissions) && !user.employee?.isTeamLeader)
-    fail(403, "Only HR or a team leader can assign tasks.");
+  if (!isHr(permissions) && !user.employee?.isDepartmentLeader)
+    fail(403, "Only HR or a department leader can assign tasks.");
 };
 const validateAssignees = async (ids, user, permissions) => {
   const employees = await taskModel.employeeScopes(ids);
@@ -21,9 +21,9 @@ const validateAssignees = async (ids, user, permissions) => {
     fail(422, "One or more selected employees do not exist.");
   if (
     !isHr(permissions) &&
-    employees.some(({ team }) => team?.leaderId !== user.employee?.id)
+    employees.some(({ department }) => department?.managerId !== user.employee?.id)
   )
-    fail(403, "Team leaders can assign tasks only to their employees.");
+    fail(403, "Department leaders can assign tasks only to their employees.");
   return employees;
 };
 const notifyStatus = async (task, actorId, status) => {
@@ -31,7 +31,7 @@ const notifyStatus = async (task, actorId, status) => {
   const employeeIds = task.assignees.map(({ employeeId }) => employeeId);
   const employees = await taskModel.employeeScopes(employeeIds);
   const assigneeUserIds = employees.map(({ userId }) => userId).filter(Boolean);
-  const leaderIds = [...new Set(employees.map(({ team }) => team?.leaderId).filter(Boolean))];
+  const leaderIds = [...new Set(employees.map(({ department }) => department?.managerId).filter(Boolean))];
   const leaders = await taskModel.employeeScopes(leaderIds);
   const recipients = [
     task.createdById,
@@ -51,6 +51,23 @@ const split = ({ assigneeIds, attachments, ...data }) => ({
   attachments,
 });
 export const taskService = {
+  async departments(user, permissions) {
+    const where = isHr(permissions) ? { status: "active" } : { id: user.employee?.departmentId ?? "__none__", status: "active" };
+    return taskModel.listDepartments(where);
+  },
+  async projects(user, permissions, departmentId) {
+    const hr = isHr(permissions);
+    const ownDepartmentId = user.employee?.departmentId;
+    if (!hr && (!ownDepartmentId || departmentId !== ownDepartmentId)) fail(403, "You can only view projects in your department.");
+    return taskModel.listProjects({ departmentId, status: "active" });
+  },
+  async createProject(user, permissions, input) {
+    ensureLeader(user, permissions);
+    const department = await taskModel.findDepartment(input.departmentId);
+    if (!department) fail(404, "Department not found.");
+    if (!isHr(permissions) && department.managerId !== user.employee?.id) fail(403, "You can create projects only for your department.");
+    return taskModel.createProject({ name: input.name, description: input.description || null, departmentId: input.departmentId, createdById: user.id });
+  },
   authorizeAssignment(user, permissions) {
     ensureLeader(user, permissions);
   },
@@ -59,14 +76,14 @@ export const taskService = {
       pageSize = Math.min(100, Math.max(1, Number(q.pageSize) || 50)),
       access = isHr(permissions)
         ? {}
-        : user.employee?.isTeamLeader
+        : user.employee?.isDepartmentLeader
           ? {
               OR: [
                 { createdById: user.id },
                 { assignees: { some: { employeeId: user.employee.id } } },
                 {
                   assignees: {
-                    some: { employee: { team: { leaderId: user.employee.id } } },
+                    some: { employee: { department: { managerId: user.employee.id } } },
                   },
                 },
               ],
@@ -77,8 +94,8 @@ export const taskService = {
       where = {
         AND: [access],
         ...(q.status && { status: String(q.status) }),
+        ...(q.projectId && { projectId: String(q.projectId) }),
         ...(q.priority && { priority: String(q.priority) }),
-        ...(q.team && { team: String(q.team) }),
         ...(q.assigneeId && {
           assignees: { some: { employeeId: String(q.assigneeId) } },
         }),
@@ -103,13 +120,19 @@ export const taskService = {
   assignees(user, permissions) {
     ensureLeader(user, permissions);
     return taskModel.eligibleEmployees(
-      isHr(permissions) ? {} : { team: { leaderId: user.employee.id } },
+      isHr(permissions) ? {} : { department: { managerId: user.employee.id } },
     );
   },
   async create(user, permissions, input) {
     ensureLeader(user, permissions);
     const { data, assigneeIds, attachments } = split(input);
-    await validateAssignees(assigneeIds, user, permissions);
+    if (data.projectId) {
+      const project = await taskModel.findProject(data.projectId);
+      if (!project || project.status !== "active") fail(422, "Select an active project.");
+      if (!isHr(permissions) && project.department.managerId !== user.employee?.id) fail(403, "You can create tasks only in your department project.");
+      const employees = await validateAssignees(assigneeIds, user, permissions);
+      if (employees.some(({ department }) => department?.id !== project.departmentId)) fail(422, "Assignees must belong to the project's department.");
+    } else await validateAssignees(assigneeIds, user, permissions);
     return taskModel.create(user.id, {
       ...data,
       assignees: { create: assigneeIds.map((employeeId) => ({ employeeId })) },
@@ -188,14 +211,14 @@ export const taskService = {
     if (
       !isHr(permissions) &&
       data.employeeId !== user.employee?.id &&
-      !(user.employee?.isTeamLeader &&
+      !(user.employee?.isDepartmentLeader &&
         task.assignees.some(
           ({ employeeId, employee }) =>
             employeeId === data.employeeId &&
-            employee.team?.leaderId === user.employee.id,
+            employee.department?.managerId === user.employee.id,
         ))
     )
-      fail(403, "You can record time only for yourself or your employees.");
+      fail(403, "You can record time only for yourself or your department employees.");
     return taskModel.addTime(id, recordedById, data);
   },
   async monthlyReport(month) {
@@ -233,23 +256,6 @@ export const taskService = {
       current.entries += 1;
       employeeMap.set(entry.employeeId, current);
     }
-    const teamMap = new Map();
-    for (const task of tasks) {
-      const team = task.team ?? "other",
-        current = teamMap.get(team) ?? {
-          team,
-          assigned: 0,
-          completed: 0,
-          minutes: 0,
-        };
-      current.assigned += 1;
-      if (task.status === "completed") current.completed += 1;
-      current.minutes += task.timeEntries.reduce(
-        (sum, entry) => sum + entry.minutes,
-        0,
-      );
-      teamMap.set(team, current);
-    }
     return {
       month,
       summary: {
@@ -266,7 +272,6 @@ export const taskService = {
       employees: [...employeeMap.values()].sort(
         (a, b) => b.minutes - a.minutes,
       ),
-      teams: [...teamMap.values()],
     };
   },
 };

@@ -47,6 +47,7 @@ import {
   TableRow,
 } from "@/shared/components/ui/table";
 import logo from "@/assets/icons/logo.png";
+import { settingsSnapshot } from "@/features/settings/settings";
 
 export type AccountingResource = "accounts" | "journals" | "reports";
 const money = (value: number) =>
@@ -206,17 +207,17 @@ export default function AccountingPage({
           </CardContent>
         </Card>
         {report && (
-          <section className="print-document hidden bg-white px-[9mm] py-[7mm] text-[10px] text-slate-900 print:absolute print:inset-0 print:block print:w-full [&_td]:border [&_td]:border-slate-300 [&_td]:px-[7px] [&_td]:py-[5px] [&_th]:border [&_th]:border-slate-300 [&_th]:bg-teal-50 [&_th]:px-[7px] [&_th]:py-[5px] [&_th]:font-bold [&_table]:w-full [&_table]:border-collapse [&_tbody_tr:nth-child(even)]:bg-slate-50">
-            <header className="mb-2.5 flex items-center justify-between border-b-[3px] border-[#1C9B49] pb-2.5">
+          <section className="print-document hidden bg-white px-[9mm] py-[7mm] text-[10px] text-slate-900 print:absolute print:inset-0 print:block print:w-full [&_td]:border [&_td]:border-slate-300 [&_td]:px-1.75 [&_td]:py-1.25 [&_th]:border [&_th]:border-slate-300 [&_th]:bg-teal-50 [&_th]:px-1.75 [&_th]:py-1.25 [&_th]:font-bold [&_table]:w-full [&_table]:border-collapse [&_tbody_tr:nth-child(even)]:bg-slate-50">
+            <header className="mb-2.5 flex items-center justify-between border-b-[3px] border-teal-500 pb-2.5">
               <div className="flex items-center gap-2.5">
                 <img
                   className="h-11 w-23 rounded-[9px] border border-slate-200 bg-white px-2 py-1 object-contain object-center shadow-[0_4px_12px_rgba(15,23,42,0.14)]"
                   src={logo}
-                  alt={t("accounting.organizationName")}
+                  alt={settingsSnapshot()?.organization.name || ""}
                 />
                 <div>
                   <strong className="block text-[13px]">
-                    {t("accounting.organizationName")}
+                    {settingsSnapshot()?.organization.name || ""}
                   </strong>
                   <small className="mt-0.5 block text-slate-500">
                     {t("accounting.organizationSubtitle")}
@@ -224,7 +225,7 @@ export default function AccountingPage({
                 </div>
               </div>
               <div className="grid gap-0.5 text-end text-slate-500">
-                <b className="text-[13px] text-[#1C9B49]">
+                <b className="text-[13px] text-teaborder-teal-500">
                   {t("accounting.reports")}
                 </b>
                 <span>
@@ -241,7 +242,7 @@ export default function AccountingPage({
                 {t("accounting.trialBalance")}
               </h1>
             </div>
-            <div className="grid grid-cols-3 gap-[7px]">
+            <div className="grid grid-cols-3 gap-1.75">
               {summaries.map(([key, value]) => (
                 <div
                   key={key}
@@ -264,7 +265,7 @@ export default function AccountingPage({
                 {report.trialBalance.length} {t("accounting.accountsCount")}
               </span>
             </div>
-            <table className="mt-[7px] [&_td:nth-last-child(-n+2)]:text-end [&_td:nth-last-child(-n+2)]:tabular-nums [&_th:nth-last-child(-n+2)]:text-end [&_th:nth-last-child(-n+2)]:tabular-nums [&_tfoot_th]:border-t-2 [&_tfoot_th]:border-t-[#1C9B49]">
+            <table className="mt-1.75 [&_td:nth-last-child(-n+2)]:text-end [&_td:nth-last-child(-n+2)]:tabular-nums [&_th:nth-last-child(-n+2)]:text-end [&_th:nth-last-child(-n+2)]:tabular-nums [&_tfoot_th]:border-t-2 [&_tfoot_th]:border-t-teaborder-teal-500">
               <thead>
                 <tr>
                   <th>{t("accounting.code")}</th>
@@ -293,7 +294,7 @@ export default function AccountingPage({
                 </tr>
               </tfoot>
             </table>
-            <div className="mt-2.5 flex justify-between rounded-[5px] bg-emerald-50 px-2.5 py-[7px] text-emerald-700">
+            <div className="mt-2.5 flex justify-between rounded-[5px] bg-emerald-50 px-2.5 py-1.75 text-emerald-700">
               <span>{t("accounting.balanceCheck")}</span>
               <b>
                 {Math.abs(totalDebit - totalCredit) < 0.001
@@ -301,9 +302,9 @@ export default function AccountingPage({
                   : t("accounting.unbalanced")}
               </b>
             </div>
-            <footer className="mt-[18px] flex justify-between border-t border-slate-300 pt-[7px] text-[8px] text-slate-500">
+            <footer className="mt-4.5 flex justify-between border-t border-slate-300 pt-1.75 text-[8px] text-slate-500">
               <span>{t("accounting.confidentialReport")}</span>
-              <span>NHO ERP · {generatedDate}</span>
+              <span>{settingsSnapshot()?.organization.name || ""} · {generatedDate}</span>
             </footer>
           </section>
         )}

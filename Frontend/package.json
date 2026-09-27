@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "vite --host",
     "mobile:dev": "vite --host --mode mobile",
-    "electron:dev": "concurrently -k \"vite --host --mode electron\" \"wait-on http://localhost:3000 && electron --class=nho-erp .\"",
+    "preelectron:dev": "node scripts/check-dev-ports.mjs",
+    "electron:dev": "concurrently -k \"npm --prefix ../Backend run dev\" \"vite --host --mode electron\" \"wait-on --timeout 60000 http://localhost:3000 http://localhost:4000/api/health && electron --class=nho-erp .\"",
     "build": "tsc -b && vite build",
     "electron:build": "tsc -b && vite build --base ./ && electron-builder --config electron-builder.config.cjs",
     "electron:build:windows": "tsc -b && vite build --base ./ && electron-builder --config electron-builder.config.cjs --win",
@@ -76,9 +77,9 @@
     "wait-on": "^8.0.5"
   },
   "build": {
-    "appId": "com.nho.erp",
-    "productName": "NHO ERP",
-    "executableName": "nho-erp",
+    "appId": "com.saghi.erp",
+    "productName": "ERP",
+    "executableName": "sagi-erp",
     "directories": {
       "output": "release"
     },
@@ -89,19 +90,19 @@
     ],
     "extraResources": [
       {
-        "from": "src/assets/icons/nho-app.png",
+        "from": "src/assets/icons/logo.png",
         "to": "icon.png"
       }
     ],
     "win": {
-      "icon": "src/assets/icons/nho-app.png",
+      "icon": "src/assets/icons/logo.png",
       "target": "nsis"
     },
     "linux": {
-      "icon": "src/assets/icons/nho-app.png",
+      "icon": "src/assets/icons/logo.png",
       "desktop": {
         "entry": {
-          "Name": "NHO ERP",
+          "Name": "ERP",
           "StartupWMClass": "nho-erp"
         }
       },

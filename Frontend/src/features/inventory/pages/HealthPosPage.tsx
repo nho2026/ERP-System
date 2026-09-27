@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/icons/logo.png";
+import { useSettings } from "@/features/settings/settings";
 import {
   inventoryApi,
   posApi,
@@ -59,6 +60,7 @@ import { WindowControls } from "@/shared/components/WindowControls";
 import { isCashier, storedUser } from "@/features/auth/access";
 
 export default function HealthPosPage() {
+  const systemSettings = useSettings();
   const { theme, toggleTheme } = useTheme();
   const { t } = useTranslation();
   const cashier = isCashier(storedUser());
@@ -202,11 +204,11 @@ export default function HealthPosPage() {
         </Link>
         <img
           src={logo}
-          alt="NHO"
+          alt={systemSettings?.organization.name || ""}
           className="size-10 rounded-xl border border-primary/15 bg-white object-contain shadow-sm"
         />
         <div className="hidden sm:block">
-          <b className="text-primary">NHO Health POS</b>
+          <b className="text-primary">{systemSettings?.organization.name || ""}</b>
           <small className="block text-muted-foreground">
             {t("pos.cashierWorkspace")}
           </small>

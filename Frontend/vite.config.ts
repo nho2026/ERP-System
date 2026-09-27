@@ -30,7 +30,10 @@ export default defineConfig({
         changeOrigin: true,
         ws: true,
       },
-      "/public": { target: "http://localhost:4000", changeOrigin: true },
+      "/public": {
+        target: "http://localhost:4000",
+        changeOrigin: true
+      },
     },
   },
 });

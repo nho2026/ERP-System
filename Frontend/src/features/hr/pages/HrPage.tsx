@@ -69,7 +69,6 @@ const configs: Record<
       { name: "lastName", label: "Last name", required: true },
       { name: "departmentId", label: "Department", type: "department", required: true },
       { name: "positionId", label: "Position", type: "position" },
-      { name: "teamId", label: "Team", type: "team" },
       { name: "hireDate", label: "Hire date", type: "date", required: true },
       {
         name: "checkInTime",
@@ -96,24 +95,13 @@ const configs: Record<
       ["position", "Position"],
       ["roles", "System roles"],
       ["department", "Department"],
-      ["team", "Team"],
-      ["teamLeader", "Team leader"],
+      ["departmentLeader", "Department leader"],
       ["hireDate", "Hire date"],
       ["workSchedule", "Working days"],
       ["checkInTime", "Expected check-in"],
       ["checkOutTime", "Expected check-out"],
       ["status", "Status"],
     ],
-  },
-  teams: {
-    title: "Teams",
-    fields: [
-      { name: "name", label: "Team name", required: true },
-      { name: "description", label: "Description" },
-      { name: "leaderId", label: "Team leader", type: "employee" },
-      { name: "status", label: "Status", type: "select", required: true, options: ["active", "inactive"] },
-    ],
-    columns: [["name", "Team"], ["description", "Description"], ["leader", "Team leader"], ["employeesCount", "Employees"], ["status", "Status"]],
   },
   positions: {
     title: "Positions",
@@ -375,9 +363,13 @@ function display(record: HrRecord, key: string, locale: string, translate: (text
     return String((record.position as HrRecord | null)?.name ?? "—");
   if (key === "department")
     return String((record.department as HrRecord | null)?.name ?? "—");
-  if (key === "team") return String((record.team as HrRecord | null)?.name ?? "—");
-  if (key === "teamLeader" || key === "leader") {
-    const leader = (key === "leader" ? record.leader : (record.team as HrRecord | null)?.leader) as HrRecord | null;
+  if (key === "departmentLeader") {
+    const department = record.department as HrRecord | null;
+    const leader = department?.manager as HrRecord | null;
+    return leader ? `${leader.firstName} ${leader.lastName}` : "—";
+  }
+  if (key === "leader") {
+    const leader = record.leader as HrRecord | null;
     return leader ? `${leader.firstName} ${leader.lastName}` : "—";
   }
   if (key === "employeesCount")
@@ -433,7 +425,6 @@ export default function HrPage({ resource }: { resource?: Resource }) {
   const [adjustmentEmployee, setAdjustmentEmployee] = useState<HrRecord | null>(
     null,
   );
-  const teams = useApiResource(useCallback(() => hasPermission(storedUser(), "hr.teams.view") ? hrApi.teams.list() : Promise.resolve([]), []));
   const positions = useApiResource(
     useCallback(() => hasPermission(storedUser(), "hr.positions.view") ? hrApi.positions.list() : Promise.resolve([]), []),
   );
@@ -445,7 +436,7 @@ export default function HrPage({ resource }: { resource?: Resource }) {
   const departments = useApiResource(
     useCallback(() => hasPermission(storedUser(), "healthcare.departments.view") ? healthcareApi.departments.list() : Promise.resolve([]), []),
   );
-  const endpoints: Record<Resource, string> = { employees: "/employees", teams: "/employees/teams", positions: "/employees/positions", salaries: "/employees/records/salaries", attendance: "/employees/records/attendance", payrolls: "/employees/records/payrolls", adjustments: "/employees/records/payroll-adjustments", advances: "/advances/salary" };
+  const endpoints: Record<Resource, string> = { employees: "/employees", positions: "/employees/positions", salaries: "/employees/records/salaries", attendance: "/employees/records/attendance", payrolls: "/employees/records/payrolls", adjustments: "/employees/records/payroll-adjustments", advances: "/advances/salary" };
   const current = useServerTable<HrRecord>(endpoints[tab], { search,
     ...(tab === "employees" ? { departmentId: departmentFilter === "all" ? undefined : departmentFilter, positionId: positionFilter === "all" ? undefined : positionFilter, status: statusFilter === "all" ? undefined : statusFilter } : {}) });
   const fullPrint = useFullReportPrint(async () => {
@@ -476,9 +467,7 @@ export default function HrPage({ resource }: { resource?: Resource }) {
                 e.id,
                 `${e.employeeCode} — ${e.firstName} ${e.lastName}`,
               ])
-          : field.type === "team"
-            ? (teams.data ?? []).map((team) => [team.id, String(team.name)])
-            : field.type === "position"
+          : field.type === "position"
               ? positions.data?.map((p) => [p.id, String(p.name)])
               : field.type === "salary"
                 ? salaries.data?.map((s) => [
@@ -525,7 +514,6 @@ export default function HrPage({ resource }: { resource?: Resource }) {
         current.refresh(),
         employees.refresh(),
         positions.refresh(),
-        teams.refresh(),
         salaries.refresh(),
       ]);
     } catch (cause) {
@@ -542,7 +530,7 @@ export default function HrPage({ resource }: { resource?: Resource }) {
       <div>
         <h1 className="text-2xl font-bold">{tr(configs[tab].title)}</h1>
         <p className="text-sm text-muted-foreground">
-          {["employees", "positions", "teams"].includes(tab) ? tr("Positions describe jobs. Roles control system access through the linked user account. Teams group employees, with a leader assigned to each team.") : t("hr.pageDescription")}
+          {["employees", "positions"].includes(tab) ? tr("Employees belong to departments, each with a department leader. Positions describe jobs, and roles control system access through the linked user account.") : t("hr.pageDescription")}
         </p>
       </div>
       <Tabs
@@ -1032,7 +1020,7 @@ export default function HrPage({ resource }: { resource?: Resource }) {
               <img
                 className="print-logo h-[46px] w-[105px] rounded-[9px] border border-slate-200 bg-white px-2 py-1 object-contain object-center shadow-[0_4px_12px_rgba(15,23,42,0.14)]"
                 src={logo}
-                alt="NHO"
+                alt={settingsSnapshot()?.organization.name || ""}
               />
               <p>{t("hr.salaryList")}</p>
             </div>

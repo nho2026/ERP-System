@@ -460,20 +460,20 @@ export default function BillingPage({ resource }: { resource: Resource }) {
         </DialogContent>
       </Dialog>
       {printInvoice && (
-        <section className="print-document hidden bg-white px-[9mm] py-[7mm] text-[11px] text-slate-900 print:absolute print:inset-0 print:block print:w-full [&_td]:border [&_td]:border-slate-300 [&_td]:p-[7px] [&_td]:text-start [&_th]:border [&_th]:border-slate-300 [&_th]:bg-teal-50 [&_th]:p-[7px] [&_th]:text-start [&_th]:font-bold [&_table]:w-full [&_table]:border-collapse">
-          <header className="mb-5 flex items-start justify-between border-b-2 border-[#1C9B49] pb-3.5">
+        <section className="print-document hidden bg-white px-[9mm] py-[7mm] text-[11px] text-slate-900 print:absolute print:inset-0 print:block print:w-full [&_td]:border [&_td]:border-slate-300 [&_td]:p-1.75 [&_td]:text-start [&_th]:border [&_th]:border-slate-300 [&_th]:bg-teal-50 [&_th]:p-1.75 [&_th]:text-start [&_th]:font-bold [&_table]:w-full [&_table]:border-collapse">
+          <header className="mb-5 flex items-start justify-between border-b-2 border-teal-500 pb-3.5">
             <div className="space-y-2">
               <img
-                className="h-[46px] w-[105px] rounded-[9px] border border-slate-200 bg-white px-2 py-1 object-contain object-center shadow-[0_4px_12px_rgba(15,23,42,0.14)]"
+                className="h-11.5 w-26.25 rounded-[9px] border border-slate-200 bg-white px-2 py-1 object-contain object-center shadow-[0_4px_12px_rgba(15,23,42,0.14)]"
                 src={logo}
-                alt="NHO"
+                alt={settingsSnapshot()?.organization.name || ""}
               />
               <p className="font-semibold uppercase tracking-wider text-slate-500">
                 {t("billing.invoice")}
               </p>
             </div>
             <div className="text-end">
-              <strong className="text-xl font-extrabold text-[#1C9B49]">
+              <strong className="text-xl font-extrabold text-teal-500">
                 {settingsSnapshot()?.organization.name}
                 <br />
                 {printInvoice.invoiceNumber}
@@ -492,7 +492,7 @@ export default function BillingPage({ resource }: { resource: Resource }) {
               )}
             </div>
           </header>
-          <div className="my-[18px] leading-relaxed">
+          <div className="my-4.5 leading-relaxed">
             <strong>{t("billing.billTo")}</strong>
             <h2 className="my-1 text-[15px] font-bold">
               {printInvoice.customer.name}
@@ -507,7 +507,7 @@ export default function BillingPage({ resource }: { resource: Resource }) {
               </p>
             )}
           </div>
-          <table className="mt-[18px]">
+          <table className="mt-4.5">
             <thead>
               <tr>
                 <th>#</th>
@@ -533,7 +533,7 @@ export default function BillingPage({ resource }: { resource: Resource }) {
               ))}
             </tbody>
           </table>
-          <div className="ms-auto mt-[18px] w-[45%] [&_p]:flex [&_p]:justify-between [&_p]:border-b [&_p]:border-slate-200 [&_p]:py-[5px]">
+          <div className="ms-auto mt-4.5 w-[45%] [&_p]:flex [&_p]:justify-between [&_p]:border-b [&_p]:border-slate-200 [&_p]:py-1.25">
             <p>
               <span>{t("billing.subtotal")}</span>
               <b>
@@ -548,7 +548,7 @@ export default function BillingPage({ resource }: { resource: Resource }) {
               <span>{t("billing.tax")}</span>
               <b>{amount(printInvoice.taxAmount)}</b>
             </p>
-            <p className="!border-b-2 !border-[#1C9B49] text-sm text-[#1C9B49]">
+            <p className="border-b-2! border-teal-500! text-sm text-teal-500">
               <span>{t("billing.total")}</span>
               <b>
                 {amount(printInvoice.totalAmount)} {printInvoice.currency}
@@ -564,12 +564,12 @@ export default function BillingPage({ resource }: { resource: Resource }) {
             </p>
           </div>
           {printInvoice.notes && (
-            <div className="mt-[22px] border border-slate-300 p-2.5">
+            <div className="mt-5.5 border border-slate-300 p-2.5">
               <strong>{t("billing.notes")}</strong>
               <p>{printInvoice.notes}</p>
             </div>
           )}
-          <footer className="mt-[35px] text-center text-slate-500">
+          <footer className="mt-8.5 text-center text-slate-500">
             {t("billing.thankYou")}
           </footer>
         </section>

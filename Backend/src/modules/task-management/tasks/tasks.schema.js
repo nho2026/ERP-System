@@ -6,18 +6,8 @@ const optionalDate = z.preprocess(
 export const taskSchema = z
   .object({
     title: z.string().trim().min(2).max(200),
+    projectId: z.string().min(1).optional(),
     description: z.string().trim().min(2).max(10000),
-    team: z
-      .enum([
-        "marketing",
-        "design",
-        "content",
-        "development",
-        "photography",
-        "other",
-      ])
-      .nullable()
-      .optional(),
     priority: z.enum(["low", "medium", "high", "urgent"]).default("medium"),
     status: z
       .enum(["todo", "in_progress", "review", "completed", "cancelled"])
@@ -44,17 +34,6 @@ export const taskSchema = z
 export const updateTaskSchema = z.object({
   title: z.string().trim().min(2).max(200).optional(),
   description: z.string().trim().min(2).max(10000).optional(),
-  team: z
-    .enum([
-      "marketing",
-      "design",
-      "content",
-      "development",
-      "photography",
-      "other",
-    ])
-    .nullable()
-    .optional(),
   priority: z.enum(["low", "medium", "high", "urgent"]).optional(),
   status: z
     .enum(["todo", "in_progress", "review", "completed", "cancelled"])
@@ -73,6 +52,11 @@ export const updateTaskSchema = z.object({
     })
     .nullable()
     .optional(),
+});
+export const projectSchema = z.object({
+  name: z.string().trim().min(2).max(160),
+  description: z.string().trim().max(5000).optional(),
+  departmentId: z.string().min(1),
 });
 export const commentSchema = z.object({
   body: z.string().trim().min(1).max(5000),

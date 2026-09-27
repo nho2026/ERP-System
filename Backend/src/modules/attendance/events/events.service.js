@@ -4,6 +4,8 @@ import { eventsModel as m } from "./events.model.js";
 import { verifiedAttendanceEvent } from "./events.verification.js";
 import { peopleService } from "../people/people.service.js";
 
+let syncInProgress = false;
+
 export const eventsService = {
   list(q) {
     const to = q.to ? String(q.to) : "";
@@ -22,6 +24,12 @@ export const eventsService = {
     }, q);
   },
   async sync(input) {
+    if (syncInProgress)
+      throw Object.assign(new Error("An attendance sync is already running."), {
+        status: 409,
+      });
+    syncInProgress = true;
+    try {
     // Use the attendance site's Baghdad calendar month, independent of the
     // server timezone. Keep one cutoff for every device in this sync.
     const now = new Date();
@@ -162,5 +170,8 @@ export const eventsService = {
         ...results.flatMap((result) => (result.error ? [result.error] : [])),
       ],
     };
+    } finally {
+      syncInProgress = false;
+    }
   },
 };

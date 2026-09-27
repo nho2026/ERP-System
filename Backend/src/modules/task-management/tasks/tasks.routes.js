@@ -11,6 +11,7 @@ import {
   commentSchema,
   timeEntrySchema,
   monthlyReportSchema,
+  projectSchema,
 } from "./tasks.schema.js";
 const dir = path.resolve(process.cwd(), "public", "task-attachments");
 mkdirSync(dir, { recursive: true });
@@ -27,6 +28,9 @@ const upload = multer({
 });
 const router = Router();
 router.get("/", c.list);
+router.get("/departments", c.departments);
+router.get("/projects", c.projects);
+router.post("/projects", validate(projectSchema), c.createProject);
 router.get("/assignees", c.assignees);
 router.get("/reports/monthly", (req, res, next) => {
   const result = monthlyReportSchema.safeParse(req.query);

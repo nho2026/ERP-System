@@ -15,15 +15,22 @@ router.get("/stream", view, (req, res) => {
   });
   res.flushHeaders();
   res.write(`event: connected\ndata: ${JSON.stringify({ connected: true })}\n\n`);
+  let closed = false;
   const unsubscribe = subscribeToAttendanceEvents((event) => {
-      res.write(`event: attendance\ndata: ${JSON.stringify(event)}\n\n`);
+      if (!res.destroyed && !res.writableEnded)
+        res.write(`event: attendance\ndata: ${JSON.stringify(event)}\n\n`);
     }),
-    heartbeat = setInterval(() => res.write(": keep-alive\n\n"), 20000),
+    heartbeat = setInterval(() => {
+      if (!res.destroyed && !res.writableEnded) res.write(": keep-alive\n\n");
+    }, 20000),
     close = () => {
+      if (closed) return;
+      closed = true;
       clearInterval(heartbeat);
       unsubscribe();
     };
-  req.on("close", close);
+  res.on("close", close);
+  req.on("aborted", close);
 });
 router.post("/sync", manage, validate(syncEventsSchema), c.sync);
 export default router;

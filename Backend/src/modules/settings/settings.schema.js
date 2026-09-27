@@ -22,7 +22,7 @@ export const defaults = {
     microphoneDefault: false,
   },
   organization: {
-    name: "NHO ERP",
+    name: "",
     loadingText: "",
     logo: "",
     branches: [],
