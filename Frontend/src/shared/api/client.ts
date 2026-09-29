@@ -12,11 +12,21 @@ export const apiClient = axios.create({
   timeout: 15_000,
 });
 
-export const apiErrorMessage = (error: unknown) =>
-  axios.isAxiosError<{ message?: string }>(error)
-    ? (error.response?.data?.message ??
-      "The server is unavailable. Please try again.")
-    : "Something went wrong. Please try again.";
+export const apiErrorMessage = (error: unknown) => {
+  if (!axios.isAxiosError<{
+    message?: string;
+    errors?: Record<string, string[]>;
+  }>(error)) return "Something went wrong. Please try again.";
+  const data = error.response?.data;
+  if (error.response?.status === 422 && data?.errors) {
+    const details = Object.entries(data.errors)
+      .flatMap(([field, messages]) =>
+        Array.isArray(messages) ? messages.map((message) => `${field}: ${message}`) : [],
+      );
+    if (details.length) return details.join("\n");
+  }
+  return data?.message ?? "The server is unavailable. Please try again.";
+};
 
 // Client checks provide immediate feedback; the API independently enforces the same policy.
 apiClient.interceptors.request.use((config) => {

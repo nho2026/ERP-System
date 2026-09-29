@@ -1,6 +1,6 @@
 export function presentUser(user) {
   const roles =
-    user.roles?.map(({ role }) => ({ id: role.id, name: role.name })) ?? [];
+    user.roles?.map(({ role }) => ({ id: role.id, name: role.name, code: role.code ?? null })) ?? [];
   const permissions = [
     ...new Set(
       user.roles?.flatMap(({ role }) =>

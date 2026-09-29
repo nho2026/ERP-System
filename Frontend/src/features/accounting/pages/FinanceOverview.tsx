@@ -1,3 +1,4 @@
+import { ArrowUpRight } from "lucide-react";
 import { useServerTable } from "@/shared/hooks/useServerTable";
 import { useCallback, useState } from "react";
 import { FinanceBarChart } from "../components/FinanceBarChart";
@@ -34,7 +35,7 @@ import {
 } from "@/shared/components/ui/table";
 import { ResourceState } from "@/shared/components/ui/table-resource-state";
 type Total = { currency: string; income: string; expense: string; net: string };
-type Overview = {
+export type Overview = {
   pending: number;
   unassigned: number;
   accounts: {
@@ -90,9 +91,17 @@ export default function FinanceOverview() {
       [],
     ),
   );
-  const debts = useServerTable<Overview["debts"][number]>("/finance/cash-flow/overview/rows", {year, section: "debts"});
-  const months = useServerTable<Total & {month:number}>("/finance/cash-flow/overview/rows", {year, section:"months"});
-  const departments = useServerTable<Total & {month:number;departmentId:string|null}>("/finance/cash-flow/overview/rows", {year, section:"departments"});
+  const debts = useServerTable<Overview["debts"][number]>(
+    "/finance/cash-flow/overview/rows",
+    { year, section: "debts" },
+  );
+  const months = useServerTable<Total & { month: number }>(
+    "/finance/cash-flow/overview/rows",
+    { year, section: "months" },
+  );
+  const departments = useServerTable<
+    Total & { month: number; departmentId: string | null }
+  >("/finance/cash-flow/overview/rows", { year, section: "departments" });
   const ready = !data.isLoading && !data.error && data.data;
   const money = (v: string) =>
     Number(v).toLocaleString(undefined, {
@@ -100,9 +109,9 @@ export default function FinanceOverview() {
       maximumFractionDigits: 2,
     });
   const series = [
-    { key: "income", label: l("income"), color: "#1C9B49" },
-    { key: "expense", label: l("expense"), color: "#f97316" },
-    { key: "net", label: l("net"), color: "#6366f1" },
+    { key: "income", label: l("income"), color: "#00664f" },
+    { key: "expense", label: l("expense"), color: "#78bfa6" },
+    { key: "net", label: l("net"), color: "#003c30" },
   ];
   const currencies = ready
     ? Array.from(
@@ -131,10 +140,12 @@ export default function FinanceOverview() {
     }
   };
   return (
-    <div className="space-y-5">
+    <div className="mx-auto max-w-[1500px] space-y-5 rounded-2xl bg-muted/30 p-4 md:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">{l("title")}</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">
+            {l("title")}
+          </h1>
           <p className="text-sm text-muted-foreground">{l("description")}</p>
         </div>
         <Button permission="finance.cash-flow.view" asChild variant="outline">
@@ -143,13 +154,13 @@ export default function FinanceOverview() {
           </Link>
         </Button>
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-card p-4">
         <Label htmlFor="finance-year">{l("year")}</Label>
         <Select
           value={String(year)}
           onValueChange={(value) => setYear(Number(value))}
         >
-          <SelectTrigger id="finance-year" className="w-28">
+          <SelectTrigger id="finance-year" className="w-28 rounded-full">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -166,7 +177,11 @@ export default function FinanceOverview() {
           {l("refresh")}
         </Button>
       </div>
-      {(debts.error || months.error || departments.error) && <p role="alert" className="text-destructive">{debts.error || months.error || departments.error}</p>}
+      {(debts.error || months.error || departments.error) && (
+        <p role="alert" className="text-destructive">
+          {debts.error || months.error || departments.error}
+        </p>
+      )}
       <ResourceState
         isLoading={data.isLoading}
         error={data.error}
@@ -174,159 +189,187 @@ export default function FinanceOverview() {
       />
       {ready && (
         <>
-          <p className="text-sm text-muted-foreground">
-            {l("pending")}: {ready.pending} · {l("unassigned")}:{" "}
-            {ready.unassigned}
-          </p>
-          <Card className="space-y-4 p-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="font-semibold">{l("cashAccounts")}</h2>
-              {hasPermission(storedUser(), "finance.cash-flow.create") && (
-                <Button permission="finance.cash-flow.create"
-                  onClick={() => {
-                    setError("");
-                    setOpen(true);
-                  }}
-                >
-                  {l("addAccount")}
-                </Button>
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground">{l("balanceHint")}</p>
-            <div className="grid gap-3 lg:grid-cols-2">
-              {Array.from(
-                new Set(ready.accounts.map((account) => account.currency)),
-              ).map((currency) => (
-                <FinanceBarChart
-                  key={currency}
-                  title={l("cashAccounts")}
-                  currency={currency}
-                  series={[
-                    {
-                      key: "balance",
-                      label: l("cashAccounts"),
-                      color: "#1C9B49",
-                    },
-                  ]}
-                  rows={ready.accounts
-                    .filter((account) => account.currency === currency)
-                    .map((account) => ({
-                      label: account.name,
-                      values: { balance: Number(account.balance) },
-                    }))}
-                />
-              ))}
-            </div>
-            {!ready.accounts.length && <p>{l("noAccounts")}</p>}
-            <div className="border-t pt-3 text-sm">
-              <p>{l("unallocated")}</p>
-              {ready.unallocated.map((row) => (
-                <span key={row.currency} className="me-5">
-                  {money(row.net)} {row.currency}
-                </span>
-              ))}
-            </div>
-          </Card>
-          <Card className="space-y-3 p-4">
-            <h2 className="font-semibold">{l("debts")}</h2>
-            <p className="text-xs text-muted-foreground">{l("debtHint")}</p>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {ready.debtTotals.map((row) => (
-                <FinanceBarChart
-                  key={row.currency}
-                  title={l("debts")}
-                  currency={row.currency}
-                  series={[
-                    { key: "amount", label: l("amount"), color: "#6366f1" },
-                  ]}
-                  rows={[
-                    {
-                      label: l("receivable"),
-                      values: { amount: Number(row.receivable) },
-                    },
-                    {
-                      label: l("payable"),
-                      values: { amount: Number(row.payable) },
-                    },
-                  ]}
-                />
-              ))}
-            </div>
-            <details className="group">
-              <summary className="cursor-pointer p-3 text-sm font-medium">
-                {l("details")}
-              </summary>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    {["type", "name", "reference", "amount", "dueDate"].map(
-                      (key) => (
-                        <TableHead key={key}>{l(key)}</TableHead>
-                      ),
-                    )}
-                  </TableRow>
-                </TableHeader>
-                <TableBody {...debts.tableProps}>
-                  {(debts.data ?? []).map((row) => (
-                    <TableRow key={`${row.type}:${row.id}`}>
-                      <TableCell>{l(row.type)}</TableCell>
-                      <TableCell>{row.name}</TableCell>
-                      <TableCell>
-                        <Link className="text-primary underline" to={row.url}>
-                          {row.reference}
-                        </Link>
-                      </TableCell>
-                      <TableCell>
-                        {money(row.amount)} {row.currency}
-                      </TableCell>
-                      <TableCell>{row.dueDate?.slice(0, 10) ?? "—"}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </details>
-          </Card>
-          <Card className="overflow-hidden">
-            <h2 className="p-4 font-semibold">{l("monthly")}</h2>
-            <div className="grid gap-4 px-4 pb-4">
-              {currencies.map((currency) => (
-                <FinanceBarChart
-                  key={currency}
-                  title={l("monthly")}
-                  currency={currency}
-                  series={series}
-                  rows={Array.from({ length: 12 }, (_, index) => {
-                    const total = ready.months
-                      .find((month) => month.month === index + 1)
-                      ?.totals.find((row) => row.currency === currency);
-                    return {
-                      label: `${year}-${String(index + 1).padStart(2, "0")}`,
-                      values: {
-                        income: Number(total?.income ?? 0),
-                        expense: Number(total?.expense ?? 0),
-                        net: Number(total?.net ?? 0),
-                      },
-                    };
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {[
+              { label: l("cashAccounts"), value: ready.accounts.length },
+              { label: l("pending"), value: ready.pending },
+              { label: l("unassigned"), value: ready.unassigned },
+              { label: l("year"), value: year },
+            ].map((stat, index) => (
+              <Card
+                key={stat.label}
+                className={`rounded-2xl border-0 p-5 shadow-none ${index === 0 ? "bg-gradient-to-br from-[#003c30] to-[#008260] text-white" : ""}`}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <h2 className="text-sm font-medium">{stat.label}</h2>
+                  <ArrowUpRight
+                    className={`size-7 rounded-full border p-1 ${index === 0 ? "border-white/30" : "border-border"}`}
+                  />
+                </div>
+                <p className="mt-5 text-4xl font-medium tabular-nums">
+                  {stat.value.toLocaleString(undefined, {
+                    useGrouping: index !== 3,
                   })}
-                />
-              ))}
-            </div>
-            <details className="group">
-              <summary className="cursor-pointer p-3 text-sm font-medium">
-                {l("details")}
-              </summary>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    {["month", "currency", "income", "expense", "net"].map(
-                      (key) => (
-                        <TableHead key={key}>{l(key)}</TableHead>
-                      ),
-                    )}
-                  </TableRow>
-                </TableHeader>
-                <TableBody {...months.tableProps}>
-                  {(months.data ?? []).map((row) => (
+                </p>
+              </Card>
+            ))}
+          </div>
+          <div className="grid items-stretch gap-4 xl:grid-cols-2">
+            <Card className="min-w-0 space-y-4 rounded-2xl border-0 bg-card p-5 shadow-none">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h2 className="font-semibold">{l("cashAccounts")}</h2>
+                {hasPermission(storedUser(), "finance.cash-flow.create") && (
+                  <Button
+                    className="rounded-full"
+                    permission="finance.cash-flow.create"
+                    onClick={() => {
+                      setError("");
+                      setOpen(true);
+                    }}
+                  >
+                    {l("addAccount")}
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {l("balanceHint")}
+              </p>
+              <div className="grid gap-4">
+                {Array.from(
+                  new Set(ready.accounts.map((account) => account.currency)),
+                ).map((currency) => (
+                  <FinanceBarChart
+                    key={currency}
+                    title={l("cashAccounts")}
+                    currency={currency}
+                    series={[
+                      {
+                        key: "balance",
+                        label: l("cashAccounts"),
+                        color: "#00664f",
+                      },
+                    ]}
+                    rows={ready.accounts
+                      .filter((account) => account.currency === currency)
+                      .map((account) => ({
+                        label: account.name,
+                        values: { balance: Number(account.balance) },
+                      }))}
+                  />
+                ))}
+              </div>
+              {!ready.accounts.length && <p>{l("noAccounts")}</p>}
+              <div className="border-t pt-3 text-sm">
+                <p>{l("unallocated")}</p>
+                {ready.unallocated.map((row) => (
+                  <span key={row.currency} className="me-5">
+                    {money(row.net)} {row.currency}
+                  </span>
+                ))}
+              </div>
+            </Card>
+            <Card className="min-w-0 space-y-4 rounded-2xl border-0 bg-card p-5 shadow-none">
+              <h2 className="font-semibold">{l("debts")}</h2>
+              <p className="text-xs text-muted-foreground">{l("debtHint")}</p>
+              <div className="grid gap-4">
+                {ready.debtTotals.map((row) => (
+                  <FinanceBarChart
+                    key={row.currency}
+                    title={l("debts")}
+                    currency={row.currency}
+                    series={[
+                      { key: "amount", label: l("amount"), color: "#003c30" },
+                    ]}
+                    rows={[
+                      {
+                        label: l("receivable"),
+                        values: { amount: Number(row.receivable) },
+                      },
+                      {
+                        label: l("payable"),
+                        values: { amount: Number(row.payable) },
+                      },
+                    ]}
+                  />
+                ))}
+              </div>
+              <details className="group">
+                <summary className="cursor-pointer p-3 text-sm font-medium">
+                  {l("details")}
+                </summary>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      {["type", "name", "reference", "amount", "dueDate"].map(
+                        (key) => (
+                          <TableHead key={key}>{l(key)}</TableHead>
+                        ),
+                      )}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody {...debts.tableProps}>
+                    {(debts.data ?? []).map((row) => (
+                      <TableRow key={`${row.type}:${row.id}`}>
+                        <TableCell>{l(row.type)}</TableCell>
+                        <TableCell>{row.name}</TableCell>
+                        <TableCell>
+                          <Link className="text-primary underline" to={row.url}>
+                            {row.reference}
+                          </Link>
+                        </TableCell>
+                        <TableCell>
+                          {money(row.amount)} {row.currency}
+                        </TableCell>
+                        <TableCell>
+                          {row.dueDate?.slice(0, 10) ?? "—"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </details>
+            </Card>
+            <Card className="min-w-0 overflow-hidden rounded-2xl border-0 bg-card p-1 shadow-none xl:col-span-2">
+              <h2 className="p-4 font-semibold">{l("monthly")}</h2>
+              <div className="grid gap-4 px-4 pb-4">
+                {currencies.map((currency) => (
+                  <FinanceBarChart
+                    key={currency}
+                    title={l("monthly")}
+                    currency={currency}
+                    series={series}
+                    rows={Array.from({ length: 12 }, (_, index) => {
+                      const total = ready.months
+                        .find((month) => month.month === index + 1)
+                        ?.totals.find((row) => row.currency === currency);
+                      return {
+                        label: `${year}-${String(index + 1).padStart(2, "0")}`,
+                        values: {
+                          income: Number(total?.income ?? 0),
+                          expense: Number(total?.expense ?? 0),
+                          net: Number(total?.net ?? 0),
+                        },
+                      };
+                    })}
+                  />
+                ))}
+              </div>
+              <details className="group">
+                <summary className="cursor-pointer p-3 text-sm font-medium">
+                  {l("details")}
+                </summary>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      {["month", "currency", "income", "expense", "net"].map(
+                        (key) => (
+                          <TableHead key={key}>{l(key)}</TableHead>
+                        ),
+                      )}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody {...months.tableProps}>
+                    {(months.data ?? []).map((row) => (
                       <TableRow key={`${row.month}:${row.currency}`}>
                         <TableCell>
                           {year}-{String(row.month).padStart(2, "0")}
@@ -337,55 +380,55 @@ export default function FinanceOverview() {
                         <TableCell>{money(row.net)}</TableCell>
                       </TableRow>
                     ))}
-                </TableBody>
-              </Table>
-            </details>
-          </Card>
-          <Card className="overflow-hidden">
-            <h2 className="p-4 font-semibold">{l("departments")}</h2>
-            <div className="grid gap-4 px-4 pb-4">
-              {currencies.map((currency) => (
-                <FinanceBarChart
-                  key={currency}
-                  title={l("departments")}
-                  currency={currency}
-                  series={series}
-                  rows={ready.months.flatMap((month) =>
-                    month.departments
-                      .filter((row) => row.currency === currency)
-                      .map((row) => ({
-                        label: `${String(month.month).padStart(2, "0")} · ${options.data?.departments.find((department) => department.id === row.departmentId)?.name ?? row.departmentId ?? t("incomeExpenses.unassigned")}`,
-                        values: {
-                          income: Number(row.income),
-                          expense: Number(row.expense),
-                          net: Number(row.net),
-                        },
-                      })),
-                  )}
-                />
-              ))}
-            </div>
-            <details className="group">
-              <summary className="cursor-pointer p-3 text-sm font-medium">
-                {l("details")}
-              </summary>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    {[
-                      "month",
-                      "department",
-                      "currency",
-                      "income",
-                      "expense",
-                      "net",
-                    ].map((key) => (
-                      <TableHead key={key}>{l(key)}</TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody {...departments.tableProps}>
-                  {(departments.data ?? []).map((row) => (
+                  </TableBody>
+                </Table>
+              </details>
+            </Card>
+            <Card className="min-w-0 overflow-hidden rounded-2xl border-0 bg-card p-1 shadow-none xl:col-span-2">
+              <h2 className="p-4 font-semibold">{l("departments")}</h2>
+              <div className="grid gap-4 px-4 pb-4">
+                {currencies.map((currency) => (
+                  <FinanceBarChart
+                    key={currency}
+                    title={l("departments")}
+                    currency={currency}
+                    series={series}
+                    rows={ready.months.flatMap((month) =>
+                      month.departments
+                        .filter((row) => row.currency === currency)
+                        .map((row) => ({
+                          label: `${String(month.month).padStart(2, "0")} · ${options.data?.departments.find((department) => department.id === row.departmentId)?.name ?? row.departmentId ?? t("incomeExpenses.unassigned")}`,
+                          values: {
+                            income: Number(row.income),
+                            expense: Number(row.expense),
+                            net: Number(row.net),
+                          },
+                        })),
+                    )}
+                  />
+                ))}
+              </div>
+              <details className="group">
+                <summary className="cursor-pointer p-3 text-sm font-medium">
+                  {l("details")}
+                </summary>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      {[
+                        "month",
+                        "department",
+                        "currency",
+                        "income",
+                        "expense",
+                        "net",
+                      ].map((key) => (
+                        <TableHead key={key}>{l(key)}</TableHead>
+                      ))}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody {...departments.tableProps}>
+                    {(departments.data ?? []).map((row) => (
                       <TableRow
                         key={`${row.month}:${row.departmentId}:${row.currency}`}
                       >
@@ -405,10 +448,11 @@ export default function FinanceOverview() {
                         <TableCell>{money(row.net)}</TableCell>
                       </TableRow>
                     ))}
-                </TableBody>
-              </Table>
-            </details>
-          </Card>
+                  </TableBody>
+                </Table>
+              </details>
+            </Card>
+          </div>
         </>
       )}
       <Dialog
@@ -441,13 +485,11 @@ export default function FinanceOverview() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {(key === "type" ? ["safe", "bank"] : ["USD"]).map(
-                      (v) => (
-                        <SelectItem key={v} value={v}>
-                          {key === "type" ? l(v) : v}
-                        </SelectItem>
-                      ),
-                    )}
+                    {(key === "type" ? ["safe", "bank"] : ["USD"]).map((v) => (
+                      <SelectItem key={v} value={v}>
+                        {key === "type" ? l(v) : v}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -469,7 +511,9 @@ export default function FinanceOverview() {
                 {error}
               </p>
             )}
-            <Button permission="finance.cash-flow.create" disabled={busy}>{t("common.save")}</Button>
+            <Button permission="finance.cash-flow.create" disabled={busy}>
+              {t("common.save")}
+            </Button>
           </form>
         </DialogContent>
       </Dialog>

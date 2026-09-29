@@ -4,6 +4,7 @@ import { hasPermission } from "@/features/auth/access";
 import { DeleteConfirmationDialog } from "@/features/attendance/components/DeleteConfirmationDialog";
 import { useState } from "react";
 import {
+  ArrowUpRight,
   CalendarDays,
   Clock3,
   Link2,
@@ -304,10 +305,10 @@ export default function HrAttendancePage() {
       </Card>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="font-bold">
+          <h2 className="text-lg font-bold tracking-tight">
             {tx("employeeDirectory", "Employee directory")}
           </h2>
-          <p className="text-xs text-muted-foreground">
+          <p className="mt-1 text-sm text-muted-foreground">
             {tx(
               "selectCard",
               "Select a card to open monthly attendance details.",
@@ -318,7 +319,8 @@ export default function HrAttendancePage() {
           <div className="relative w-full sm:w-80">
             <Search className="absolute inset-s-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              className="h-11 bg-card ps-9 shadow-xs"
+              className="h-11 rounded-xl bg-card ps-9 shadow-xs"
+              aria-label={tx("searchEmployee", "Search employee or code…")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={tx("searchEmployee", "Search employee or code…")}
@@ -328,6 +330,7 @@ export default function HrAttendancePage() {
             <Button
               size="sm"
               variant={directoryView === "grid" ? "default" : "ghost"}
+              aria-pressed={directoryView === "grid"}
               onClick={() => setDirectoryView("grid")}
             >
               <LayoutGrid />
@@ -336,6 +339,7 @@ export default function HrAttendancePage() {
             <Button
               size="sm"
               variant={directoryView === "table" ? "default" : "ghost"}
+              aria-pressed={directoryView === "table"}
               onClick={() => setDirectoryView("table")}
             >
               <List />
@@ -350,10 +354,10 @@ export default function HrAttendancePage() {
         </p>
       )}
       {directoryView === "grid" ? (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {isLoading &&
             Array.from({ length: 6 }, (_, index) => (
-              <Skeleton key={index} className="h-28 rounded-2xl" />
+              <Skeleton key={index} className="h-52 rounded-2xl" />
             ))}
           {visible.map((employee) => {
             const records = recordsFor(employee.id);
@@ -362,60 +366,60 @@ export default function HrAttendancePage() {
               0,
             );
             return (
-              <button
+              <Button
                 key={employee.id}
+                variant="ghost"
                 onClick={() => setSelected(employee)}
-                className="group text-start"
+                className="group block h-auto min-w-0 whitespace-normal rounded-2xl p-0 text-start hover:bg-transparent focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-4"
               >
-                <Card className="relative h-full overflow-hidden border-0 bg-card shadow-sm ring-1 ring-border/70 transition duration-200 before:absolute before:inset-y-0 before:start-0 before:w-1 before:bg-linear-to-b before:from-primary before:to-teal-400 group-hover:-translate-y-0.5 group-hover:ring-primary/35 group-hover:shadow-md">
-                  <CardContent className="flex min-h-28 items-center gap-3 p-4 ps-5">
-                    <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-linear-to-br from-primary/15 to-teal-500/10 text-sm font-bold text-primary ring-1 ring-primary/15">
-                      {String(employee.firstName ?? "E").charAt(0)}
-                      {String(employee.lastName ?? "").charAt(0)}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="truncate font-bold">
+                <Card className="h-full gap-0 overflow-hidden rounded-2xl border-border/70 bg-card py-0 shadow-xs transition-all duration-200 group-hover:border-primary/40 group-hover:shadow-md motion-reduce:transition-none">
+                  <CardContent className="p-5">
+                    <div className="flex items-start gap-3.5">
+                      <div className="grid size-12 shrink-0 place-items-center rounded-2xl bg-primary/10 text-base font-bold text-primary ring-1 ring-inset ring-primary/10">
+                        {String(employee.firstName ?? "E").charAt(0)}
+                        {String(employee.lastName ?? "").charAt(0)}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="line-clamp-2 text-sm font-semibold leading-5 text-foreground" title={employeeLabel(employee)}>
                           {employeeLabel(employee)}
                         </p>
-                        <span
-                          className={`size-2 shrink-0 rounded-full ${linkedEmployees.has(employee.id) ? "bg-emerald-500" : "bg-slate-300"}`}
-                          title={
-                            linkedEmployees.has(employee.id)
-                              ? tx("linked", "Linked")
-                              : tx("notLinked", "Not linked")
-                          }
-                        />
+                        <p className="mt-1 truncate text-xs font-normal text-muted-foreground">
+                          {employee.user
+                            ? `@${String((employee.user as HrRecord).username)}`
+                            : tx("noSystemUser", "No system user")}
+                        </p>
                       </div>
-                      <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
-                        {employee.user
-                          ? `@${String((employee.user as HrRecord).username)}`
-                          : tx("noSystemUser", "No system user")}
-                      </p>
-                      <p className="mt-1.5 flex items-center gap-1.5 truncate text-xs">
-                        <BriefcaseBusiness className="size-3.5 shrink-0 text-primary" />
+                      <ArrowUpRight aria-hidden="true" className="size-4 shrink-0 text-muted-foreground/50 transition-colors group-hover:text-primary rtl:-scale-x-100" />
+                    </div>
+                    <div className="mt-4 flex min-w-0 items-center gap-2 text-xs font-normal text-muted-foreground">
+                      <BriefcaseBusiness className="size-3.5 shrink-0" />
+                      <span className="truncate">
                         {String(
                           (employee.position as HrRecord | null)?.name ??
                             tx("noPosition", "No position"),
                         )}
-                      </p>
-                      <p className="mt-1 text-[10px] font-medium text-muted-foreground">
-                        {String(employee.employeeCode)} ·{" "}
-                        {deviceUserCount(employee)}{" "}
-                        {tx("deviceUsers", "device users")}
-                      </p>
-                    </div>
-                    <div className="shrink-0 border-s ps-3 text-end">
-                      <p className="text-[10px] text-muted-foreground">
-                        {tx("lostTime", "Lost time")}
-                      </p>
-                      <p className="mt-1 text-sm font-bold text-destructive">
-                        {duration(lost)}
-                      </p>
+                      </span>
+                      <span className="ms-auto shrink-0 rounded-md bg-muted px-2 py-1 text-[11px] font-medium tabular-nums text-foreground/70">
+                        {String(employee.employeeCode)}
+                      </span>
                     </div>
                   </CardContent>
+                  <div className="flex items-center justify-between gap-3 border-t border-border/60 bg-muted/25 px-5 py-3">
+                    <span className="flex min-w-0 items-center gap-2 text-xs font-normal text-muted-foreground">
+                      <span
+                        className={`size-1.5 shrink-0 rounded-full ${linkedEmployees.has(employee.id) ? "bg-emerald-500" : "bg-muted-foreground/35"}`}
+                        title={linkedEmployees.has(employee.id) ? tx("linked", "Linked") : tx("notLinked", "Not linked")}
+                      />
+                      <span className="truncate">{deviceUserCount(employee)} {tx("deviceUsers", "device users")}</span>
+                    </span>
+                    <span className="flex shrink-0 items-center gap-2 rounded-lg bg-primary px-2.5 py-1.5 text-xs text-primary-foreground">
+                      <Clock3 className="size-3.5" />
+                      <span className="font-normal">{tx("lostTime", "Lost time")}</span>
+                      <span className="font-semibold tabular-nums">{duration(lost)}</span>
+                    </span>
+                  </div>
                 </Card>
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -472,7 +476,7 @@ export default function HrAttendancePage() {
                     <TableCell>
                       {deviceUserCount(employee)}
                     </TableCell>
-                    <TableCell className="text-end font-bold text-destructive">
+                    <TableCell className={`text-end font-semibold tabular-nums ${lost > 0 ? "text-destructive" : "text-muted-foreground"}`}>
                       {duration(lost)}
                     </TableCell>
                   </TableRow>
@@ -498,18 +502,19 @@ export default function HrAttendancePage() {
         open={Boolean(selected)}
         onOpenChange={(open) => !open && setSelected(undefined)}
       >
-        <DialogContent className="max-h-[94vh] w-[min(96vw,1200px)] max-w-none gap-0 overflow-hidden border-0 p-0 shadow-2xl">
-          <div className="border-b bg-linear-to-br from-primary/12 via-primary/5 to-background px-7 py-6 pe-16">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-4 text-2xl">
-                <span className="grid size-12 place-items-center rounded-xl bg-primary text-primary-foreground shadow-md">
+        <DialogContent className="flex max-h-[94dvh] w-[min(96vw,1440px)] max-w-none flex-col gap-0 overflow-hidden rounded-2xl border p-0 shadow-2xl sm:max-w-none">
+          <div className="shrink-0 border-b bg-card px-4 py-4 sm:px-6 sm:py-5">
+            <div className="flex flex-wrap items-center justify-between gap-4 pe-8">
+            <DialogHeader className="min-w-0 flex-1 text-start">
+              <DialogTitle className="flex items-center gap-3 text-lg sm:text-xl">
+                <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
                   <CalendarDays className="size-6" />
                 </span>
                 <span>
                   <span className="block">
                     {selected && employeeLabel(selected)}
                   </span>
-                  <span className="mt-1.5 block text-sm font-medium text-muted-foreground">
+                  <span className="mt-1.5 block text-xs font-normal leading-5 text-muted-foreground">
                     {String(selected?.employeeCode ?? "")} ·{" "}
                     {new Intl.DateTimeFormat(undefined, {
                       month: "long",
@@ -526,34 +531,35 @@ export default function HrAttendancePage() {
             </DialogHeader>
             {canManage && (
               <Button permission="hr.attendance-permissions.create"
-                className="absolute end-16 top-6"
+                className="shrink-0 rounded-xl"
                 onClick={() => setPermissionOpen(true)}
               >
                 <ShieldCheck /> {tx("grantPermission", "Grant permission")}
               </Button>
             )}
-            <div className="mt-6 grid grid-cols-3 gap-4">
-              <div className="rounded-xl border bg-background/80 p-4 shadow-sm">
-                <p className="text-sm font-medium text-muted-foreground">
+            </div>
+            <div className="mt-4 grid grid-cols-3 divide-x divide-border rounded-xl border bg-muted/25 rtl:divide-x-reverse">
+              <div className="min-w-0 px-3 py-3 sm:px-5">
+                <p className="text-xs font-medium text-muted-foreground">
                   {tx("recordedDays", "Recorded days")}
                 </p>
-                <p className="mt-1.5 text-xl font-bold">
+                <p className="mt-1 text-base font-semibold tabular-nums sm:text-xl">
                   {selectedRecords.length}
                 </p>
               </div>
-              <div className="rounded-xl border bg-background/80 p-4 shadow-sm">
-                <p className="text-sm font-medium text-muted-foreground">
+              <div className="min-w-0 px-3 py-3 sm:px-5">
+                <p className="text-xs font-medium text-muted-foreground">
                   {tx("workedTime", "Worked time")}
                 </p>
-                <p className="mt-1.5 text-xl font-bold text-emerald-600">
+                <p className="mt-1 text-base font-semibold tabular-nums sm:text-xl text-emerald-600">
                   {duration(selectedWorked)}
                 </p>
               </div>
-              <div className="rounded-xl border bg-background/80 p-4 shadow-sm">
-                <p className="text-sm font-medium text-muted-foreground">
+              <div className="min-w-0 px-3 py-3 sm:px-5">
+                <p className="text-xs font-medium text-muted-foreground">
                   {tx("lostTime", "Lost time")}
                 </p>
-                <p className="mt-1.5 text-xl font-bold text-destructive">
+                <p className="mt-1 text-base font-semibold tabular-nums sm:text-xl text-primary">
                   {duration(selectedLost)}
                 </p>
               </div>
@@ -600,19 +606,30 @@ export default function HrAttendancePage() {
                 </div>
               )}
           </div>
-          <div className="content-scrollbar overflow-y-auto p-5 sm:p-6">
-            <div className="mb-2 grid grid-cols-7 gap-2 text-center text-sm font-bold uppercase tracking-wide text-muted-foreground">
+          <div className="content-scrollbar min-h-0 flex-1 overflow-auto bg-muted/20 p-3 sm:p-5">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <h3 className="flex items-center gap-2 text-base font-semibold tracking-tight">
+                <CalendarDays className="size-4 text-primary" />
+                {new Intl.DateTimeFormat(i18n.resolvedLanguage, { month: "long", year: "numeric" }).format(new Date(year, monthNumber - 1))}
+              </h3>
+              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-primary" />{tx("recordedDays", "Recorded days")}</span>
+                <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-destructive" />{tx("lostTime", "Lost time")}</span>
+              </div>
+            </div>
+            <div className="min-w-[840px] overflow-hidden rounded-xl border bg-border/70 shadow-xs">
+            <div className="grid grid-cols-7 gap-px border-b text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {Array.from({ length: 7 }, (_, i) => (
-                <div className="py-2" key={i}>
-                  {new Intl.DateTimeFormat(undefined, {
+                <div className="bg-muted px-3 py-3" key={i}>
+                  {new Intl.DateTimeFormat(i18n.resolvedLanguage, {
                     weekday: "short",
                   }).format(new Date(2024, 0, 7 + i))}
                 </div>
               ))}
             </div>
-            <div className="grid grid-cols-7 gap-2">
+            <div className="grid grid-cols-7 gap-px">
               {Array.from({ length: firstOffset }, (_, i) => (
-                <div key={`empty-${i}`} />
+                <div key={`empty-${i}`} className="bg-muted/70" aria-hidden="true" />
               ))}
               {days.map((day) => {
                 const schedule = selected
@@ -630,12 +647,31 @@ export default function HrAttendancePage() {
                     String(permission.toDate).slice(0, 10) >= dateKey,
                 );
                 const lost = row ? lostMinutes(row, permissions.data ?? []) : 0;
+                const isToday = day.toDateString() === new Date().toDateString();
                 return (
                   <div
                     key={dateKey}
-                    className={`min-h-26 rounded-xl border p-2.5 transition-colors ${row ? "border-primary/20 bg-card shadow-sm" : "border-transparent bg-muted/35"}`}
+                    aria-current={isToday ? "date" : undefined}
+                    className={`relative min-h-36 p-3 ${isToday ? "bg-primary/5 ring-2 ring-inset ring-primary" : row ? "bg-card" : "bg-background"}`}
                   >
-                    <p className="mb-1 text-[10px] text-muted-foreground">
+                    <div className="mb-2 flex flex-wrap items-center justify-between gap-1">
+                      <span
+                        className={`grid size-8 place-items-center rounded-full text-sm font-semibold tabular-nums ${isToday ? "bg-primary text-primary-foreground" : "text-foreground"}`}
+                      >
+                        {day.getDate()}
+                      </span>
+                      {row && (
+                        <Badge
+                          variant="secondary"
+                          className={`max-w-full whitespace-normal px-2 py-0.5 text-[10px] ${lost > 0 ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}
+                        >
+                          {t(`hr.${String(row.status)}`, {
+                            defaultValue: String(row.status),
+                          })}
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="mb-3 text-[11px] tabular-nums text-muted-foreground">
                       {schedule
                         ? selected?.scheduleType === "dynamic"
                           ? t("employeeSchedule.hours", {
@@ -646,25 +682,8 @@ export default function HrAttendancePage() {
                             defaultValue: "Day off",
                           })}
                     </p>
-                    <div className="mb-1.5 flex items-center justify-between gap-1">
-                      <span
-                        className={`grid size-7 place-items-center rounded-lg text-sm font-bold ${row ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}
-                      >
-                        {day.getDate()}
-                      </span>
-                      {row && (
-                        <Badge
-                          variant="secondary"
-                          className="px-2 py-0.5 text-[11px]"
-                        >
-                          {t(`hr.${String(row.status)}`, {
-                            defaultValue: String(row.status),
-                          })}
-                        </Badge>
-                      )}
-                    </div>
                     {row ? (
-                      <div className="space-y-1.5 text-xs">
+                      <div className="space-y-2 text-xs tabular-nums">
                         <div className="flex items-center justify-between gap-1 text-muted-foreground">
                           <LogIn className="size-3.5 text-emerald-600" />
                           <span>{time(row.checkIn)}</span>
@@ -693,9 +712,9 @@ export default function HrAttendancePage() {
                         </div>
                       </div>
                     ) : (
-                      <div className="grid h-12 place-items-center">
+                      <div className="flex min-h-10 items-end">
                         <span
-                          className={`rounded-full px-2.5 py-1 text-xs ${dayPermissions.length ? "bg-emerald-100 font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" : "bg-background/70 text-muted-foreground"}`}
+                          className={`rounded-full px-2.5 py-1 text-xs ${dayPermissions.length ? "bg-emerald-100 font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" : "bg-muted/70 text-muted-foreground/80"}`}
                         >
                           {dayPermissions.length
                             ? tx(
@@ -704,13 +723,19 @@ export default function HrAttendancePage() {
                                   dayPermissions[0].permissionType,
                                 ).replaceAll("_", " "),
                               )
-                            : tx("noRecord", "No record")}
+                            : !schedule
+                              ? t("employeeSchedule.dayOff", { defaultValue: "Day off" })
+                              : tx("noRecord", "No record")}
                         </span>
                       </div>
                     )}
                   </div>
                 );
               })}
+              {Array.from({ length: (7 - ((firstOffset + days.length) % 7)) % 7 }, (_, i) => (
+                <div key={`trailing-${i}`} className="bg-muted/70" aria-hidden="true" />
+              ))}
+            </div>
             </div>
           </div>
         </DialogContent>

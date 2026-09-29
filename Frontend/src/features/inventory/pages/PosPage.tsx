@@ -40,7 +40,6 @@ import {
   AlertDialogTitle,
 } from "@/shared/components/ui/alert-dialog";
 import { printPosInvoice } from "../components/print-pos-invoice";
-import logo from "@/assets/icons/logo.png";
 import { storedUser } from "@/features/auth/access";
 export default function PosPage({ mode }: { mode: "checkout" | "sales" }) {
   const { t } = useTranslation();
@@ -168,7 +167,7 @@ export default function PosPage({ mode }: { mode: "checkout" | "sales" }) {
                         size="icon"
                         variant="ghost"
                         title={t("pos.print")}
-                        onClick={() => printPosInvoice(s, t, logo)}
+                        onClick={() => printPosInvoice(s, t)}
                       >
                         <Printer />
                       </Button>

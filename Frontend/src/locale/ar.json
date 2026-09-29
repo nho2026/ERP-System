@@ -266,6 +266,10 @@
     "privacy": "سياسة الخصوصية"
   },
   "navigation": {
+    "taskReview": "المهام والمراجعة",
+    "taskDashboard": "لوحة المهام",
+    "accountantDashboard": "لوحة المحاسب",
+    "hrDashboard": "لوحة الموارد البشرية",
     "confirmLogout": "تسجيل الخروج؟",
     "confirmLogoutDescription": "هل تريد تسجيل الخروج؟ احفظ أي عمل غير مكتمل قبل المتابعة.",
     "dashboard": "لوحة التحكم",
@@ -1220,6 +1224,8 @@
     "searchOptions": "ابحث عن الخيارات…"
   },
   "usersAdmin": {
+    "storageHelp": "اختر المخزن المخصص لمستخدم القسم الطبي.",
+    "statusLabel": "الحالة",
     "assignedStorage": "المخزن المخصص",
     "title": "المستخدمون",
     "description": "إدارة حسابات الموظفين وصلاحيات النظام.",
@@ -1784,6 +1790,7 @@
     "deletedTask": "هذه المهمة لم تعد متاحة"
   },
   "tasks": {
+    "emptyStatus": "لا توجد مهام",
     "title": "إدارة المهام",
     "list": "المهام",
     "subtitle": "تعيين ومتابعة العمل بين فرق المستشفى.",
@@ -1855,11 +1862,13 @@
       "urgent": "عاجلة"
     },
     "statuses": {
+      "incomplete": "غير مكتملة",
       "todo": "للعمل",
       "in_progress": "قيد التنفيذ",
       "review": "مراجعة",
       "completed": "مكتملة",
-      "cancelled": "ملغاة"
+      "cancelled": "ملغاة",
+      "rejected": "مرفوضة"
     },
     "logTime": "تسجيل الوقت",
     "timeSaved": "تم تسجيل وقت العمل.",

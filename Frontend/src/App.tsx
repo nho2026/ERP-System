@@ -1,3 +1,6 @@
+import TaskReviewPage from "@/features/tasks/pages/TaskReviewPage";
+import AccountantDashboardPage from "@/features/accounting/pages/AccountantDashboardPage";
+import HrDashboardPage from "@/features/hr/pages/HrDashboardPage";
 import LaboratoryTicketsPage from "@/features/laboratory/pages/LaboratoryTicketsPage";
 import LaboratoryDashboardPage from "@/features/laboratory/pages/LaboratoryDashboardPage";
 import LaboratoryPage from "@/features/laboratory/pages/LaboratoryPage";
@@ -111,6 +114,14 @@ export default function App() {
             element={secured(<EmployeePortalPage />)}
           />
           <Route
+            path="/tasks/review"
+            element={secured(<TaskReviewPage />)}
+          />
+          <Route
+            path="/tasks/dashboard"
+            element={secured(<TasksPage />)}
+          />
+          <Route
             path="/tasks"
             element={secured(<TasksPage />)}
           />
@@ -139,6 +150,10 @@ export default function App() {
           <Route
             path="/system-logs"
             element={secured(<SystemLogsPage />)}
+          />
+          <Route
+            path="/hr"
+            element={secured(<HrDashboardPage />)}
           />
           <Route
             path="/employees"
@@ -242,6 +257,7 @@ export default function App() {
             path="/crm/surgeries"
             element={secured(<CrmPage resource="surgeries" />)}
           />
+          <Route path="/accounting" element={secured(<AccountantDashboardPage />)} />
           <Route path="/accounting/overview" element={secured(<FinanceOverview />)} />
           <Route path="/accounting/income-expenses" element={secured(<IncomeExpensesPage />)} />
           <Route

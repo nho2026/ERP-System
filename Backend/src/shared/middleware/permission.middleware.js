@@ -8,7 +8,7 @@ export function requireRequestPermission(req, res, next) {
   const body = req.body ?? {};
   if (!req.permissionKeys?.has("*")) {
     const extra = [];
-    if (/^\/tasks\/[^/]+$/.test(path) && body.status === "completed") extra.push("tasks.list.approve");
+    if (/^\/tasks\/[^/]+$/.test(path) && ["completed", "rejected"].includes(body.status)) extra.push("tasks.list.approve");
     if (/^\/tasks\/[^/]+$/.test(path) && body.adjustment) extra.push("hr.payroll-adjustments.view", "hr.payroll-adjustments.create");
     if (/^\/targets\/[^/]+$/.test(path) && body.rewardAmount != null) extra.push("targets.reward");
     if (/^\/roles(?:\/|$)/.test(path) && Object.hasOwn(body, "permissionIds") && (req.method !== "POST" || body.permissionIds?.length)) extra.push("roles.assign_permissions");

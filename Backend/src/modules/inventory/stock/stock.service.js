@@ -2,7 +2,7 @@ import { setStockQuantity } from "./set-quantity.js";
 import { stockModel } from "./stock.model.js";
 import { stockAdjustmentSchema } from "./stock.schema.js";
 export const stockService = {
-  summary: async () => (await stockModel.summary()).map((row) => ({
+  summary: async ({ warehouseScope } = {}) => (await stockModel.summary()).filter(row => !warehouseScope || row.warehouseId === warehouseScope).map((row) => ({
     warehouseId: row.warehouseId,
     total: Number(row.total),
     units: Number(row.units),

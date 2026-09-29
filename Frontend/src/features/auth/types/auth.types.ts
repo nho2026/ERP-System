@@ -22,7 +22,7 @@ export type AuthUser = {
   department?: string | null;
   status?: string;
   role: string;
-  roles?: { id: string; name: string }[];
+  roles?: { id: string; name: string; code?: string | null }[];
   permissions?: string[];
   createdAt?: string;
   employee?: {

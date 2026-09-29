@@ -2,7 +2,7 @@ import { z } from "zod";
 import { prisma } from "../../../shared/database/client.js";
 import { pageInput } from "../shared/pagination.schema.js";
 
-export async function listExpiry({ query = {} }) {
+export async function listExpiry({ query = {}, warehouseScope }) {
   const { page, pageSize } = pageInput(query);
   const status = z.enum(["all", "expired", "soon", "valid", "unknown"]).default("soon").parse(query.status);
   const maximum = query.maximum === undefined || query.maximum === "" ? null : z.coerce.number().int().min(0).max(365000).parse(query.maximum);
@@ -37,7 +37,7 @@ export async function listExpiry({ query = {} }) {
       skip: (currentPage - 1) * pageSize,
       take: pageSize,
     });
-    const warehouses = await tx.inventoryWarehouse.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } });
+    const warehouses = await tx.inventoryWarehouse.findMany({ ...(warehouseScope && { where: { id: warehouseScope } }), select: { id: true, name: true }, orderBy: { name: "asc" } });
     const categories = await tx.productCategory.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } });
     return { items, pagination: { page: currentPage, pageSize, total, totalPages }, warehouses, categories, today };
   });

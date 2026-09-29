@@ -148,6 +148,8 @@ const primaryNavigation = [
   },
 ];
 const taskNavigation = [
+  { to: "/tasks/dashboard", label: "navigation.taskDashboard", icon: LayoutDashboard },
+  { to: "/tasks/review", label: "navigation.taskReview", icon: ListTodo },
   {
     to: "/tasks",
     label: "tasks.list",
@@ -177,6 +179,7 @@ const attendanceNavigation = [
   },
 ];
 const hrNavigation = [
+  { to: "/hr", label: "navigation.hrDashboard", icon: LayoutDashboard },
   {
     to: "/employees",
     label: "navigation.employees",
@@ -350,6 +353,7 @@ const crmNavigation = [
   },
 ];
 const accountingNavigation = [
+  { to: "/accounting", label: "navigation.accountantDashboard", icon: LayoutDashboard },
   {
     to: "/accounting/overview",
     label: "financeOverview.title",
@@ -1991,7 +1995,7 @@ export default function DashboardLayout() {
         )}
         <div className="flex min-h-0 flex-1 flex-col md:flex-row">
           <main className="content-scrollbar min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain scroll-smooth">
-            <div className="min-h-full p-3 md:p-5 xl:p-6">
+            <div className={location.pathname.replace(/\/$/, "") === "/tasks" && (new URLSearchParams(location.search).has("department") || new URLSearchParams(location.search).has("project") || new URLSearchParams(location.search).get("view") === "review") && !(panelMode && showPanel) ? "flex h-full min-h-0 flex-col overflow-hidden p-3 md:p-5 xl:p-6 [&>button]:shrink-0" : "min-h-full p-3 md:p-5 xl:p-6"}>
               {panelMode && showPanel ? (
                 <div
                   className="mx-auto max-w-7xl space-y-6 py-3 md:py-6"
@@ -2108,6 +2112,7 @@ export default function DashboardLayout() {
                 </div>
               ) : (
                 <>
+                  {panelMode && !["/tasks", "/tasks/dashboard"].includes(location.pathname.replace(/\/$/, "")) && (
                   <Button
                     variant="outline"
                     size="sm"
@@ -2146,6 +2151,7 @@ export default function DashboardLayout() {
                     <ArrowLeft className="size-4 rtl:rotate-180" />
                     {t("controlPanel.goBack")}
                   </Button>
+                  )}
                   <Outlet key={location.pathname + location.search} />
                 </>
               )}

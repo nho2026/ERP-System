@@ -1,7 +1,6 @@
 import { useCallback } from "react";
 import {
   Activity,
-  ArrowDownRight,
   ArrowUpRight,
   Baby,
   Banknote,
@@ -42,22 +41,22 @@ const divisions = [
     value: 1240,
     percent: 86,
     icon: Stethoscope,
-    color: "#7c3aed",
+    color: "#00664f",
   },
-  { name: "Pediatrics", value: 987, percent: 69, icon: Baby, color: "#0ea5e9" },
+  { name: "Pediatrics", value: 987, percent: 69, icon: Baby, color: "#36ad89" },
   {
     name: "Cardiology",
     value: 642,
     percent: 45,
     icon: HeartPulse,
-    color: "#f43f5e",
+    color: "#71bd9f",
   },
   {
     name: "General care",
     value: 524,
     percent: 37,
     icon: Activity,
-    color: "#14b8a6",
+    color: "#008260",
   },
 ];
 const appointments = [
@@ -72,9 +71,9 @@ function Legend() {
   return (
     <div className="flex justify-center gap-4 text-[11px] text-muted-foreground">
       {[
-        ["Dental", "#7c3aed"],
-        ["Pediatrics", "#38bdf8"],
-        ["Cardiology", "#fb7185"],
+        ["Dental", "#00664f"],
+        ["Pediatrics", "#36ad89"],
+        ["Cardiology", "#a4d7c3"],
       ].map(([label, color]) => (
         <span key={label} className="flex items-center gap-1.5">
           <i className="size-2 rounded-full" style={{ background: color }} />
@@ -109,14 +108,14 @@ function VisitChart() {
               <div className="flex h-[88%] items-end gap-1.5">
                 {(
                   [
-                    ["dental", "#7c3aed"],
-                    ["children", "#38bdf8"],
-                    ["heart", "#fb7185"],
+                    ["dental", "#00664f"],
+                    ["children", "#36ad89"],
+                    ["heart", "#a4d7c3"],
                   ] as const
                 ).map(([key, color]) => (
                   <span
                     key={key}
-                    className="w-3.5 rounded-t-md transition-opacity hover:opacity-70"
+                    className="w-3.5 rounded-full transition-opacity hover:opacity-70"
                     title={`${key}: ${item[key]}`}
                     style={{ height: `${item[key] / 2}%`, background: color }}
                   />
@@ -149,8 +148,8 @@ function RevenueChart() {
     >
       <defs>
         <linearGradient id="rev" x1="0" y1="0" x2="0" y2="1">
-          <stop stopColor="#14b8a6" stopOpacity=".35" />
-          <stop offset="100%" stopColor="#14b8a6" stopOpacity="0" />
+          <stop stopColor="#008260" stopOpacity=".35" />
+          <stop offset="100%" stopColor="#008260" stopOpacity="0" />
         </linearGradient>
       </defs>
       {[36, 82, 128, 176].map((y, i) => (
@@ -173,7 +172,7 @@ function RevenueChart() {
       <polyline
         points={points}
         fill="none"
-        stroke="#14b8a6"
+        stroke="#008260"
         strokeWidth="3"
         strokeLinejoin="round"
         strokeLinecap="round"
@@ -185,7 +184,7 @@ function RevenueChart() {
           cy={176 - v * 2.05}
           r="3.5"
           fill="white"
-          stroke="#14b8a6"
+          stroke="#008260"
           strokeWidth="2"
         />
       ))}
@@ -216,7 +215,7 @@ function AdmissionChart() {
           className="flex h-full flex-1 flex-col items-center justify-end gap-1.5"
         >
           <span
-            className="w-full rounded-t bg-primary/15 transition-colors hover:bg-primary"
+            className="w-full rounded-full bg-primary/25 transition-colors hover:bg-primary"
             style={{ height: `${(v / max) * 100}%` }}
             title={`${v} admissions`}
           />
@@ -282,7 +281,7 @@ export default function DashboardPage() {
     },
   ];
   return (
-    <div className="mx-auto max-w-[1600px] space-y-5">
+    <div className="mx-auto max-w-[1500px] space-y-5 rounded-2xl bg-muted/30 p-4 md:p-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="mb-1 text-xs font-semibold uppercase tracking-[.16em] text-primary">
@@ -295,48 +294,47 @@ export default function DashboardPage() {
             {t("dashboardLocal.description")}
           </p>
         </div>
-        <div className="flex items-center gap-2 rounded-xl border bg-card px-3 py-2 text-xs shadow-sm">
+        <div className="flex items-center gap-2 rounded-full border border-primary/15 bg-card px-4 py-2 text-xs">
           <CalendarDays className="size-4 text-primary" />
           <span className="font-medium">Jan 1 — Jun 30, 2026</span>
         </div>
       </div>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        {stats.map(({ label, value, change, up, icon: Icon, color }, i) => (
+        {stats.map(({ label, value, change, icon: Icon }, i) => (
           <Card
             key={label}
-            className="group overflow-hidden border-border/60 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+            className={`overflow-hidden rounded-2xl border-0 shadow-none ${i === 0 ? "bg-gradient-to-br from-[#003c30] to-[#008260] text-white" : "bg-card"}`}
           >
             <CardContent className="p-5">
-              <div className="mb-5 flex items-start justify-between">
-                <span
-                  className={`grid size-11 place-items-center rounded-xl ${color}`}
-                >
-                  <Icon className="size-5" />
-                </span>
-                <span
-                  className={`flex items-center rounded-full px-2 py-1 text-[10px] font-bold ${up ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950" : "bg-rose-50 text-rose-600 dark:bg-rose-950"}`}
-                >
-                  {up ? (
-                    <ArrowUpRight className="size-3" />
-                  ) : (
-                    <ArrowDownRight className="size-3" />
-                  )}
-                  {change}
-                </span>
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-sm font-medium">{label}</p>
+                <ArrowUpRight
+                  aria-hidden="true"
+                  className={`size-7 shrink-0 rounded-full border p-1 ${i === 0 ? "border-white/30" : "border-border"}`}
+                />
               </div>
-              {(i === 3 && employees.isLoading) ||
-              (i === 4 && salaries.isLoading) ? (
-                <Skeleton className="h-8 w-20" />
-              ) : (
-                <strong className="text-2xl">{value}</strong>
-              )}
-              <p className="mt-1 text-xs text-muted-foreground">{label}</p>
+              <div className="my-5">
+                {(i === 3 && employees.isLoading) ||
+                (i === 4 && salaries.isLoading) ? (
+                  <Skeleton className="h-10 w-24" />
+                ) : (
+                  <strong className="text-4xl font-medium tracking-tight">
+                    {value}
+                  </strong>
+                )}
+              </div>
+              <p
+                className={`flex items-center gap-2 text-xs ${i === 0 ? "text-emerald-100" : "text-muted-foreground"}`}
+              >
+                <Icon className="size-3.5" />
+                {change}
+              </p>
             </CardContent>
           </Card>
         ))}
       </div>
       <div className="grid gap-4 xl:grid-cols-12">
-        <Card className="border-border/60 shadow-sm xl:col-span-7">
+        <Card className="rounded-2xl border-0 shadow-none xl:col-span-7">
           <CardHeader className="flex-row items-center justify-between">
             <div>
               <CardTitle className="text-base">
@@ -352,7 +350,7 @@ export default function DashboardPage() {
             <VisitChart />
           </CardContent>
         </Card>
-        <Card className="border-border/60 shadow-sm xl:col-span-5">
+        <Card className="rounded-2xl border-0 shadow-none xl:col-span-5">
           <CardHeader className="flex-row items-center justify-between">
             <div>
               <CardTitle className="text-base">
@@ -371,8 +369,8 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <Card className="border-border/60 shadow-sm xl:col-span-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-12">
+        <Card className="rounded-2xl border-0 shadow-none xl:col-span-5">
           <CardHeader>
             <CardTitle className="text-base">
               {t("dashboardLocal.departmentDistribution")}
@@ -409,7 +407,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/60 shadow-sm xl:col-span-5">
+        <Card className="rounded-2xl border-0 shadow-none xl:col-span-7">
           <CardHeader className="flex-row items-start justify-between">
             <div>
               <CardTitle className="text-base">
@@ -446,7 +444,7 @@ export default function DashboardPage() {
         </Card>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
-        <Card className="border-border/60 shadow-sm">
+        <Card className="rounded-2xl border-0 shadow-none">
           <CardHeader className="flex-row items-start justify-between">
             <div>
               <CardTitle className="text-base">
@@ -462,7 +460,7 @@ export default function DashboardPage() {
             <AdmissionChart />
           </CardContent>
         </Card>
-        <Card className="border-border/60 bg-gradient-to-br from-primary to-teal-600 text-white shadow-sm">
+        <Card className="rounded-2xl border-0 bg-gradient-to-br from-[#003c30] to-[#008260] text-white shadow-none">
           <CardContent className="flex h-full min-h-44 flex-col justify-between p-6">
             <div className="flex items-center justify-between">
               <span className="rounded-xl bg-white/15 p-2.5">

@@ -108,6 +108,7 @@ model AttendanceEvent {
 }
 
 model Role {
+  code        String?          @unique(map: "Role_code_key")
   id          String           @id @default(cuid())
   name        String           @unique(map: "Role_name_key")
   description String?

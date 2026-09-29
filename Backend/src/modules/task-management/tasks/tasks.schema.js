@@ -1,6 +1,6 @@
 import { z } from "zod";
 const optionalDate = z.preprocess(
-  (v) => (v === "" || v == null ? null : v),
+  (v) => (v === "" || v === null ? null : v),
   z.coerce.date().nullable().optional(),
 );
 export const taskSchema = z
@@ -10,7 +10,7 @@ export const taskSchema = z
     description: z.string().trim().min(2).max(10000),
     priority: z.enum(["low", "medium", "high", "urgent"]).default("medium"),
     status: z
-      .enum(["todo", "in_progress", "review", "completed", "cancelled"])
+      .enum(["todo", "in_progress", "incomplete", "review", "completed", "rejected"])
       .default("todo"),
     startDate: optionalDate,
     dueDate: optionalDate,
@@ -29,14 +29,15 @@ export const taskSchema = z
       .default([]),
   })
   .refine((v) => !v.startDate || !v.dueDate || v.dueDate >= v.startDate, {
-    message: "Due date must be after the start date.",
+    message: "Due date must be on or after the start date.",
+    path: ["dueDate"],
   });
 export const updateTaskSchema = z.object({
   title: z.string().trim().min(2).max(200).optional(),
   description: z.string().trim().min(2).max(10000).optional(),
   priority: z.enum(["low", "medium", "high", "urgent"]).optional(),
   status: z
-    .enum(["todo", "in_progress", "review", "completed", "cancelled"])
+    .enum(["todo", "in_progress", "incomplete", "review", "completed", "rejected"])
     .optional(),
   startDate: optionalDate,
   dueDate: optionalDate,

@@ -10,6 +10,7 @@ export async function listStorage({ query = {} }) {
   const warehouseId = query.warehouseId ? String(query.warehouseId) : null;
   const where = {
     status: "active",
+    ...(warehouseId && { stocks: { some: { warehouseId } } }),
     ...(categoryId && { categoryId }),
     ...(search && {
       OR: ["name", "sku", "barcode"].map((field) => ({

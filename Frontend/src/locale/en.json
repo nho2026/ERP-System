@@ -266,6 +266,10 @@
     "privacy": "Privacy policy"
   },
   "navigation": {
+    "taskReview": "Tasks & Review",
+    "taskDashboard": "Task Dashboard",
+    "accountantDashboard": "Accountant Dashboard",
+    "hrDashboard": "HR Dashboard",
     "confirmLogout": "Log out?",
     "confirmLogoutDescription": "Are you sure you want to log out? Save any unfinished work before continuing.",
     "dashboard": "Dashboard",
@@ -1220,6 +1224,8 @@
     "searchOptions": "Search options…"
   },
   "usersAdmin": {
+    "storageHelp": "Choose the storage assigned to this hospital department user.",
+    "statusLabel": "Status",
     "assignedStorage": "Assigned storage",
     "title": "Users",
     "description": "Manage staff accounts and system access.",
@@ -1784,6 +1790,7 @@
     "deletedTask": "This task is no longer available"
   },
   "tasks": {
+    "emptyStatus": "No tasks",
     "title": "Task management",
     "list": "Tasks",
     "subtitle": "Assign and track work across hospital teams.",
@@ -1855,11 +1862,13 @@
       "urgent": "Urgent"
     },
     "statuses": {
+      "incomplete": "Incomplete",
       "todo": "To do",
       "in_progress": "In progress",
-      "review": "Review",
-      "completed": "Completed",
-      "cancelled": "Cancelled"
+      "review": "In review",
+      "completed": "Complete",
+      "cancelled": "Cancelled",
+      "rejected": "Rejected"
     },
     "logTime": "Log time",
     "timeSaved": "Work time recorded.",

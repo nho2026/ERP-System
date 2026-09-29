@@ -4,7 +4,7 @@ const include = { warehouse: { select: { id: true, name: true } }, roles: { incl
 export const userModel = {
   storageOptions: () => prisma.inventoryWarehouse.findMany({ where: { status: "active" }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
   findWarehouse: id => prisma.inventoryWarehouse.findUnique({ where: { id }, select: { id: true, status: true } }),
-  hasWarehouseStaffRole: roleIds => prisma.role.count({ where: { id: { in: roleIds }, name: "Warehouse Staff" } }).then(count => count > 0),
+  isHospitalDepartment: name => name ? prisma.department.count({ where: { name, type: "hospital", status: "active" } }).then(count => count > 0) : Promise.resolve(false),
   hasSuperadminRole: (roleIds) => prisma.role.count({ where: { id: { in: roleIds }, name: "Super Administrator" } }).then(count => count > 0),
   findById: id => prisma.user.findUniqueOrThrow({ where: { id }, include }),
   findAll: (query = {}) =>
