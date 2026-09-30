@@ -7,7 +7,6 @@ export type TargetEmployee = {
   employeeCode: string;
   department?: { id?: string; name: string; managerId?: string | null } | null;
   position?: { name: string } | null;
-  department?: { name: string } | null;
 };
 export type EmployeeTarget = {
   id: string;
