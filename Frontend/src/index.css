@@ -26,11 +26,11 @@
   --color-teal-200: #CCE5D4;
   --color-teal-300: #A8E4BC;
   --color-teal-400: #74D394;
-  --color-teal-500: #1C9B49;
-  --color-teal-600: #17823D;
-  --color-teal-700: #126A31;
-  --color-teal-800: #10552A;
-  --color-teal-900: #0B3619;
+  --color-teal-500: #00664F;
+  --color-teal-600: #007A59;
+  --color-teal-700: #00664F;
+  --color-teal-800: #00513E;
+  --color-teal-900: #003C30;
   --color-teal-950: #071B0E;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -65,18 +65,18 @@
   --card-foreground: #173322;
   --popover: #ffffff;
   --popover-foreground: #173322;
-  --primary: #1C9B49;
+  --primary: #00664F;
   --primary-foreground: #ffffff;
   --secondary: #E8F5ED;
-  --secondary-foreground: #17823D;
+  --secondary-foreground: #007A59;
   --muted: #EDF7F0;
   --muted-foreground: #607567;
   --accent: #D3EFDC;
-  --accent-foreground: #17823D;
+  --accent-foreground: #007A59;
   --destructive: #dc2626;
   --border: #CCE5D4;
   --input: #B8DAC4;
-  --ring: #1C9B49;
+  --ring: #00664F;
   --radius: 0.625rem;
   font-family: "Kurdish", system-ui, sans-serif;
   color-scheme: light;
@@ -89,7 +89,7 @@
   --card-foreground: #ffffff;
   --popover: #16251B;
   --popover-foreground: #ffffff;
-  --primary: #1C9B49;
+  --primary: #00664F;
   --primary-foreground: #ffffff;
   --secondary: #1B3022;
   --secondary-foreground: #ffffff;
@@ -100,7 +100,7 @@
   --destructive: #fb7185;
   --border: #2B4433;
   --input: #36533F;
-  --ring: #1C9B49;
+  --ring: #00664F;
   color-scheme: dark;
 }
 
@@ -112,7 +112,7 @@
     --card-foreground: #ffffff;
     --popover: #16251B;
     --popover-foreground: #ffffff;
-    --primary: #1C9B49;
+    --primary: #00664F;
     --primary-foreground: #ffffff;
     --secondary: #1B3022;
     --secondary-foreground: #ffffff;
@@ -123,7 +123,7 @@
     --destructive: #fb7185;
     --border: #2B4433;
     --input: #36533F;
-    --ring: #1C9B49;
+    --ring: #00664F;
     color-scheme: dark;
   }
 }
@@ -325,12 +325,12 @@ html[lang="ku"] [data-sonner-toaster] {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    border-bottom: 2px solid #1C9B49;
+    border-bottom: 2px solid #00664F;
     padding-bottom: 14px;
     margin-bottom: 20px;
   }
   .salary-list-print h1 {
-    color: #1C9B49;
+    color: #00664F;
     font-size: 28px;
     font-weight: 800;
   }
@@ -358,7 +358,7 @@ html[lang="ku"] [data-sonner-toaster] {
     width: 45%;
     margin-inline-start: auto;
     margin-top: 18px;
-    border-top: 2px solid #1C9B49;
+    border-top: 2px solid #00664F;
     padding-top: 8px;
   }
   .salary-print-totals p {

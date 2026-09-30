@@ -68,12 +68,27 @@ export default function UsersPage() {
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const [warehouseId, setWarehouseId] = useState("");
-  const selectedRole = roles.data?.find(role => role.id === roleId) ?? editing?.roles?.find(role => role.id === roleId);
-  const isWarehouseStaff = selectedRole?.name === "Warehouse Staff";
-  const storages = useApiResource(useCallback(() => editing !== undefined && isWarehouseStaff ? usersApi.storageOptions() : Promise.resolve([]), [editing, isWarehouseStaff]));
+  const isHospitalDepartment =
+    departments.data?.some(
+      (item) =>
+        item.name === department &&
+        item.type === "hospital" &&
+        item.status === "active",
+    ) ?? false;
+  const storages = useApiResource(
+    useCallback(
+      () =>
+        editing !== undefined && isHospitalDepartment
+          ? usersApi.storageOptions()
+          : Promise.resolve([]),
+      [editing, isHospitalDepartment],
+    ),
+  );
   const [showPassword, setShowPassword] = useState(false);
   const filtered = users.data ?? [];
   const openEditor = (user: User | null) => {
+    if (canViewRoles) void roles.refresh();
+    if (canEditUsers) void departments.refresh();
     setShowPassword(false);
     setEditing(user);
     setRoleId(user?.roles?.[0]?.id ?? "");
@@ -91,7 +106,9 @@ export default function UsersPage() {
       email: String(f.get("email")),
       name: String(f.get("name")),
       department,
-      ...((isWarehouseStaff || editing?.warehouseId) && { warehouseId: isWarehouseStaff ? warehouseId || null : null }),
+      ...((isHospitalDepartment || editing?.warehouseId) && {
+        warehouseId: isHospitalDepartment ? warehouseId || null : null,
+      }),
       status: String(f.get("status")),
       ...(canAssignRoles && { roleIds: roleId ? [roleId] : [] }),
       ...(!editing && { password: String(f.get("password")) }),
@@ -231,7 +248,7 @@ export default function UsersPage() {
           }
         }}
       >
-        <DialogContent>
+        <DialogContent className="max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {t(editing ? "usersAdmin.edit" : "usersAdmin.add")}
@@ -242,43 +259,106 @@ export default function UsersPage() {
             className="space-y-3"
             onSubmit={submit}
           >
-            <Input
-              name="name"
-              defaultValue={editing?.name}
-              placeholder={t("usersAdmin.fullName")}
-              required
-            />
-            <Input
-              name="username"
-              defaultValue={editing?.username}
-              placeholder={t("usersAdmin.username")}
-              required
-            />
-            <Input
-              name="email"
-              type="email"
-              defaultValue={editing?.email}
-              placeholder={t("usersAdmin.email")}
-              required
-            />
-            <Select
-              value={department || "none"}
-              onValueChange={(value) =>
-                setDepartment(value === "none" ? "" : value)
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={t("usersAdmin.department")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">—</SelectItem>
-                {departments.data?.map((item) => (
-                  <SelectItem key={item.id} value={String(item.name)}>
-                    {String(item.name)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="space-y-2">
+              <Label htmlFor="user-name">{t("usersAdmin.fullName")}</Label>
+              <Input
+                id="user-name"
+                name="name"
+                defaultValue={editing?.name}
+                placeholder={t("usersAdmin.fullName")}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="user-username">{t("usersAdmin.username")}</Label>
+              <Input
+                id="user-username"
+                name="username"
+                defaultValue={editing?.username}
+                placeholder={t("usersAdmin.username")}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="user-email">{t("usersAdmin.email")}</Label>
+              <Input
+                id="user-email"
+                name="email"
+                type="email"
+                defaultValue={editing?.email}
+                placeholder={t("usersAdmin.email")}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="user-department">
+                {t("usersAdmin.department")}
+              </Label>
+              <Select
+                value={department || "none"}
+                onValueChange={(value) =>
+                  setDepartment(value === "none" ? "" : value)
+                }
+              >
+                <SelectTrigger id="user-department">
+                  <SelectValue placeholder={t("usersAdmin.department")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">—</SelectItem>
+                  {departments.data?.map((item) => (
+                    <SelectItem key={item.id} value={String(item.name)}>
+                      {String(item.name)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {isHospitalDepartment && (
+              <div className="space-y-2">
+                <Label htmlFor="user-storage">
+                  {t("usersAdmin.assignedStorage")}
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  {t("usersAdmin.storageHelp")}
+                </p>
+                <Select
+                  value={warehouseId || "none"}
+                  onValueChange={(value) =>
+                    setWarehouseId(value === "none" ? "" : value)
+                  }
+                  disabled={busy || storages.isLoading || !!storages.error}
+                >
+                  <SelectTrigger id="user-storage">
+                    <SelectValue
+                      placeholder={t("usersAdmin.assignedStorage")}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">
+                      {t("healthcareAdmin.none")}
+                    </SelectItem>
+                    {editing?.warehouse &&
+                      !storages.data?.some(
+                        (item) => item.id === editing.warehouseId,
+                      ) && (
+                        <SelectItem value={editing.warehouse.id}>
+                          {editing.warehouse.name}
+                        </SelectItem>
+                      )}
+                    {storages.data?.map((item) => (
+                      <SelectItem key={item.id} value={item.id}>
+                        {item.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {storages.error && (
+                  <p role="alert" className="text-sm text-destructive">
+                    {storages.error}
+                  </p>
+                )}
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="user-password">
                 {t(
@@ -330,49 +410,42 @@ export default function UsersPage() {
                 </p>
               )}
             </div>
-            <Select
-              permission="users.assign_roles"
-              value={roleId}
-              onValueChange={setRoleId}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={t("usersAdmin.chooseRole")} />
-              </SelectTrigger>
-              <SelectContent>
-                {roles.data?.map((r) => (
-                  <SelectItem key={r.id} value={r.id}>
-                    {r.name}
+            <div className="space-y-2">
+              <Label htmlFor="user-role">{t("rolesTable.name")}</Label>
+              <Select
+                permission="users.assign_roles"
+                value={roleId}
+                onValueChange={setRoleId}
+              >
+                <SelectTrigger id="user-role">
+                  <SelectValue placeholder={t("usersAdmin.chooseRole")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {roles.data?.map((r) => (
+                    <SelectItem key={r.id} value={r.id}>
+                      {r.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="user-status">{t("usersAdmin.statusLabel")}</Label>
+              <Select name="status" defaultValue={editing?.status ?? "active"}>
+                <SelectTrigger id="user-status">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">
+                    {t("dashboard.status.active")}
                   </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {isWarehouseStaff && (
-              <div className="space-y-2">
-                <Label htmlFor="user-storage">{t("usersAdmin.assignedStorage")}</Label>
-                <Select value={warehouseId || "none"} onValueChange={value => setWarehouseId(value === "none" ? "" : value)} disabled={busy || storages.isLoading || !!storages.error}>
-                  <SelectTrigger id="user-storage"><SelectValue placeholder={t("usersAdmin.assignedStorage")} /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">{t("healthcareAdmin.none")}</SelectItem>
-                    {editing?.warehouse && !storages.data?.some(item => item.id === editing.warehouseId) && <SelectItem value={editing.warehouse.id}>{editing.warehouse.name}</SelectItem>}
-                    {storages.data?.map(item => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-                {storages.error && <p role="alert" className="text-sm text-destructive">{storages.error}</p>}
-              </div>
-            )}
-            <Select name="status" defaultValue={editing?.status ?? "active"}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="active">
-                  {t("dashboard.status.active")}
-                </SelectItem>
-                <SelectItem value="inactive">
-                  {t("dashboard.status.inactive")}
-                </SelectItem>
-              </SelectContent>
-            </Select>
+                  <SelectItem value="inactive">
+                    {t("dashboard.status.inactive")}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <Button
               permission={editing ? "update" : "create"}

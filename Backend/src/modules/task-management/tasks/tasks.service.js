@@ -95,6 +95,7 @@ export const taskService = {
         AND: [access],
         ...(q.status && { status: String(q.status) }),
         ...(q.projectId && { projectId: String(q.projectId) }),
+        ...(q.departmentId && { project: { departmentId: String(q.departmentId) } }),
         ...(q.priority && { priority: String(q.priority) }),
         ...(q.assigneeId && {
           assignees: { some: { employeeId: String(q.assigneeId) } },
@@ -125,6 +126,7 @@ export const taskService = {
   },
   async create(user, permissions, input) {
     ensureLeader(user, permissions);
+    if (["completed", "rejected"].includes(input.status)) fail(403, "Create a task before submitting it for review.");
     const { data, assigneeIds, attachments } = split(input);
     if (data.projectId) {
       const project = await taskModel.findProject(data.projectId);
@@ -148,11 +150,17 @@ export const taskService = {
       ensureLeader(user, permissions);
       await validateAssignees(assigneeIds, user, permissions);
     }
+    if (["completed", "rejected"].includes(data.status) &&
+        !(hr && (permissions?.has("*") || permissions?.has("tasks.list.approve"))))
+      fail(403, "Only authorized reviewers can approve or reject tasks.");
     if (!hr) {
+      if (!current.assignees.some(({ employeeId }) => employeeId === user.employee?.id))
+        fail(403, "You can update only your assigned tasks.");
+      if (current.status === "completed") fail(403, "Approved tasks cannot be changed by employees.");
       const allowed = new Set(["status", "reviewNote"]);
       if (Object.keys(data).some((key) => !allowed.has(key)) || assigneeIds)
         fail(403, "Employees may update only task progress.");
-      if (data.status && !["todo", "in_progress", "review"].includes(data.status))
+      if (data.status && !["todo", "in_progress", "incomplete", "review"].includes(data.status))
         fail(403, "Submit completed work for HR review.");
     }
     if (data.status === "completed") {
@@ -164,6 +172,13 @@ export const taskService = {
       data.reviewedBy = { connect: { id: user.id } };
       if (adjustment && !current.assignees.some(({ employeeId }) => employeeId === adjustment.employeeId))
         fail(422, "The reward or punishment employee must be assigned to this task.");
+    } else if (data.status === "rejected") {
+      if (!hr) fail(403, "Only HR can reject a task.");
+      if (current.status !== "review")
+        fail(409, "The task must be submitted for review before rejection.");
+      data.completedAt = null;
+      data.reviewedAt = new Date();
+      data.reviewedBy = { connect: { id: user.id } };
     } else if (data.status) {
       data.completedAt = null;
       if (data.status !== "review") {
@@ -237,7 +252,7 @@ export const taskService = {
       (task) =>
         task.dueDate &&
         task.dueDate < new Date() &&
-        !["completed", "cancelled"].includes(task.status),
+        !["completed", "rejected", "cancelled"].includes(task.status),
     );
     const minutes = entries.reduce((sum, entry) => sum + entry.minutes, 0);
     const estimatedMinutes = tasks.reduce(

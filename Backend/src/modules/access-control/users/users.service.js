@@ -3,9 +3,9 @@ import { hashSecret, verifySecret } from "../../../shared/security/password.js";
 import { createPinLookup } from "../../../shared/security/token.js";
 import { presentUser } from "../../auth/auth.presenter.js";
 import { userModel } from "./users.model.js";
-async function storageAssignment(roleIds, warehouseId) {
-  if (!await userModel.hasWarehouseStaffRole(roleIds)) {
-    if (warehouseId) throw Object.assign(new Error("Storage can only be assigned to Warehouse Staff."), { status: 400 });
+async function storageAssignment(department, warehouseId) {
+  if (!await userModel.isHospitalDepartment(department)) {
+    if (warehouseId) throw Object.assign(new Error("Storage can only be assigned to users in an active hospital department."), { status: 400 });
     return null;
   }
   if (!warehouseId) return null;
@@ -20,7 +20,7 @@ export const userService = {
     return mapPage(await userModel.findAll(query), presentUser);
   },
   async create({ roleIds, pin, password, warehouseId, ...data }) {
-    const assignedWarehouseId = await storageAssignment(roleIds, warehouseId);
+    const assignedWarehouseId = await storageAssignment(data.department, warehouseId);
     if (pin && !(await userModel.hasSuperadminRole(roleIds))) throw forbidden("Only superadmins can have a login PIN.");
     return presentUser(
       await userModel.create({
@@ -34,11 +34,12 @@ export const userService = {
     );
   },
   async update(id, { roleIds, pin, password, warehouseId, ...data }) {
-    if (warehouseId !== undefined || roleIds !== undefined) {
+    if (warehouseId !== undefined || data.department !== undefined) {
       const current = await userModel.findById(id);
-      const nextRoles = roleIds ?? current.roles.map(({ role }) => role.id);
-      const isStaff = await userModel.hasWarehouseStaffRole(nextRoles);
-      data.warehouseId = await storageAssignment(nextRoles, isStaff ? (warehouseId === undefined ? current.warehouseId : warehouseId) : warehouseId);
+      const nextDepartment = data.department ?? current.department;
+      const eligible = await userModel.isHospitalDepartment(nextDepartment);
+      data.warehouseId = await storageAssignment(nextDepartment,
+        eligible ? (warehouseId === undefined ? current.warehouseId : warehouseId) : warehouseId);
     }
     const superadmin = roleIds
       ? await userModel.hasSuperadminRole(roleIds)

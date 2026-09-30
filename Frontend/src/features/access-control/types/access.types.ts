@@ -9,9 +9,10 @@ export type User = {
   warehouseId?: string | null;
   warehouse?: { id: string; name: string } | null;
   status: UserStatus;
-  roles?: { id: string; name: string }[];
+  roles?: { id: string; name: string; code?: string | null }[];
 };
 export type Role = {
+  code?: string | null;
   id: string;
   name: string;
   description: string;

@@ -30,7 +30,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
-import logo from "@/assets/icons/logo.png";
+import defaultLogo from "@/assets/icons/logo.png";
 import { useSettings } from "@/features/settings/settings";
 import {
   inventoryApi,
@@ -61,6 +61,7 @@ import { isCashier, storedUser } from "@/features/auth/access";
 
 export default function HealthPosPage() {
   const systemSettings = useSettings();
+  const logo = systemSettings?.organization.logo || defaultLogo;
   const { theme, toggleTheme } = useTheme();
   const { t } = useTranslation();
   const cashier = isCashier(storedUser());
@@ -176,7 +177,7 @@ export default function HealthPosPage() {
         })),
       });
       setLastSale(sale);
-      printPosInvoice(sale, t, logo, printWindow, printFormat);
+      printPosInvoice(sale, t, printWindow, printFormat);
       toast.success(t("pos.completed"));
       setCart({});
       setDiscount(0);
@@ -618,7 +619,7 @@ export default function HealthPosPage() {
                 disabled={!lastSale}
                 onClick={() =>
                   lastSale &&
-                  printPosInvoice(lastSale, t, logo, undefined, printFormat)
+                  printPosInvoice(lastSale, t, undefined, printFormat)
                 }
               >
                 <Printer />
