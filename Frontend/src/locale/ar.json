@@ -340,9 +340,6 @@
   "attendance": {
     "schedule": {
       "title": "جدول الحضور — {{name}}",
-      "workingDays": "أيام العمل المطلوبة شهرياً",
-      "checkIn": "وقت الحضور اليومي",
-      "checkOut": "وقت الانصراف اليومي",
       "save": "حفظ جدول الحضور",
       "saving": "جارٍ الحفظ…"
     },
@@ -373,8 +370,6 @@
       "passwordUnchanged": "اتركه فارغاً للاحتفاظ بكلمة المرور",
       "saveChanges": "حفظ التغييرات",
       "serialUnavailable": "الرقم التسلسلي غير متاح",
-      "monthlyDays": "الأيام الشهرية",
-      "dailyHours": "الساعات اليومية",
       "deleteTitle": "حذف جهاز الحضور؟",
       "deleteDescription": "سيؤدي هذا إلى حذف {{name}} ومستخدميه وأحداث الحضور المحفوظة نهائياً من النظام.",
       "thisDevice": "هذا الجهاز"
@@ -1216,6 +1211,7 @@
     "superAdminPassword": "كلمة مرور المدير العام",
     "enterPassword": "أدخل كلمة المرور",
     "deleting": "جارٍ الحذف…",
+    "delete": "حذف",
     "deletePermanently": "حذف نهائي",
     "noOptionsFound": "لا توجد خيارات",
     "selectOption": "اختر خياراً",
@@ -1243,6 +1239,8 @@
     "saving": "جارٍ الحفظ…",
     "update": "تحديث المستخدم",
     "create": "إنشاء المستخدم",
+    "unlockAttempts": "إعادة تعيين محاولات تسجيل الدخول",
+    "unlockSuccess": "تمت إعادة تعيين المحاولات. يمكن للمستخدم تسجيل الدخول مجدداً.",
     "deleteConfirm": "حذف {{name}}؟"
   },
   "rolesAdmin": {

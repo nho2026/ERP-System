@@ -74,9 +74,6 @@ export default function DevicesPage() {
         port: Number(f.get("port")),
         username: f.get("username"),
         ...(password ? { password } : {}),
-        workingDaysPerMonth: Number(f.get("workingDaysPerMonth")),
-        checkInTime: f.get("checkInTime"),
-        checkOutTime: f.get("checkOutTime"),
       });
       setManaging(null);
       await devices.refresh();
@@ -152,76 +149,83 @@ export default function DevicesPage() {
           isEmpty={!devices.data?.length}
         />
         {(devices.data ?? []).map((d) => (
-          <Card key={d.id}>
-            <CardContent className="p-5">
-              <div className="flex justify-between">
-                <span
-                  className={`grid size-10 place-items-center rounded-xl ${d.status === "online" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"}`}
-                >
-                  {d.status === "online" ? <Wifi /> : <WifiOff />}
-                </span>
-                <div className="flex gap-2">
-                  <Badge variant="outline">{d.status}</Badge>
+          <Card
+            key={d.id}
+            className="group overflow-hidden rounded-2xl border-border/70 bg-card shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lg"
+          >
+            <CardContent className="p-0">
+              <div className="flex items-start justify-between gap-4 p-5 pb-4">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span
+                    className={`grid size-12 shrink-0 place-items-center rounded-2xl ring-1 ring-inset ${d.status === "online" ? "bg-emerald-500/10 text-emerald-700 ring-emerald-600/15 dark:text-emerald-400" : "bg-muted text-muted-foreground ring-border"}`}
+                  >
+                    {d.status === "online" ? <Wifi className="size-5" /> : <WifiOff className="size-5" />}
+                  </span>
+                  <div className="min-w-0">
+                    <h2 className="truncate font-semibold tracking-tight">{d.name}</h2>
+                    <p className="mt-1 truncate text-xs text-muted-foreground">
+                      {d.model}
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <h2 className="mt-4 font-bold">{d.name}</h2>
-              <p className="text-xs text-muted-foreground">
-                {d.model} ·{" "}
-                {d.serialNumber ?? t("attendance.device.serialUnavailable")}
-              </p>
-              <p className="mt-3 font-mono text-sm">
-                {d.ipAddress}:{d.port}
-              </p>
-              <div className="mt-4 grid grid-cols-2 gap-2 rounded-xl bg-muted/50 p-3 text-xs">
-                <span>
-                  <small className="block text-muted-foreground">
-                    {t("attendance.device.monthlyDays")}
-                  </small>
-                  <b>{d.workingDaysPerMonth}</b>
-                </span>
-                <span>
-                  <small className="block text-muted-foreground">
-                    {t("attendance.device.dailyHours")}
-                  </small>
-                  <b>
-                    {d.checkInTime} – {d.checkOutTime}
-                  </b>
-                </span>
-              </div>
-              <div className="mt-4 flex gap-2">
-                <Button permission="attendance.events.delete"
-                  title={t("attendance.device.clearEvents")}
-                  variant="ghost"
-                  size="icon"
-                  className="text-amber-600"
-                  onClick={() => setClearingEvents(d)}
+                <Badge
+                  variant="outline"
+                  className={`shrink-0 gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium capitalize ${d.status === "online" ? "border-emerald-600/20 bg-emerald-500/5 text-emerald-700 dark:text-emerald-400" : "text-muted-foreground"}`}
                 >
-                  <CalendarX2 />
-                </Button>
-                <Button permission="update"
+                  <span className={`size-1.5 rounded-full ${d.status === "online" ? "bg-emerald-500" : "bg-slate-400"}`} />
+                  {d.status}
+                </Badge>
+              </div>
+              <div className="mx-5 rounded-xl border border-border/60 bg-muted/35 px-3.5 py-3">
+                <p className="font-mono text-sm font-medium tracking-tight" dir="ltr">
+                  {d.ipAddress}:{d.port}
+                </p>
+                <p className="mt-1 truncate text-[11px] text-muted-foreground">
+                  {d.serialNumber ?? t("attendance.device.serialUnavailable")}
+                </p>
+              </div>
+              <div className="mt-4 flex items-center gap-2 border-t border-border/60 px-5 py-4">
+                <Button
+                  permission="update"
                   variant="outline"
                   size="sm"
+                  className="gap-2 rounded-xl"
                   onClick={() => setManaging(d)}
                 >
-                  <Settings2 />
+                  <Settings2 className="size-4" />
                   {t("common.manage")}
                 </Button>
-                <Button permission="test"
+                <Button
+                  permission="test"
                   variant="outline"
                   size="sm"
-                  className="flex-1"
+                  className="flex-1 gap-2 rounded-xl"
                   onClick={() => void testDevice(d)}
                 >
-                  <RefreshCw />
+                  <RefreshCw className="size-4" />
                   {t("common.test")}
                 </Button>
-                <Button data-action="delete"
+                <Button
+                  permission="attendance.events.delete"
+                  title={t("attendance.device.clearEvents")}
+                  aria-label={t("attendance.device.clearEvents")}
                   variant="ghost"
                   size="icon"
-                  className="text-destructive"
+                  className="shrink-0 rounded-xl text-amber-600 hover:bg-amber-500/10 hover:text-amber-700"
+                  onClick={() => setClearingEvents(d)}
+                >
+                  <CalendarX2 className="size-4" />
+                </Button>
+                <Button
+                  data-action="delete"
+                  title={t("common.delete")}
+                  aria-label={t("common.delete")}
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0 rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive"
                   onClick={() => setDeleting(d)}
                 >
-                  <Trash2  className="size-4 text-white" />
+                  <Trash2 className="size-4" />
                 </Button>
               </div>
             </CardContent>
@@ -303,49 +307,6 @@ export default function DevicesPage() {
                     name="password"
                     type="password"
                     placeholder={t("attendance.device.passwordUnchanged")}
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="mb-1.5 block text-xs font-semibold">
-                  {t("attendance.schedule.workingDays")}
-                </label>
-                <Input
-                  name="workingDaysPerMonth"
-                  type="number"
-                  min="1"
-                  max="31"
-                  defaultValue={managing.workingDaysPerMonth}
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="mb-1.5 block text-xs font-semibold">
-                    {t("attendance.schedule.checkIn")}
-                  </label>
-                  <Input
-                    name="checkInTime"
-                    dir="ltr"
-                    inputMode="numeric"
-                    pattern="([01][0-9]|2[0-3]):[0-5][0-9]"
-                    placeholder="09:00"
-                    defaultValue={managing.checkInTime}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="mb-1.5 block text-xs font-semibold">
-                    {t("attendance.schedule.checkOut")}
-                  </label>
-                  <Input
-                    name="checkOutTime"
-                    dir="ltr"
-                    inputMode="numeric"
-                    pattern="([01][0-9]|2[0-3]):[0-5][0-9]"
-                    placeholder="17:00"
-                    defaultValue={managing.checkOutTime}
-                    required
                   />
                 </div>
               </div>

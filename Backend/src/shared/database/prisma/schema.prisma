@@ -54,9 +54,6 @@ model AttendanceDevice {
   status              String             @default("offline")
   lastSeenAt          DateTime?
   eventsClearedAt     DateTime?
-  workingDaysPerMonth Int                @default(22)
-  checkInTime         String             @default("09:00")
-  checkOutTime        String             @default("17:00")
   createdAt           DateTime           @default(now())
   updatedAt           DateTime           @updatedAt
   people              AttendancePerson[]

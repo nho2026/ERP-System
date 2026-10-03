@@ -9,6 +9,10 @@ export const userController = {
   update: run(async (req, res) =>
     res.json(await userService.update(req.params.id, req.validatedBody)),
   ),
+  unlockAttempts: run(async (req, res) => {
+    await userService.unlockAttempts(req.params.id);
+    res.status(204).end();
+  }),
   remove: run(async (req, res) => {
     await userService.remove(req.params.id, req.user.id);
     res.status(204).end();

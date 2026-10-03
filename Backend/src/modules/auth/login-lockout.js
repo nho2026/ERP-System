@@ -6,6 +6,10 @@ import { authModel } from './auth.model.js';
 export const MAX_LOGIN_FAILURES = 4;
 export const LOGIN_LOCK_MS = 15 * 60 * 1000;
 const hash = value => createHash('sha256').update(value).digest('hex');
+export async function clearUserLoginAttempts(userId) {
+  const key = hash(`account:${userId}`);
+  await prisma.$executeRaw`DELETE FROM auth_LoginAttempt WHERE id = ${key}`;
+}
 export const lockedError = until => Object.assign(new Error('Too many failed login attempts. Login is blocked for 15 minutes. Please try again later.'), {
   status: 429, retryAfter: Math.max(1, Math.ceil((until.getTime() - Date.now()) / 1000)),
 });

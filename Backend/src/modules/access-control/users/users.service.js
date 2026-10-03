@@ -3,6 +3,7 @@ import { hashSecret, verifySecret } from "../../../shared/security/password.js";
 import { createPinLookup } from "../../../shared/security/token.js";
 import { presentUser } from "../../auth/auth.presenter.js";
 import { userModel } from "./users.model.js";
+import { clearUserLoginAttempts } from "../../auth/login-lockout.js";
 async function storageAssignment(department, warehouseId) {
   if (!await userModel.isHospitalDepartment(department)) {
     if (warehouseId) throw Object.assign(new Error("Storage can only be assigned to users in an active hospital department."), { status: 400 });
@@ -63,6 +64,10 @@ export const userService = {
     if (id === currentId)
       throw forbidden("You cannot delete your own account.");
     await userModel.remove(id, currentId);
+  },
+  async unlockAttempts(id) {
+    await userModel.findById(id);
+    await clearUserLoginAttempts(id);
   },
   async changePassword(id, currentUser, input) {
     if (id !== currentUser.id) throw forbidden("Forbidden.", 403);
