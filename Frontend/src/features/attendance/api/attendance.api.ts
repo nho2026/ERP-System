@@ -9,9 +9,6 @@ export type Device = {
   serialNumber?: string;
   status: string;
   lastSeenAt?: string;
-  workingDaysPerMonth: number;
-  checkInTime: string;
-  checkOutTime: string;
 };
 export type Person = {
   id: string;

@@ -1,6 +1,6 @@
 import { useServerTable } from "@/shared/hooks/useServerTable";
 import { useCallback, useState } from "react";
-import { Eye, EyeOff, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Eye, EyeOff, LockKeyholeOpen, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { usersApi, rolesApi } from "../api/access.api";
 import type { User } from "../types/access.types";
 import { useApiResource } from "@/shared/hooks/useApiResource";
@@ -72,6 +72,8 @@ export default function UsersPage() {
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const [warehouseId, setWarehouseId] = useState("");
+  const [unlockingId, setUnlockingId] = useState<string | null>(null);
+  const [notice, setNotice] = useState("");
   const isHospitalDepartment =
     departments.data?.some(
       (item) =>
@@ -170,6 +172,19 @@ export default function UsersPage() {
       setBusy(false);
     }
   };
+  const unlockAttempts = async (id: string) => {
+    setUnlockingId(id);
+    setError("");
+    setNotice("");
+    try {
+      await usersApi.unlockAttempts(id);
+      setNotice(t("usersAdmin.unlockSuccess"));
+    } catch (c) {
+      setError(apiErrorMessage(c));
+    } finally {
+      setUnlockingId(null);
+    }
+  };
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
@@ -188,6 +203,7 @@ export default function UsersPage() {
       </div>
       <Card>
         <CardContent className="p-0">
+          {notice && <p role="status" className="mx-4 mt-4 text-sm text-muted-foreground">{notice}</p>}
           <div className="relative m-4 max-w-sm">
             <Search className="absolute inset-s-3 top-1/2 -translate-y-1/2" />
             <Input
@@ -316,6 +332,19 @@ export default function UsersPage() {
                     </TableCell>
                     <TableCell className="text-end">
                       <div className="flex flex-wrap items-center gap-2 justify-end">
+                        {canUpdate && (
+                          <Button
+                            data-action="unlock-attempts"
+                            variant="ghost"
+                            size="icon"
+                            aria-label={t("usersAdmin.unlockAttempts")}
+                            title={t("usersAdmin.unlockAttempts")}
+                            disabled={unlockingId === u.id}
+                            onClick={() => void unlockAttempts(u.id)}
+                          >
+                            <LockKeyholeOpen />
+                          </Button>
+                        )}
                         {canUpdate && (
                           <Button
                             data-action="edit"

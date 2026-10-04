@@ -9,6 +9,7 @@ export const usersApi = {
   update: async (id: string, payload: Record<string, unknown>) =>
     (await apiClient.patch<User>(`/users/${id}`, payload)).data,
   remove: async (id: string) => apiClient.delete(`/users/${id}`),
+  unlockAttempts: async (id: string) => apiClient.post(`/users/${id}/unlock-attempts`),
 };
 
 export const rolesApi = {

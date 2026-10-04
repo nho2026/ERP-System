@@ -580,9 +580,6 @@
   "attendance": {
     "schedule": {
       "title": "Attendance schedule — {{name}}",
-      "workingDays": "Required working days per month",
-      "checkIn": "Daily check-in",
-      "checkOut": "Daily check-out",
       "save": "Save attendance schedule",
       "saving": "Saving…"
     },
@@ -613,8 +610,6 @@
       "passwordUnchanged": "Leave blank to keep unchanged",
       "saveChanges": "Save changes",
       "serialUnavailable": "Serial unavailable",
-      "monthlyDays": "Monthly days",
-      "dailyHours": "Daily hours",
       "deleteTitle": "Delete attendance device?",
       "deleteDescription": "This permanently removes {{name}}, its users, and saved attendance events from the ERP.",
       "thisDevice": "this device"
@@ -1460,6 +1455,7 @@
     "superAdminPassword": "Super Administrator password",
     "enterPassword": "Enter your password",
     "deleting": "Deleting…",
+    "delete": "Delete",
     "deletePermanently": "Delete permanently",
     "noOptionsFound": "No options found",
     "selectOption": "Select an option",
@@ -1493,6 +1489,8 @@
     "saving": "Saving…",
     "update": "Update user",
     "create": "Create user",
+    "unlockAttempts": "Reset login attempts",
+    "unlockSuccess": "Login attempts reset. The user can try signing in again.",
     "deleteConfirm": "Delete {{name}}?"
   },
   "rolesAdmin": {

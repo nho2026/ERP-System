@@ -25,6 +25,7 @@ router.patch(
   validate(updateUserSchema),
   userController.update,
 );
+router.post("/:id/unlock-attempts", requirePermission("users.update"), userController.unlockAttempts);
 router.delete("/:id", requirePermission("users.delete"), userController.remove);
 router.post(
   "/:id/password",
