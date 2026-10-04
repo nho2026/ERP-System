@@ -67,6 +67,7 @@ const time = (value: unknown) =>
     ? new Intl.DateTimeFormat(undefined, {
         hour: "2-digit",
         minute: "2-digit",
+        timeZone: "Asia/Baghdad",
       }).format(new Date(String(value)))
     : "—";
 

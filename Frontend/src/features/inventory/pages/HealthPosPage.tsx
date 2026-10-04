@@ -192,7 +192,7 @@ export default function HealthPosPage() {
   };
   return (
     <div className="h-svh overflow-hidden bg-background">
-      <header className="electron-titlebar relative flex h-16 items-center gap-3 border-b border-primary/15 bg-card px-4 shadow-[0_4px_20px_-16px_var(--primary)] before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-gradient-to-r before:from-primary before:via-teal-400 before:to-teal-400">
+      <header className="electron-titlebar relative flex h-16 items-center gap-3 border-b border-primary/15 bg-card px-4 shadow-[0_4px_20px_-16px_var(--primary)] before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-linear-to-r before:from-primary before:via-teal-400 before:to-teal-400">
         <Link
           to={cashier ? "/profile" : "/dashboard"}
           className="grid size-9 place-items-center rounded-lg border border-primary/20 bg-primary/5 text-primary transition hover:bg-primary/12"
@@ -342,7 +342,7 @@ export default function HealthPosPage() {
                         className="size-full object-contain p-3 transition duration-300 group-hover:scale-105"
                       />
                     ) : (
-                      <div className="grid size-full place-items-center bg-gradient-to-br from-slate-50 to-slate-100">
+                      <div className="grid size-full place-items-center bg-linear-to-br from-slate-50 to-slate-100">
                         <span className="grid size-16 place-items-center rounded-2xl border border-primary/10 bg-white text-primary/45 shadow-sm">
                           <Package className="size-8 transition group-hover:scale-110 group-hover:text-primary" />
                         </span>
@@ -352,7 +352,7 @@ export default function HealthPosPage() {
                       {stock(p)} {t("inventory.fields.stock")}
                     </span>
                     {discounted(p) && (
-                      <span className="absolute start-2.5 top-2.5 rounded-full bg-rose-500 px-2 py-1 text-[10px] font-bold text-white shadow-sm">
+                      <span className="absolute inset-s-2.5 top-2.5 rounded-full bg-rose-500 px-2 py-1 text-[10px] font-bold text-white shadow-sm">
                         {p.discountType === "percentage"
                           ? `-${p.discountValue}%`
                           : `-${Number(p.discountValue).toLocaleString()}`}
@@ -487,7 +487,7 @@ export default function HealthPosPage() {
           <PaginationControls {...catalog.pagination} />
         </section>
         <aside className="flex min-h-0 flex-col border-s border-primary/20 bg-card shadow-[-8px_0_24px_-24px_var(--primary)]">
-          <div className="border-b border-primary/15 bg-gradient-to-e from-primary/10 to-card p-5">
+          <div className="border-b border-primary/15 bg-linear-to-e from-primary/10 to-card p-5">
             <h2 className="flex items-center gap-2 text-lg font-bold">
               <ShoppingCart className="size-8 rounded-lg bg-primary p-1.5 text-primary-foreground shadow-sm" />
               {t("pos.cart")}
@@ -562,7 +562,7 @@ export default function HealthPosPage() {
               </Card>
             ))}
           </div>
-          <div className="space-y-3 border-t border-primary/20 bg-gradient-to-b from-primary/4 to-card p-5 shadow-[0_-8px_24px_-20px_var(--primary)]">
+          <div className="space-y-3 border-t border-primary/20 bg-linear-to-b from-primary/4 to-card p-5 shadow-[0_-8px_24px_-20px_var(--primary)]">
             <Summary label={t("pos.subtotal")} value={subtotal} />
             <Summary label={t("pos.tax")} value={tax} />
             <Input

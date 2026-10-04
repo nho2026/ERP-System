@@ -402,8 +402,8 @@ export default function DeviceUsersPage() {
               isEmpty={!filteredPeople.length}
               colSpan={5}
             />
-            {!people.isLoading &&
-              !people.error &&
+            {!pagedPeople.isLoading &&
+              !pagedPeople.error &&
               filteredPeople.map((p) => (
                 <TableRow key={p.id}>
                   <TableCell>

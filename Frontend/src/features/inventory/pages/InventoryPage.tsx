@@ -945,7 +945,7 @@ export default function InventoryPage({ resource }: { resource: Resource }) {
                             type="button"
                             variant={image.isMain ? "default" : "secondary"}
                             size="icon"
-                            className="absolute bottom-2 start-2 size-7"
+                            className="absolute bottom-2 inset-s-2 size-7"
                             disabled={busy}
                             title={t("inventory.setMainImage")}
                             onClick={() =>

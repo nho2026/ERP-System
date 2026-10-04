@@ -90,7 +90,7 @@ export function SearchableSelect({
         >
           {showSearch && (
             <div className="relative shrink-0 border-b p-2">
-              <Search className="absolute start-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="absolute inset-s-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 aria-label={searchPlaceholder ?? t("common.searchOptions")}
                 autoFocus

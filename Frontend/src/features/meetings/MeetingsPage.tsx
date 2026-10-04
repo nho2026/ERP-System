@@ -161,7 +161,7 @@ function VideoTile({
         muted={muted}
         className="h-full w-full object-contain"
       />
-      <span className="absolute bottom-2 start-2 rounded-full bg-black/65 px-2.5 py-1 text-xs font-medium text-white">
+      <span className="absolute bottom-2 inset-s-2 rounded-full bg-black/65 px-2.5 py-1 text-xs font-medium text-white">
         {label}
       </span>
       <button
@@ -871,7 +871,7 @@ export default function MeetingsPage({
   if (!active)
     return (
       <div className="space-y-8 pb-8">
-        <div className="relative overflow-hidden rounded-3xl border border-primary/15 bg-gradient-to-br from-primary/10 via-card to-card p-6 shadow-sm md:p-8">
+        <div className="relative overflow-hidden rounded-3xl border border-primary/15 bg-linear-to-br from-primary/10 via-card to-card p-6 shadow-sm md:p-8">
           <div className="pointer-events-none absolute -end-16 -top-20 size-64 rounded-full bg-primary/10 blur-3xl" />
           <div className="relative flex items-center gap-4">
             <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">

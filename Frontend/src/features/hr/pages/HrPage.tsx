@@ -17,6 +17,7 @@ import { DeleteConfirmationDialog } from "@/shared/components/ui/confirmation-di
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent } from "@/shared/components/ui/card";
+import { Checkbox } from "@/shared/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -137,7 +138,7 @@ const configs: Record<
         type: "number",
         required: true,
       },
-      { name: "currencyId", label: "Currency", type: "select", options: ["USD"], required: true },
+      { name: "currencyId", label: "Currency", type: "select", options: ["IQD", "USD"], required: true },
       {
         name: "payType",
         label: "Pay type",
@@ -421,6 +422,8 @@ export default function HrPage({ resource }: { resource?: Resource }) {
     setStatusFilter("all");
   };
   const [busy, setBusy] = useState(false);
+  const [deletingEmployees, setDeletingEmployees] = useState(false);
+  const [employeeSelection, setEmployeeSelection] = useState<{ scope: string; ids: string[] }>({ scope: "", ids: [] });
   const [error, setError] = useState("");
   const [adjustmentEmployee, setAdjustmentEmployee] = useState<HrRecord | null>(
     null,
@@ -444,6 +447,35 @@ export default function HrPage({ resource }: { resource?: Resource }) {
     return all.filter(row => JSON.stringify(row).toLowerCase().includes(search.trim().toLowerCase()));
   });
   const rows = fullPrint.printData ?? current.data ?? [];
+  const canDeleteEmployees = tab === "employees" && hasPermission(storedUser(), "hr.employees.delete");
+  const selectionScope = JSON.stringify([tab, search, departmentFilter, positionFilter, statusFilter, current.pagination.page]);
+  const selectedEmployeeIds = employeeSelection.scope === selectionScope
+    ? employeeSelection.ids.filter((id) => rows.some((row) => row.id === id))
+    : [];
+  const selectEmployees = (ids: string[]) => setEmployeeSelection({ scope: selectionScope, ids });
+  const deleteSelectedEmployees = async () => {
+    if (deletingEmployees || !canDeleteEmployees || !selectedEmployeeIds.length) return;
+    setDeletingEmployees(true);
+    setError("");
+    const failedIds: string[] = [];
+    const failures: string[] = [];
+    try {
+      for (const id of selectedEmployeeIds) {
+        try {
+          await hrApi.employees.remove(id);
+        } catch (cause) {
+          failedIds.push(id);
+          const employee = rows.find((row) => row.id === id);
+          failures.push(`${employee ? `${employee.firstName} ${employee.lastName}` : id}: ${apiErrorMessage(cause)}`);
+        }
+      }
+      selectEmployees(failedIds);
+      if (failures.length) setError(failures.join("; "));
+      await Promise.all([current.refresh(), employees.refresh()]);
+    } finally {
+      setDeletingEmployees(false);
+    }
+  };
   const options = (field: Field) =>
     field.type === "systemUser"
       ? users.data?.map((user) => [user.id, `${user.name} — @${user.username}`])
@@ -533,6 +565,9 @@ export default function HrPage({ resource }: { resource?: Resource }) {
           {["employees", "positions"].includes(tab) ? tr("Employees belong to departments, each with a department leader. Positions describe jobs, and roles control system access through the linked user account.") : t("hr.pageDescription")}
         </p>
       </div>
+      {error && editing === undefined && !adjustmentEmployee && (
+        <p role="alert" className="text-sm text-destructive">{error}</p>
+      )}
       <Tabs
         value={tab}
         onValueChange={(value) => {
@@ -566,6 +601,18 @@ export default function HrPage({ resource }: { resource?: Resource }) {
                     />
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
+                    {key === "employees" && canDeleteEmployees && (
+                      <DeleteConfirmationDialog
+                        permission="hr.employees.delete"
+                        description={t("hr.deleteSelectedConfirm", { count: selectedEmployeeIds.length })}
+                        onConfirm={deleteSelectedEmployees}
+                      >
+                        <Button permission="hr.employees.delete" variant="destructive" disabled={deletingEmployees || current.isLoading || !selectedEmployeeIds.length}>
+                          <Trash2 className="size-4" />
+                          {t("hr.deleteSelectedEmployees", { count: selectedEmployeeIds.length })}
+                        </Button>
+                      </DeleteConfirmationDialog>
+                    )}
                     {key === "employees" && (
                       <>
                         <Button variant="outline" onClick={() => setFilterOpen(true)}>
@@ -693,6 +740,16 @@ export default function HrPage({ resource }: { resource?: Resource }) {
                   <Table className={key === "employees" ? "[&_th]:whitespace-nowrap [&_td]:whitespace-nowrap" : undefined}>
                     <TableHeader>
                       <TableRow>
+                        {key === "employees" && canDeleteEmployees && (
+                          <TableHead className="print:hidden">
+                            <Checkbox
+                              aria-label={t("hr.selectPageEmployees")}
+                              disabled={deletingEmployees || current.isLoading || !rows.length}
+                              checked={rows.length > 0 && selectedEmployeeIds.length === rows.length ? true : selectedEmployeeIds.length > 0 ? "indeterminate" : false}
+                              onCheckedChange={(checked) => selectEmployees(checked === true ? rows.map((row) => row.id) : [])}
+                            />
+                          </TableHead>
+                        )}
                         {configs[key].columns.map(([, label]) => (
                           <TableHead key={label}>{tr(label)}</TableHead>
                         ))}
@@ -704,12 +761,22 @@ export default function HrPage({ resource }: { resource?: Resource }) {
                         isLoading={current.isLoading}
                         error={current.error}
                         isEmpty={!rows.length}
-                        colSpan={configs[key].columns.length + 1}
+                        colSpan={configs[key].columns.length + 1 + (key === "employees" && canDeleteEmployees ? 1 : 0)}
                       />
                       {!current.isLoading &&
                         !current.error &&
                         rows.map((row) => (
                           <TableRow key={row.id}>
+                            {key === "employees" && canDeleteEmployees && (
+                              <TableCell className="print:hidden">
+                                <Checkbox
+                                  aria-label={t("hr.selectEmployee", { name: `${row.firstName} ${row.lastName}` })}
+                                  disabled={deletingEmployees}
+                                  checked={selectedEmployeeIds.includes(row.id)}
+                                  onCheckedChange={(checked) => selectEmployees(checked === true ? [...selectedEmployeeIds, row.id] : selectedEmployeeIds.filter((id) => id !== row.id))}
+                                />
+                              </TableCell>
+                            )}
                             {configs[key].columns.map(([field]) => (
                               <TableCell key={field}>
                                 {field === "status" || field === "type" ? (
@@ -772,6 +839,7 @@ export default function HrPage({ resource }: { resource?: Resource }) {
                                     variant="ghost"
                                     size="icon"
                                     className="text-destructive"
+                                    disabled={deletingEmployees}
                                   >
                                     <Trash2 className="size-4" />
                                   </Button>
@@ -835,10 +903,12 @@ export default function HrPage({ resource }: { resource?: Resource }) {
                       <Select
                         name={field.name}
                         defaultValue={
-                          ["currency", "currencyId"].includes(field.name)
-                            ? "USD"
-                            : initial != null
+                          initial != null
                             ? String(initial)
+                            : field.name === "currencyId"
+                              ? "IQD"
+                            : field.name === "currency"
+                              ? "USD"
                             : field.name === "status"
                               ? "active"
                               : field.required

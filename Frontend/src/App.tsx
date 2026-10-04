@@ -1,3 +1,5 @@
+import BuildingDashboardPage from "@/features/building-expenses/BuildingDashboardPage";
+import BuildingExpensesPage from "@/features/building-expenses/BuildingExpensesPage";
 import TaskReviewPage from "@/features/tasks/pages/TaskReviewPage";
 import AccountantDashboardPage from "@/features/accounting/pages/AccountantDashboardPage";
 import HrDashboardPage from "@/features/hr/pages/HrDashboardPage";
@@ -24,7 +26,7 @@ import BuyDebtsPage from "@/features/inventory/pages/BuyDebtsPage";
 import BuyProductPage from "@/features/inventory/pages/BuyProductPage";
 import WarehouseDashboardPage from "@/features/inventory/pages/WarehouseDashboardPage";
 import { warehousePages } from "@/features/inventory/warehouse-pages";
-import WarehouseModulePage from "@/features/inventory/pages/WarehouseModulePage";
+import TopProductsPage from "@/features/inventory/pages/TopProductsPage";
 
 import DepartmentOrdersPage from "@/features/inventory/pages/DepartmentOrdersPage";
 import SettingsPage from "@/features/settings/SettingsPage";
@@ -87,6 +89,13 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route element={<DashboardLayout />}>
+          <Route path="/building-expenses" element={secured(<BuildingDashboardPage />)} />
+          <Route path="/building-expenses/products" element={secured(<BuildingExpensesPage key="products" page="products" />)} />
+          <Route path="/building-expenses/requests" element={secured(<BuildingExpensesPage key="requests" page="requests" />)} />
+          <Route path="/building-expenses/purchases" element={secured(<BuildingExpensesPage key="purchases" page="purchases" />)} />
+          <Route path="/building-expenses/sales" element={secured(<BuildingExpensesPage key="sales" page="sales" />)} />
+          <Route path="/building-expenses/departments" element={secured(<BuildingExpensesPage key="departments" page="departments" />)} />
+          <Route path="/building-expenses/expenses" element={secured(<BuildingExpensesPage key="expenses" page="expenses" />)} />
           <Route path="/laboratory/tickets" element={secured(<LaboratoryTicketsPage />)} />
           <Route path="/laboratory/display" element={secured(<LaboratoryTicketsPage display />)} />
           <Route path="/laboratory" element={secured(<LaboratoryDashboardPage />)} />
@@ -378,7 +387,7 @@ export default function App() {
                 ) : page.path === "/warehouses/reports/products-per-patient" ? (
                   <PatientProductsReportPage />
                 ) : (
-                  <WarehouseModulePage page={page} />
+                  <TopProductsPage />
                 ))}
             />
           ))}

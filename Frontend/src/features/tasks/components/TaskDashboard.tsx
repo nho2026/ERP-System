@@ -94,10 +94,10 @@ export default function TaskDashboard({
   const loadingValue = (n: number) => (resource.isLoading ? "—" : n);
   return (
     <div className="min-w-0 flex-1 bg-muted/30 p-4 md:p-6">
-      <div className="mx-auto max-w-[1500px] space-y-5">
+      <div className="mx-auto max-w-350 space-y-5">
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-card p-3">
           <div className="relative w-full sm:max-w-sm">
-            <Search className="absolute start-3 top-3 size-4 text-muted-foreground" />
+            <Search className="absolute inset-s-3 top-3 size-4 text-muted-foreground" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -162,7 +162,7 @@ export default function TaskDashboard({
           ].map((stat) => (
             <Card
               key={stat.label}
-              className={`rounded-2xl border-0 p-5 shadow-none ${stat.green ? "bg-gradient-to-br from-[#003c30] to-[#008260] text-white" : "bg-card"}`}
+              className={`rounded-2xl border-0 p-5 shadow-none ${stat.green ? "bg-linear-to-br from-[#003c30] to-[#008260] text-white" : "bg-card"}`}
             >
               <div className="flex items-center justify-between gap-2">
                 <h2 className="text-sm font-medium">{stat.label}</h2>

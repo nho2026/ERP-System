@@ -4,15 +4,16 @@ const fail = (message, status) => {
   throw Object.assign(new Error(message), { status });
 };
 export const posModel = {
-  list: (skip, take) =>
-    prisma.$transaction([
-      prisma.posSale.findMany({
+  list: (skip, take, where = {}, db = prisma) =>
+    db.$transaction([
+      db.posSale.findMany({
+        where,
         include,
         orderBy: { soldAt: "desc" },
         skip,
         take,
       }),
-      prisma.posSale.count(),
+      db.posSale.count({ where }),
     ]),
   create: (input, cashierName, db = prisma) =>
     db.$transaction(async (tx) => {

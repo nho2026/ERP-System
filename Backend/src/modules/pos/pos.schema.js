@@ -1,9 +1,11 @@
 import { z } from "zod";
+import { posFilterShape, validateSaleRanges } from "./pos-filters.js";
 
 export const posSalesQuerySchema = z.object({
+  ...posFilterShape,
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(50),
-});
+}).superRefine(validateSaleRanges);
 export const createSaleSchema = z.object({
   warehouseId: z.string(),
   customerName: z.string().trim().nullable().optional(),

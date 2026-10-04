@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Package } from "lucide-react";
 import { apiClient, apiErrorMessage } from "@/shared/api/client";
@@ -14,7 +14,7 @@ export function StorageQuantityEditor({ product, onSaved, initialWarehouseId = "
   const { t, i18n } = useTranslation();
   const [open, setOpen] = useState(false);
   const [warehouseId, setWarehouseId] = useState("");
-  const [quantity, setQuantity] = useState("");
+  const [quantityInput, setQuantity] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -25,7 +25,7 @@ export function StorageQuantityEditor({ product, onSaved, initialWarehouseId = "
     const { data } = await apiClient.get<{ items: { quantity: number }[] }>("/inventory/stock", { params: { productId: product.id, warehouseId, page: 1, pageSize: 1 } });
     return data.items[0]?.quantity ?? 0;
   }, [open, product.id, warehouseId]));
-  useEffect(() => { setQuantity(stock.data == null ? "" : String(stock.data)); }, [stock.data, warehouseId]);
+  const quantity = quantityInput ?? (stock.data == null ? "" : String(stock.data));
   async function save(event: React.FormEvent) {
     event.preventDefault();
     if (lock.current || stock.isLoading || stock.error || stock.data == null || !warehouseId || !quantity.trim()) return;
@@ -38,7 +38,7 @@ export function StorageQuantityEditor({ product, onSaved, initialWarehouseId = "
     finally { lock.current = false; setBusy(false); }
   }
   return <>
-    <Button type="button" variant="outline" permission="inventory.stock.adjust" size="icon" title={t("productQuantity.title")} aria-label={t("productQuantity.title")} onClick={() => { setError(""); setWarehouseId(initialWarehouseId); setQuantity(""); setNotes(""); setOpen(true); }}>
+    <Button type="button" variant="outline" permission="inventory.stock.adjust" size="icon" title={t("productQuantity.title")} aria-label={t("productQuantity.title")} onClick={() => { setError(""); setWarehouseId(initialWarehouseId); setQuantity(null); setNotes(""); setOpen(true); }}>
       <Package />
     </Button>
     <Dialog open={open} onOpenChange={value => { if (!lock.current) setOpen(value); }}>
@@ -46,7 +46,7 @@ export function StorageQuantityEditor({ product, onSaved, initialWarehouseId = "
         <DialogHeader><DialogTitle>{t("productQuantity.title")}</DialogTitle><DialogDescription>{product.name} · {t("productQuantity.help")}</DialogDescription></DialogHeader>
         <form onSubmit={save} className="space-y-4">
           <fieldset disabled={busy} className="space-y-4">
-            <div className="space-y-2"><Label>{t("buyProductForm.storage")}</Label><SearchableFilter value={warehouseId} onValueChange={setWarehouseId} className="w-full" label={t("buyProductForm.storage")} options={(warehouses.data ?? []).map(item => ({ value: item.id, label: item.name }))} /></div>
+            <div className="space-y-2"><Label>{t("buyProductForm.storage")}</Label><SearchableFilter value={warehouseId} onValueChange={value => { setWarehouseId(value); setQuantity(null); }} className="w-full" label={t("buyProductForm.storage")} options={(warehouses.data ?? []).map(item => ({ value: item.id, label: item.name }))} /></div>
             <p className="text-sm text-muted-foreground">{t("productQuantity.current")}: {stock.isLoading ? t("resourceState.loading") : stock.data == null ? "—" : stock.data.toLocaleString(i18n.language)}</p>
             <div className="space-y-2"><Label htmlFor="product-new-quantity">{t("productQuantity.new")}</Label><Input id="product-new-quantity" type="number" min="0" max="1000000000" step="any" required disabled={!warehouseId || stock.isLoading || !!stock.error} value={quantity} onChange={event => setQuantity(event.target.value)} /></div>
             <div className="space-y-2"><Label htmlFor="quantity-note">{t("orderForm.note")}</Label><Input id="quantity-note" maxLength={5000} value={notes} onChange={event => setNotes(event.target.value)} /></div>

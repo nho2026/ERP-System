@@ -90,7 +90,7 @@ export default function AccountantDashboardPage() {
     <div className="mx-auto max-w-[1500px] space-y-5 rounded-2xl bg-muted/30 p-4 md:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-card p-3">
         <div className="relative w-full sm:max-w-sm">
-          <Search className="absolute start-3 top-3 size-4 text-muted-foreground" />
+          <Search className="absolute inset-s-3 top-3 size-4 text-muted-foreground" />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -163,7 +163,7 @@ export default function AccountantDashboardPage() {
         ].map((stat, i) => (
           <Card
             key={stat.label}
-            className={`rounded-2xl border-0 p-5 shadow-none ${i === 0 ? "bg-gradient-to-br from-[#003c30] to-[#008260] text-white" : ""}`}
+            className={`rounded-2xl border-0 p-5 shadow-none ${i === 0 ? "bg-linear-to-br from-[#003c30] to-[#008260] text-white" : ""}`}
           >
             <div className="flex justify-between gap-3">
               <h2 className="text-sm font-medium">{stat.label}</h2>
@@ -305,7 +305,7 @@ export default function AccountantDashboardPage() {
               </div>
             </div>
           </Card>
-          <Card className="rounded-2xl border-0 bg-gradient-to-br from-[#003c30] to-[#008260] p-5 text-white shadow-none">
+          <Card className="rounded-2xl border-0 bg-linear-to-br from-[#003c30] to-[#008260] p-5 text-white shadow-none">
             <WalletCards className="mb-4 size-6" />
             <h2 className="text-sm">Outstanding Payables</h2>
             <p className="my-4 break-words text-3xl font-medium">

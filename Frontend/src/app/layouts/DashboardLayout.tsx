@@ -1,3 +1,4 @@
+import { buildingNavigation } from "@/features/building-expenses/building-navigation";
 import { permissionForPath } from "@/features/auth/permission-policy";
 import {
   AlertDialog,
@@ -703,6 +704,7 @@ export default function DashboardLayout() {
   const [healthcareExpanded, setHealthcareExpanded] = useState(true);
   const [crmExpanded, setCrmExpanded] = useState(true);
   const [accountingExpanded, setAccountingExpanded] = useState(true);
+  const [buildingExpanded, setBuildingExpanded] = useState(true);
   const [financeExpanded, setFinanceExpanded] = useState(true);
   const [warehouseGroupsExpanded, setWarehouseGroupsExpanded] = useState({
     cases: true,
@@ -856,6 +858,7 @@ export default function DashboardLayout() {
   const pageTitle = (() => {
     const allItems = [
       ...primaryNavigation,
+      ...buildingNavigation,
       ...taskNavigation,
       ...attendanceNavigation,
       ...hrNavigation,
@@ -919,6 +922,7 @@ export default function DashboardLayout() {
     `group flex h-11 w-full items-center gap-3 rounded-xl px-3 text-[13px] font-semibold outline-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary/25 ${items.some((item) => location.pathname === item.to) ? "bg-primary/8 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`;
 
   const panelGroups = [
+    { key: "building", icon: Building2, items: buildingNavigation },
     {
       key: "warehouse",
       icon: Package,
@@ -1036,7 +1040,7 @@ export default function DashboardLayout() {
   const panelTerm = panelSearch.trim().toLocaleLowerCase();
   const visibleGroups = panelGroups.filter(
     (group) =>
-      t(`controlPanel.${group.key}`).toLocaleLowerCase().includes(panelTerm) ||
+      t(`controlPanel.${group.key}`, { defaultValue: group.key === "building" ? t("buildingExpenses.title") : group.key }).toLocaleLowerCase().includes(panelTerm) ||
       group.items.some((item) =>
         t(item.label).toLocaleLowerCase().includes(panelTerm),
       ),
@@ -1152,6 +1156,12 @@ export default function DashboardLayout() {
             </div>
             <div className="contents">
               <div className="space-y-1">{navItems(primaryNavigation)}</div>
+              {buildingNavigation.some(({ to }) => hasPermission(user, permissionForPath(to))) && <div className="mt-2 space-y-1">
+                {collapsed ? <NavLink to="/building-expenses" title={t("buildingExpenses.title")} className="flex h-11 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted"><Building2 className="size-4.5" /></NavLink> : <>
+                  <Button variant="ghost" className={sectionButtonClass(buildingNavigation)} aria-expanded={buildingExpanded || Boolean(normalizedNavigationSearch)} onClick={() => setBuildingExpanded(value => !value)}><Building2 className="size-4.25 shrink-0" /><span className="flex-1 text-start">{t("buildingExpenses.title")}</span><ChevronDown className={`size-3.5 transition-transform ${buildingExpanded ? "rotate-180" : ""}`} /></Button>
+                  {(buildingExpanded || Boolean(normalizedNavigationSearch)) && <div className="ms-4.5 space-y-0.5 border-s border-primary/20 ps-3">{navItems(buildingNavigation)}</div>}
+                </>}
+              </div>}
               <div
                 className={`mt-2 space-y-1 ${taskNavigation.some(({ to }) => hasPermission(user, permissionForPath(to))) ? "" : "hidden"}`}
               >
@@ -2047,7 +2057,7 @@ export default function DashboardLayout() {
                   <div className="flex items-center justify-between">
                     <h2 className="text-lg font-semibold">
                       {panelGroup
-                        ? t(`controlPanel.${panelGroup}`)
+                        ? (panelGroup === "building" ? t("buildingExpenses.title") : t(`controlPanel.${panelGroup}`))
                         : t("controlPanel.workspaces")}
                     </h2>
                   </div>
@@ -2070,8 +2080,9 @@ export default function DashboardLayout() {
                               title={t(item.label)}
                               description={t(
                                 `controlPanel.descriptions.${panelGroup}`,
+                                { defaultValue: panelGroup === "building" ? t("buildingExpenses.description") : "" },
                               )}
-                              meta={t(`controlPanel.${panelGroup}`)}
+                              meta={(panelGroup === "building" ? t("buildingExpenses.title") : t(`controlPanel.${panelGroup}`))}
                               colorIndex={
                                 panelGroups
                                   .find((group) => group.key === panelGroup)
@@ -2086,9 +2097,10 @@ export default function DashboardLayout() {
                           <WorkspaceCard
                             key={`workspace:${group.key}`}
                             icon={group.icon}
-                            title={t(`controlPanel.${group.key}`)}
+                            title={t(`controlPanel.${group.key}`, { defaultValue: group.key === "building" ? t("buildingExpenses.title") : group.key })}
                             description={t(
                               `controlPanel.descriptions.${group.key}`,
+                              { defaultValue: group.key === "building" ? t("buildingExpenses.description") : "" },
                             )}
                             meta={t("controlPanel.pages", {
                               count: group.items.length,

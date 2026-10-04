@@ -1,5 +1,6 @@
 import { verifySecret } from "../../shared/security/password.js";
 import { posModel } from "./pos.model.js";
+import { saleFiltersWhere } from "./pos-filters.js";
 import {
   cancelSaleSchema,
   createSaleSchema,
@@ -8,8 +9,8 @@ import {
 } from "./pos.schema.js";
 export const posService = {
   async list(raw) {
-    const { page, pageSize } = posSalesQuerySchema.parse(raw);
-    const [items, total] = await posModel.list((page - 1) * pageSize, pageSize);
+    const { page, pageSize, ...filters } = posSalesQuerySchema.parse(raw);
+    const [items, total] = await posModel.list((page - 1) * pageSize, pageSize, saleFiltersWhere(filters));
     return {
       items,
       pagination: {

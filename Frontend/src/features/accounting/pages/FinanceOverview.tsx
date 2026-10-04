@@ -198,7 +198,7 @@ export default function FinanceOverview() {
             ].map((stat, index) => (
               <Card
                 key={stat.label}
-                className={`rounded-2xl border-0 p-5 shadow-none ${index === 0 ? "bg-gradient-to-br from-[#003c30] to-[#008260] text-white" : ""}`}
+                className={`rounded-2xl border-0 p-5 shadow-none ${index === 0 ? "bg-linear-to-br from-[#003c30] to-[#008260] text-white" : ""}`}
               >
                 <div className="flex items-center justify-between gap-3">
                   <h2 className="text-sm font-medium">{stat.label}</h2>

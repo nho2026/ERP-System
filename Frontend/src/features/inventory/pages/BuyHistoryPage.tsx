@@ -205,7 +205,7 @@ export default function BuyHistoryPage({
       <Card className="overflow-hidden rounded-xl border bg-card">
         <div className="flex flex-wrap gap-3 p-3">
           <div className="relative w-full sm:w-80">
-            <Search className="absolute start-3 top-3 size-4 text-muted-foreground" />
+            <Search className="absolute inset-s-3 top-3 size-4 text-muted-foreground" />
             <Input
               className="ps-9"
               aria-label={t("buyHistory.search")}

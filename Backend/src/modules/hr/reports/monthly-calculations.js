@@ -95,8 +95,9 @@ const payrollAmounts = (baseSalary, minutesLost, hoursPerDay = HOURS_PER_DAY, re
     };
 };
 const localDateKey = (value) => {
-    const date = new Date(value);
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    // Match the report's Baghdad (UTC+03:00) month boundaries, independent of the host.
+    const date = new Date(new Date(value).getTime() + 3 * 3600000);
+    return date.toISOString().slice(0, 10);
 };
 const deviceAttendanceRecords = (events, people, employees, month) => {
     const employeeByPerson = new Map(people
@@ -145,7 +146,7 @@ const deviceAttendanceRecords = (events, people, employees, month) => {
         const expectedMinutes = daySchedule ? scheduledMinutes(daySchedule) : 0;
         const expectedAt = (value) => {
             const [hour, minute] = String(value).split(":").map(Number);
-            return new Date(recordYear, recordMonth - 1, recordDay, hour, minute).getTime();
+            return Date.UTC(recordYear, recordMonth - 1, recordDay, hour, minute) - 3 * 3600000;
         };
         const expectedCheckIn = expectedAt(daySchedule?.checkInTime ?? "09:00");
         let expectedCheckOut = expectedAt(daySchedule?.checkOutTime ?? "17:00");

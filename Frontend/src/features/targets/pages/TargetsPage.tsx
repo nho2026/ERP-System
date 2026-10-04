@@ -300,7 +300,7 @@ export default function TargetsPage() {
                 </div>
                 <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-primary to-teal-500 transition-all"
+                    className="h-full rounded-full bg-linear-to-r from-primary to-teal-500 transition-all"
                     style={{ width: `${percent}%` }}
                   />
                 </div>

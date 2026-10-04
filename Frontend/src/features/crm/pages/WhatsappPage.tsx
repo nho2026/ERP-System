@@ -422,7 +422,7 @@ export default function WhatsappPage() {
               </Badge>
             </div>
             <div className="relative">
-              <Search className="absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="absolute inset-s-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}

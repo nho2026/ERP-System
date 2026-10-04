@@ -28,9 +28,9 @@ function updateDocumentLanguage(language: string) {
 
 void i18n.use(initReactI18next).init({
   resources: {
-    en: { translation: en },
-    ar: { translation: ar },
-    ku: { translation: ku },
+    en: { translation: en, building: en.buildingExpenses },
+    ar: { translation: ar, building: ar.buildingExpenses },
+    ku: { translation: ku, building: ku.buildingExpenses },
   },
   lng: initialLanguage,
   fallbackLng: "en",

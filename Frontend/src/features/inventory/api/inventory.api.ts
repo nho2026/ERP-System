@@ -72,9 +72,9 @@ export const productImageUrl = (url?: string) =>
       : `${(import.meta.env.VITE_API_URL ?? "").replace(/\/api\/?$/, "")}${url}`
     : "";
 export const posApi = {
-  list: (page = 1) =>
+  list: (page = 1, filters: Record<string, string> = {}) =>
     apiClient
-      .get<PageData>("/pos/sales", { params: { page, pageSize: 50 } })
+      .get<PageData>("/pos/sales", { params: { page, pageSize: 50, ...filters } })
       .then((r) => r.data),
   create: (data: Record<string, unknown>) =>
     apiClient.post("/pos/sales", data).then((r) => r.data),

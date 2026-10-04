@@ -427,6 +427,9 @@ model TaskComment {
 }
 
 model Department {
+  buildingProducts BuildingDepartmentProduct[]
+  buildingExpenses BuildingExpense[]
+  buildingRequests BuildingRequest[]
   cashFlows FinanceCashFlow[]
   type String @default("office")
   inventoryOrders InventoryDepartmentOrder[]
@@ -448,6 +451,66 @@ model Department {
 
   @@index([managerId], map: "Department_managerId_idx")
   @@map("hr_Department")
+}
+
+model BuildingProduct {
+  id String @id @default(cuid())
+  name String
+  category String
+  barcode String? @unique
+  price Decimal @db.Decimal(14, 2)
+  active Boolean @default(true)
+  departments BuildingDepartmentProduct[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("building_Product")
+}
+
+model BuildingDepartmentProduct {
+  id String @id @default(cuid())
+  departmentId String
+  productId String
+  quantity Int @default(0)
+  department Department @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  product BuildingProduct @relation(fields: [productId], references: [id], onDelete: Restrict)
+  updatedAt DateTime @updatedAt
+  @@unique([departmentId, productId])
+  @@map("building_DepartmentProduct")
+}
+
+model BuildingExpense {
+  id String @id @default(cuid())
+  departmentId String
+  category String
+  description String
+  amount Decimal @db.Decimal(14, 2)
+  date DateTime @db.Date
+  paidBy String
+  note String @db.Text
+  createdBy String
+  department Department @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([departmentId, date])
+  @@map("building_Expense")
+}
+
+model BuildingRequest {
+  paidAmount Decimal @default(0) @db.Decimal(14, 2)
+  paymentMethod String @default("cash")
+  id String @id @default(cuid())
+  departmentId String
+  kind String
+  status String @default("draft")
+  note String @db.Text
+  items Json
+  history Json
+  createdBy String
+  department Department @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([departmentId, status])
+  @@map("building_Request")
 }
 
 model Meeting {

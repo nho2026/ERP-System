@@ -170,7 +170,7 @@ function Progress({
           <div key={stage} className="relative z-10 flex flex-col items-center">
             {index < stages.length - 1 && (
               <span
-                className="absolute start-1/2 top-[15px] -z-10 h-0.5 w-full bg-slate-200 dark:bg-slate-800"
+                className="absolute inset-s-1/2 top-[15px] -z-10 h-0.5 w-full bg-slate-200 dark:bg-slate-800"
                 style={
                   index < current
                     ? { backgroundColor: progressColors[stage] }
@@ -292,7 +292,7 @@ export default function LeadProgressPage() {
       </section>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="relative w-full max-w-md">
-          <Search className="absolute start-3 top-2.5 size-4 text-muted-foreground" />
+          <Search className="absolute inset-s-3 top-2.5 size-4 text-muted-foreground" />
           <Input
             className="ps-9"
             value={search}
@@ -660,7 +660,7 @@ export default function LeadProgressPage() {
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {rows.map((lead) => (
             <Card key={lead.id} className="overflow-hidden">
-              <div className="h-1.5 bg-gradient-to-r from-primary to-teal-400" />
+              <div className="h-1.5 bg-linear-to-r from-primary to-teal-400" />
               <CardContent className="p-5">
                 <div className="flex items-start justify-between">
                   <span className="grid size-12 place-items-center rounded-xl bg-primary/10 text-primary">

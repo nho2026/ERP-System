@@ -3,6 +3,7 @@ import { laboratoryChangeMiddleware } from "./modules/laboratory/laboratory.real
 import laboratoryRoutes from "./modules/laboratory/laboratory.routes.js";
 import settingsRoutes from "./modules/settings/settings.routes.js";
 import express from "express";
+import buildingExpenseRoutes from "./modules/building-expenses/building.routes.js";
 import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
@@ -88,6 +89,7 @@ app.use("/api/billing", laboratoryChangeMiddleware, billingRoutes);
 app.use("/api/advances", advancesRoutes);
 app.use("/api/finance", financeRoutes);
 app.use("/api/inventory", inventoryRoutes);
+app.use("/api/building-expenses", buildingExpenseRoutes);
 app.use("/api/pos", posRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/feedback", feedbackRoutes);

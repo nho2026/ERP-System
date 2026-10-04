@@ -268,7 +268,7 @@ export default function TodayPatientsPage() {
             className="relative overflow-hidden rounded-2xl p-5 sm:p-6"
           >
             <span
-              className={`absolute inset-y-6 start-0 w-1 rounded-e-full ${accent}`}
+              className={`absolute inset-y-6 inset-s-0 w-1 rounded-e-full ${accent}`}
               aria-hidden="true"
             />
             <div className="flex items-start justify-between gap-4">

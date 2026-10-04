@@ -274,7 +274,7 @@ function EmployeeFilter({
       </PopoverTrigger>
       <PopoverContent className="w-[300px] p-0" align="start">
         <div className="relative border-b p-2">
-          <Search className="absolute start-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute inset-s-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             className="ps-8"
             value={search}
@@ -594,8 +594,12 @@ export default function EventsPage() {
                   </TableCell>
                   <TableCell>
                     {new Intl.DateTimeFormat(i18n.resolvedLanguage, {
-                      dateStyle: "medium",
-                      timeStyle: "short",
+                      weekday: "long",
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                      hour: "numeric",
+                      minute: "2-digit",
                       timeZone: "Asia/Baghdad",
                     }).format(new Date(e.occurredAt))}
                   </TableCell>

@@ -105,7 +105,7 @@ export default function HrDashboardPage() {
     <div className="mx-auto max-w-[1500px] space-y-5 rounded-2xl bg-muted/30 p-4 md:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-card p-3">
         <div className="relative w-full sm:max-w-sm">
-          <Search className="absolute start-3 top-3 size-4 text-muted-foreground" />
+          <Search className="absolute inset-s-3 top-3 size-4 text-muted-foreground" />
           <Input
             className="rounded-full border-0 bg-muted/40 ps-9"
             placeholder="Search employees or departments"
@@ -174,7 +174,7 @@ export default function HrDashboardPage() {
         ].map((stat, i) => (
           <Card
             key={stat.label}
-            className={`rounded-2xl border-0 p-5 shadow-none ${i === 0 ? "bg-gradient-to-br from-[#003c30] to-[#008260] text-white" : ""}`}
+            className={`rounded-2xl border-0 p-5 shadow-none ${i === 0 ? "bg-linear-to-br from-[#003c30] to-[#008260] text-white" : ""}`}
           >
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-sm font-medium">{stat.label}</h2>
@@ -381,7 +381,7 @@ export default function HrDashboardPage() {
               </Button>
             ))}
           </Card>
-          <Card className="rounded-2xl border-0 bg-gradient-to-br from-[#003c30] to-[#008260] p-5 text-white shadow-none">
+          <Card className="rounded-2xl border-0 bg-linear-to-br from-[#003c30] to-[#008260] p-5 text-white shadow-none">
             <CalendarDays className="mb-4 size-6" />
             <p className="text-2xl font-medium">
               {now.toLocaleDateString(undefined, {

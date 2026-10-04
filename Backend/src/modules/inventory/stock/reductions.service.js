@@ -14,6 +14,7 @@ export const listReductions = ({ query }) => {
   return paginate(query, "inventoryMovement", {
     where: {
       movementType: "item_reduction",
+      ...(query.warehouseId && { warehouseId: String(query.warehouseId) }),
       ...(search && {
         OR: [
           { product: { name: { contains: search } } },

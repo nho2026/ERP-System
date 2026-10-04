@@ -381,7 +381,7 @@ function AppointmentCalendar({
   return (
     <div className="grid min-h-[700px] xl:grid-cols-[minmax(0,1fr)_340px]">
       <div className="min-w-0 border-e">
-        <div className="border-b bg-gradient-to-r from-primary/10 via-teal-500/5 to-transparent p-4">
+        <div className="border-b bg-linear-to-r from-primary/10 via-teal-500/5 to-transparent p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <span className="grid size-11 place-items-center rounded-xl bg-primary text-primary-foreground shadow-md">
@@ -607,7 +607,7 @@ function AppointmentCalendar({
         </div>
       </div>
       <aside className="bg-muted/20 p-4">
-        <div className="mb-4 rounded-2xl bg-gradient-to-br from-slate-950 to-teal-900 p-4 text-white shadow-md">
+        <div className="mb-4 rounded-2xl bg-linear-to-br from-slate-950 to-teal-900 p-4 text-white shadow-md">
           <div className="flex items-start justify-between">
             <span className="grid size-10 place-items-center rounded-xl bg-white/10">
               <CalendarCheck />
@@ -634,7 +634,7 @@ function AppointmentCalendar({
                   className="relative w-full overflow-hidden rounded-xl border bg-card p-3 ps-4 text-start shadow-sm transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
                 >
                   <span
-                    className={`absolute inset-y-0 start-0 w-1 ${appointmentDots[String(appointment.status)] ?? appointmentDots.pending}`}
+                    className={`absolute inset-y-0 inset-s-0 w-1 ${appointmentDots[String(appointment.status)] ?? appointmentDots.pending}`}
                   />
                   <div className="flex items-center justify-between gap-2">
                     <span className="flex items-center gap-1.5 text-sm font-bold">

@@ -25,7 +25,14 @@ export const apiErrorMessage = (error: unknown) => {
       );
     if (details.length) return details.join("\n");
   }
-  return data?.message ?? "The server is unavailable. Please try again.";
+  const message = data?.message ?? "The server is unavailable. Please try again.";
+  if (error.config?.url?.includes("/building-expenses")) {
+    const options = { ns: "building", keySeparator: false as const, nsSeparator: false as const };
+    if (i18n.exists(message, options)) return i18n.t(message, options);
+    if (error.response?.status === 403) return i18n.t("access.denied");
+    return i18n.t(error.response?.status === 400 || error.response?.status === 422 ? "Check required fields and entered values." : "Unable to complete this action. Please try again.", options);
+  }
+  return message;
 };
 
 // Client checks provide immediate feedback; the API independently enforces the same policy.

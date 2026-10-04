@@ -155,8 +155,9 @@ export const payrollAmounts = (
 };
 
 const localDateKey = (value: string) => {
-  const date = new Date(value);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  // Match the Events page and report's Baghdad (UTC+03:00) month boundaries.
+  const date = new Date(new Date(value).getTime() + 3 * 3600000);
+  return date.toISOString().slice(0, 10);
 };
 
 export const deviceAttendanceRecords = (
@@ -231,13 +232,13 @@ export const deviceAttendanceRecords = (
     const expectedMinutes = daySchedule ? scheduledMinutes(daySchedule) : 0;
     const expectedAt = (value: unknown) => {
       const [hour, minute] = String(value).split(":").map(Number);
-      return new Date(
+      return Date.UTC(
         recordYear,
         recordMonth - 1,
         recordDay,
         hour,
         minute,
-      ).getTime();
+      ) - 3 * 3600000;
     };
     const expectedCheckIn = expectedAt(daySchedule?.checkInTime ?? "09:00");
     let expectedCheckOut = expectedAt(daySchedule?.checkOutTime ?? "17:00");

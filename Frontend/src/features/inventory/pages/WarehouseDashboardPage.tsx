@@ -148,7 +148,7 @@ export default function WarehouseDashboardPage() {
   ];
   return (
     <div className="mx-auto max-w-[1600px] space-y-6 pb-6">
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-teal-950 via-teal-900 to-teal-700 p-6 text-white shadow-lg sm:p-8">
+      <section className="relative overflow-hidden rounded-3xl bg-linear-to-br from-teal-950 via-teal-900 to-teal-700 p-6 text-white shadow-lg sm:p-8">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute -end-14 -top-24 size-80 rounded-full border-[45px] border-white/5"
