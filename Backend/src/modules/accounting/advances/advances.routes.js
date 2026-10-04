@@ -1,6 +1,9 @@
 import { Router } from "express";
 import { requireAuth } from "../../../shared/middleware/auth.middleware.js";
-import { requireAnyPermission, requirePermission } from "../../../shared/middleware/permission.middleware.js";
+import {
+  requireAnyPermission,
+  requirePermission,
+} from "../../../shared/middleware/permission.middleware.js";
 import { validate } from "../../../shared/middleware/validation.middleware.js";
 import { advancesController } from "./advances.controller.js";
 import {

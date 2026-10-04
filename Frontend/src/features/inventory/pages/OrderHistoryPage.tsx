@@ -83,7 +83,12 @@ export default function OrderHistoryPage({
   const [busy, setBusy] = useState(false);
   const lock = useRef(false);
   const [error, setError] = useState("");
-  const canManage = hasPagePermission(storedUser(), "create", "update", "delete");
+  const canManage = hasPagePermission(
+    storedUser(),
+    "create",
+    "update",
+    "delete",
+  );
   const result = useApiResource(
     useCallback(
       () =>
@@ -255,7 +260,8 @@ export default function OrderHistoryPage({
                     ))}
                   <TableCell>
                     <div className="flex justify-end gap-2">
-                      <Button permission="print"
+                      <Button
+                        permission="print"
                         size="icon"
                         className="size-8 bg-teal-500 text-white hover:bg-teal-600"
                         aria-label={`${t("buyHistory.print")} ${row.name}`}
@@ -274,12 +280,21 @@ export default function OrderHistoryPage({
                       >
                         <Eye className="size-4" />
                       </Button>
-                      {canEdit && <Button permission="update" size="icon" variant="outline" className="size-8"
-                        aria-label={`${t("orderHistory.edit")} ${row.name}`} onClick={() => setEditing(row)}>
-                        <Pencil className="size-4" />
-                      </Button>}
+                      {canEdit && (
+                        <Button
+                          permission="update"
+                          size="icon"
+                          variant="outline"
+                          className="size-8"
+                          aria-label={`${t("orderHistory.edit")} ${row.name}`}
+                          onClick={() => setEditing(row)}
+                        >
+                          <Pencil className="size-4" />
+                        </Button>
+                      )}
                       {canManage && (
-                        <Button data-action="delete"
+                        <Button
+                          data-action="delete"
                           size="icon"
                           variant="destructive"
                           className="size-8"
@@ -330,15 +345,32 @@ export default function OrderHistoryPage({
           </div>
         </footer>
       </Card>
-      <Dialog open={!!editing} onOpenChange={(open) => { if (!open && !editBusy) setEditing(null); }}>
-        <DialogContent dir={i18n.dir()} className="flex h-[80dvh] max-h-[90dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-[min(96vw,1200px)]">
+      <Dialog
+        open={!!editing}
+        onOpenChange={(open) => {
+          if (!open && !editBusy) setEditing(null);
+        }}
+      >
+        <DialogContent
+          dir={i18n.dir()}
+          className="flex h-[80dvh] max-h-[90dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-[min(96vw,1200px)]"
+        >
           <DialogHeader className="shrink-0 px-6 py-5">
-            <DialogTitle>{t("orderHistory.edit")} · {editing?.name}</DialogTitle>
+            <DialogTitle>
+              {t("orderHistory.edit")} · {editing?.name}
+            </DialogTitle>
           </DialogHeader>
-          {editing && <OrderForm key={editing.id} order={editing} onBusy={setEditBusy} onSaved={() => {
-            setEditing(null);
-            void result.refresh();
-          }} />}
+          {editing && (
+            <OrderForm
+              key={editing.id}
+              order={editing}
+              onBusy={setEditBusy}
+              onSaved={() => {
+                setEditing(null);
+                void result.refresh();
+              }}
+            />
+          )}
         </DialogContent>
       </Dialog>
       <Dialog
@@ -440,7 +472,8 @@ export default function OrderHistoryPage({
             >
               {t("buyHistory.cancel")}
             </Button>
-            <Button permission="delete"
+            <Button
+              permission="delete"
               variant="destructive"
               disabled={busy}
               onClick={() => void remove()}

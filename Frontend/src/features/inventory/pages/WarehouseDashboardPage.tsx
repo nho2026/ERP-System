@@ -58,7 +58,12 @@ export default function WarehouseDashboardPage() {
       return { warehouses, stock, products, movements };
     }, [canStock, canProducts, canMovements]),
   );
-  const alertTable = useServerTable<RecordItem>("/inventory/stock", { onlyLow: "true", warehouseId: location === "all" ? undefined : location }, canStock, 5);
+  const alertTable = useServerTable<RecordItem>(
+    "/inventory/stock",
+    { onlyLow: "true", warehouseId: location === "all" ? undefined : location },
+    canStock,
+    5,
+  );
   const d = resource.data;
   const number = (value: number) =>
     new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 2 }).format(
@@ -133,9 +138,7 @@ export default function WarehouseDashboardPage() {
     },
     {
       label: "units",
-      value: d?.stock
-        ? units
-        : undefined,
+      value: d?.stock ? units : undefined,
       icon: Boxes,
       note: "selectedLocation",
     },
@@ -393,7 +396,10 @@ export default function WarehouseDashboardPage() {
                       )}
                     </TableRow>
                   </TableHeader>
-                  <TableBody {...alertTable.tableProps} aria-busy={alertTable.isLoading}>
+                  <TableBody
+                    {...alertTable.tableProps}
+                    aria-busy={alertTable.isLoading}
+                  >
                     {(alertTable.data ?? []).map((row) => (
                       <TableRow key={row.id} className="border-t">
                         <TableCell className="px-5 py-3 font-medium">

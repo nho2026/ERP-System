@@ -18,23 +18,37 @@ import {
   TableRow,
 } from "@/shared/components/ui/table";
 
-import {
-  duration,
-  employeeLabel,
-  monthValue,
-} from "./monthly-hr";
+import { duration, employeeLabel, monthValue } from "./monthly-hr";
 
 export default function PayrollPage() {
   const { t, i18n } = useTranslation();
   const tx = (key: string, fallback: string) =>
     t(`hrMonthly.${key}`, { defaultValue: fallback });
   const [month, setMonth] = useState(monthValue());
-  const table = useServerTable<{ employee: HrRecord; salary: HrRecord; minutesLost: number; hourlyRate: number; adjustments: HrRecord[]; deduction: number; netSalary: number; rewardAmount: number; punishmentAmount: number }>("/employees/records/payrolls/monthly-report", { month });
-  const fullPrint = useFullReportPrint(() => apiClient.get<NonNullable<typeof table.data>>("/employees/records/payrolls/monthly-report", { params: { month, export: "true" } }).then(r => r.data));
+  const table = useServerTable<{
+    employee: HrRecord;
+    salary: HrRecord;
+    minutesLost: number;
+    hourlyRate: number;
+    adjustments: HrRecord[];
+    deduction: number;
+    netSalary: number;
+    rewardAmount: number;
+    punishmentAmount: number;
+  }>("/employees/records/payrolls/monthly-report", { month });
+  const fullPrint = useFullReportPrint(() =>
+    apiClient
+      .get<NonNullable<typeof table.data>>(
+        "/employees/records/payrolls/monthly-report",
+        { params: { month, export: "true" } },
+      )
+      .then((r) => r.data),
+  );
   const rows = fullPrint.printData ?? table.data ?? [];
   const money = (value: number, currency?: unknown) =>
     `${value.toLocaleString(undefined, { maximumFractionDigits: 2 })} ${String(currency ?? "")}`.trim();
-  const loadError = table.error, isLoading = table.isLoading;
+  const loadError = table.error,
+    isLoading = table.isLoading;
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -91,77 +105,91 @@ export default function PayrollPage() {
                   <TableHead>{t("hr.net")}</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody autoPaginate={false} pagination={fullPrint.printData ? undefined : table.pagination}>
-                <TableResourceState isLoading={isLoading} error={loadError ?? null} isEmpty={!rows.length} colSpan={10} />
-                {!isLoading && !loadError && rows.map((row, index) => (
-                  <TableRow key={row.employee.id}>
-                    <TableCell>{index + 1}</TableCell>
-                    <TableCell>
-                      <p className="font-medium">
-                        {employeeLabel(row.employee)}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {String(row.employee.employeeCode)}
-                      </p>
-                    </TableCell>
-                    {row.salary ? (
-                      <>
-                        <TableCell>
-                          {money(
-                            Number(row.salary.baseSalary),
-                            row.salary.currencyId,
-                          )}
-                        </TableCell>
-                        <TableCell>{duration(row.minutesLost)}</TableCell>
-                        <TableCell>
-                          {money(row.hourlyRate, row.salary.currencyId)}
-                        </TableCell>
-                        <TableCell className="text-destructive">
-                          − {money(row.deduction, row.salary.currencyId)}
-                        </TableCell>
-                        <TableCell className="text-emerald-700">
-                          + {money(row.rewardAmount, row.salary.currencyId)}
-                        </TableCell>
-                        <TableCell className="text-destructive">
-                          − {money(row.punishmentAmount, row.salary.currencyId)}
-                        </TableCell>
-                        <TableCell className="min-w-56">
-                          {row.adjustments.length ? (
-                            <ul className="space-y-1 text-xs">
-                              {row.adjustments.map((adjustment) => (
-                                <li key={adjustment.id}>
-                                  <span
-                                    className={
-                                      adjustment.type === "reward"
-                                        ? "font-semibold text-emerald-700"
-                                        : "font-semibold text-destructive"
-                                    }
-                                  >
-                                    {adjustment.type === "reward" ? "+" : "−"}
-                                    {money(
-                                      Number(adjustment.amount),
-                                      row.salary?.currencyId,
-                                    )}
-                                  </span>{" "}
-                                  — {String(adjustment.reason)}
-                                </li>
-                              ))}
-                            </ul>
-                          ) : (
-                            "—"
-                          )}
-                        </TableCell>
-                        <TableCell className="font-bold text-emerald-700">
-                          {money(row.netSalary, row.salary.currencyId)}
-                        </TableCell>
-                      </>
-                    ) : (
-                      <TableCell colSpan={8} className="text-muted-foreground">
-                        {tx("noSalary", "No active salary for this month")}
+              <TableBody
+                autoPaginate={false}
+                pagination={fullPrint.printData ? undefined : table.pagination}
+              >
+                <TableResourceState
+                  isLoading={isLoading}
+                  error={loadError ?? null}
+                  isEmpty={!rows.length}
+                  colSpan={10}
+                />
+                {!isLoading &&
+                  !loadError &&
+                  rows.map((row, index) => (
+                    <TableRow key={row.employee.id}>
+                      <TableCell>{index + 1}</TableCell>
+                      <TableCell>
+                        <p className="font-medium">
+                          {employeeLabel(row.employee)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {String(row.employee.employeeCode)}
+                        </p>
                       </TableCell>
-                    )}
-                  </TableRow>
-                ))}
+                      {row.salary ? (
+                        <>
+                          <TableCell>
+                            {money(
+                              Number(row.salary.baseSalary),
+                              row.salary.currencyId,
+                            )}
+                          </TableCell>
+                          <TableCell>{duration(row.minutesLost)}</TableCell>
+                          <TableCell>
+                            {money(row.hourlyRate, row.salary.currencyId)}
+                          </TableCell>
+                          <TableCell className="text-destructive">
+                            − {money(row.deduction, row.salary.currencyId)}
+                          </TableCell>
+                          <TableCell className="text-emerald-700">
+                            + {money(row.rewardAmount, row.salary.currencyId)}
+                          </TableCell>
+                          <TableCell className="text-destructive">
+                            −{" "}
+                            {money(row.punishmentAmount, row.salary.currencyId)}
+                          </TableCell>
+                          <TableCell className="min-w-56">
+                            {row.adjustments.length ? (
+                              <ul className="space-y-1 text-xs">
+                                {row.adjustments.map((adjustment) => (
+                                  <li key={adjustment.id}>
+                                    <span
+                                      className={
+                                        adjustment.type === "reward"
+                                          ? "font-semibold text-emerald-700"
+                                          : "font-semibold text-destructive"
+                                      }
+                                    >
+                                      {adjustment.type === "reward" ? "+" : "−"}
+                                      {money(
+                                        Number(adjustment.amount),
+                                        row.salary?.currencyId,
+                                      )}
+                                    </span>{" "}
+                                    — {String(adjustment.reason)}
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              "—"
+                            )}
+                          </TableCell>
+                          <TableCell className="font-bold text-emerald-700">
+                            {money(row.netSalary, row.salary.currencyId)}
+                          </TableCell>
+                        </>
+                      ) : (
+                        <TableCell
+                          colSpan={8}
+                          className="text-muted-foreground"
+                        >
+                          {tx("noSalary", "No active salary for this month")}
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
               </TableBody>
             </Table>
           </div>

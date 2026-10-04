@@ -336,7 +336,13 @@ export default function StoragePage() {
                   ))}
                   <TableCell>
                     <div className="flex gap-2">
-                      <StorageQuantityEditor product={{ id: p.id, name: String(p.name) }} initialWarehouseId={warehouse === "all" ? "" : warehouse} onSaved={data.refresh} />
+                      <StorageQuantityEditor
+                        product={{ id: p.id, name: String(p.name) }}
+                        initialWarehouseId={
+                          warehouse === "all" ? "" : warehouse
+                        }
+                        onSaved={data.refresh}
+                      />
                       <Button
                         variant="outline"
                         size="icon"

@@ -232,13 +232,10 @@ export const deviceAttendanceRecords = (
     const expectedMinutes = daySchedule ? scheduledMinutes(daySchedule) : 0;
     const expectedAt = (value: unknown) => {
       const [hour, minute] = String(value).split(":").map(Number);
-      return Date.UTC(
-        recordYear,
-        recordMonth - 1,
-        recordDay,
-        hour,
-        minute,
-      ) - 3 * 3600000;
+      return (
+        Date.UTC(recordYear, recordMonth - 1, recordDay, hour, minute) -
+        3 * 3600000
+      );
     };
     const expectedCheckIn = expectedAt(daySchedule?.checkInTime ?? "09:00");
     let expectedCheckOut = expectedAt(daySchedule?.checkOutTime ?? "17:00");

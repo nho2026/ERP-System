@@ -99,7 +99,8 @@ export function DeleteConfirmationDialog({
             >
               {t("common.cancel")}
             </Button>
-            <Button permission={permission}
+            <Button
+              permission={permission}
               type="submit"
               variant="destructive"
               disabled={(requirePassword && !password) || busy}

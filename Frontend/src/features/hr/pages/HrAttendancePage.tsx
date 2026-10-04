@@ -72,7 +72,10 @@ const time = (value: unknown) =>
     : "—";
 
 const deviceUserCount = (employee: HrRecord) =>
-  Number((employee._count as { devicePeople?: number } | undefined)?.devicePeople ?? 0);
+  Number(
+    (employee._count as { devicePeople?: number } | undefined)?.devicePeople ??
+      0,
+  );
 
 export default function HrAttendancePage() {
   const { t, i18n } = useTranslation();
@@ -84,7 +87,10 @@ export default function HrAttendancePage() {
   const [deletingPermission, setDeletingPermission] = useState<HrRecord | null>(
     null,
   );
-  const canManage = hasPermission(storedUser(), "hr.attendance-permissions.create");
+  const canManage = hasPermission(
+    storedUser(),
+    "hr.attendance-permissions.create",
+  );
   const [month, setMonth] = useState(monthValue());
   const [search, setSearch] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState("all");
@@ -93,11 +99,32 @@ export default function HrAttendancePage() {
   const [selected, setSelected] = useState<HrRecord>();
   const [permissionOpen, setPermissionOpen] = useState(false);
   const [permissionType, setPermissionType] = useState("full_day");
-  const table = useServerTable<HrRecord, { records: HrRecord[]; permissions: HrRecord[]; departments: [string,string][]; totals: { employees: number; linked: number; lost: number } }>("/employees/records/attendance/monthly-report", { month, search, departmentId: departmentFilter, attendance: attendanceFilter, selectedId: selected?.id });
+  const table = useServerTable<
+    HrRecord,
+    {
+      records: HrRecord[];
+      permissions: HrRecord[];
+      departments: [string, string][];
+      totals: { employees: number; linked: number; lost: number };
+    }
+  >("/employees/records/attendance/monthly-report", {
+    month,
+    search,
+    departmentId: departmentFilter,
+    attendance: attendanceFilter,
+    selectedId: selected?.id,
+  });
   const visible = table.data ?? [];
-  const linkedEmployees = new Set(visible.filter(employee => deviceUserCount(employee) > 0).map(employee => employee.id));
+  const linkedEmployees = new Set(
+    visible
+      .filter((employee) => deviceUserCount(employee) > 0)
+      .map((employee) => employee.id),
+  );
   const monthRecords = table.pageData?.records ?? [];
-  const permissions = { data: table.pageData?.permissions ?? [], refresh: table.refresh };
+  const permissions = {
+    data: table.pageData?.permissions ?? [],
+    refresh: table.refresh,
+  };
   const departmentOptions = table.pageData?.departments ?? [];
   const recordsFor = (id: string) =>
     monthRecords.filter((x) => x.employeeId === id);
@@ -193,7 +220,9 @@ export default function HrAttendancePage() {
               <p className="text-xs text-muted-foreground">
                 {tx("totalEmployees", "Employees")}
               </p>
-              <p className="text-xl font-bold">{table.pageData?.totals.employees ?? 0}</p>
+              <p className="text-xl font-bold">
+                {table.pageData?.totals.employees ?? 0}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-3 rounded-2xl border bg-background/80 p-4 backdrop-blur">
@@ -204,7 +233,9 @@ export default function HrAttendancePage() {
               <p className="text-xs text-muted-foreground">
                 {tx("linkedEmployees", "Device linked")}
               </p>
-              <p className="text-xl font-bold">{table.pageData?.totals.linked ?? 0}</p>
+              <p className="text-xl font-bold">
+                {table.pageData?.totals.linked ?? 0}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-3 rounded-2xl border bg-background/80 p-4 backdrop-blur">
@@ -349,11 +380,7 @@ export default function HrAttendancePage() {
           </div>
         </div>
       </div>
-      {(table.error) && (
-        <p className="text-sm text-destructive">
-          {table.error}
-        </p>
-      )}
+      {table.error && <p className="text-sm text-destructive">{table.error}</p>}
       {directoryView === "grid" ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {isLoading &&
@@ -381,7 +408,10 @@ export default function HrAttendancePage() {
                         {String(employee.lastName ?? "").charAt(0)}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="line-clamp-2 text-sm font-semibold leading-5 text-foreground" title={employeeLabel(employee)}>
+                        <p
+                          className="line-clamp-2 text-sm font-semibold leading-5 text-foreground"
+                          title={employeeLabel(employee)}
+                        >
                           {employeeLabel(employee)}
                         </p>
                         <p className="mt-1 truncate text-xs font-normal text-muted-foreground">
@@ -390,7 +420,10 @@ export default function HrAttendancePage() {
                             : tx("noSystemUser", "No system user")}
                         </p>
                       </div>
-                      <ArrowUpRight aria-hidden="true" className="size-4 shrink-0 text-muted-foreground/50 transition-colors group-hover:text-primary rtl:-scale-x-100" />
+                      <ArrowUpRight
+                        aria-hidden="true"
+                        className="size-4 shrink-0 text-muted-foreground/50 transition-colors group-hover:text-primary rtl:-scale-x-100"
+                      />
                     </div>
                     <div className="mt-4 flex min-w-0 items-center gap-2 text-xs font-normal text-muted-foreground">
                       <BriefcaseBusiness className="size-3.5 shrink-0" />
@@ -409,14 +442,25 @@ export default function HrAttendancePage() {
                     <span className="flex min-w-0 items-center gap-2 text-xs font-normal text-muted-foreground">
                       <span
                         className={`size-1.5 shrink-0 rounded-full ${linkedEmployees.has(employee.id) ? "bg-emerald-500" : "bg-muted-foreground/35"}`}
-                        title={linkedEmployees.has(employee.id) ? tx("linked", "Linked") : tx("notLinked", "Not linked")}
+                        title={
+                          linkedEmployees.has(employee.id)
+                            ? tx("linked", "Linked")
+                            : tx("notLinked", "Not linked")
+                        }
                       />
-                      <span className="truncate">{deviceUserCount(employee)} {tx("deviceUsers", "device users")}</span>
+                      <span className="truncate">
+                        {deviceUserCount(employee)}{" "}
+                        {tx("deviceUsers", "device users")}
+                      </span>
                     </span>
                     <span className="flex shrink-0 items-center gap-2 rounded-lg bg-primary px-2.5 py-1.5 text-xs text-primary-foreground">
                       <Clock3 className="size-3.5" />
-                      <span className="font-normal">{tx("lostTime", "Lost time")}</span>
-                      <span className="font-semibold tabular-nums">{duration(lost)}</span>
+                      <span className="font-normal">
+                        {tx("lostTime", "Lost time")}
+                      </span>
+                      <span className="font-semibold tabular-nums">
+                        {duration(lost)}
+                      </span>
                     </span>
                   </div>
                 </Card>
@@ -474,10 +518,10 @@ export default function HrAttendancePage() {
                         ? `@${String((employee.user as HrRecord).username)}`
                         : tx("noSystemUser", "No system user")}
                     </TableCell>
-                    <TableCell>
-                      {deviceUserCount(employee)}
-                    </TableCell>
-                    <TableCell className={`text-end font-semibold tabular-nums ${lost > 0 ? "text-destructive" : "text-muted-foreground"}`}>
+                    <TableCell>{deviceUserCount(employee)}</TableCell>
+                    <TableCell
+                      className={`text-end font-semibold tabular-nums ${lost > 0 ? "text-destructive" : "text-muted-foreground"}`}
+                    >
                       {duration(lost)}
                     </TableCell>
                   </TableRow>
@@ -506,38 +550,39 @@ export default function HrAttendancePage() {
         <DialogContent className="flex max-h-[94dvh] w-[min(96vw,1440px)] max-w-none flex-col gap-0 overflow-hidden rounded-2xl border p-0 shadow-2xl sm:max-w-none">
           <div className="shrink-0 border-b bg-card px-4 py-4 sm:px-6 sm:py-5">
             <div className="flex flex-wrap items-center justify-between gap-4 pe-8">
-            <DialogHeader className="min-w-0 flex-1 text-start">
-              <DialogTitle className="flex items-center gap-3 text-lg sm:text-xl">
-                <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
-                  <CalendarDays className="size-6" />
-                </span>
-                <span>
-                  <span className="block">
-                    {selected && employeeLabel(selected)}
+              <DialogHeader className="min-w-0 flex-1 text-start">
+                <DialogTitle className="flex items-center gap-3 text-lg sm:text-xl">
+                  <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
+                    <CalendarDays className="size-6" />
                   </span>
-                  <span className="mt-1.5 block text-xs font-normal leading-5 text-muted-foreground">
-                    {String(selected?.employeeCode ?? "")} ·{" "}
-                    {new Intl.DateTimeFormat(undefined, {
-                      month: "long",
-                      year: "numeric",
-                    }).format(new Date(year, monthNumber - 1))}
-                    {" · "}
-                    {tx("schedule", "Schedule")}:{" "}
-                    {selected?.scheduleType === "dynamic"
-                      ? t("employeeSchedule.dynamic")
-                      : `${String(selected?.checkInTime ?? "09:00")}–${String(selected?.checkOutTime ?? "17:00")}`}
+                  <span>
+                    <span className="block">
+                      {selected && employeeLabel(selected)}
+                    </span>
+                    <span className="mt-1.5 block text-xs font-normal leading-5 text-muted-foreground">
+                      {String(selected?.employeeCode ?? "")} ·{" "}
+                      {new Intl.DateTimeFormat(undefined, {
+                        month: "long",
+                        year: "numeric",
+                      }).format(new Date(year, monthNumber - 1))}
+                      {" · "}
+                      {tx("schedule", "Schedule")}:{" "}
+                      {selected?.scheduleType === "dynamic"
+                        ? t("employeeSchedule.dynamic")
+                        : `${String(selected?.checkInTime ?? "09:00")}–${String(selected?.checkOutTime ?? "17:00")}`}
+                    </span>
                   </span>
-                </span>
-              </DialogTitle>
-            </DialogHeader>
-            {canManage && (
-              <Button permission="hr.attendance-permissions.create"
-                className="shrink-0 rounded-xl"
-                onClick={() => setPermissionOpen(true)}
-              >
-                <ShieldCheck /> {tx("grantPermission", "Grant permission")}
-              </Button>
-            )}
+                </DialogTitle>
+              </DialogHeader>
+              {canManage && (
+                <Button
+                  permission="hr.attendance-permissions.create"
+                  className="shrink-0 rounded-xl"
+                  onClick={() => setPermissionOpen(true)}
+                >
+                  <ShieldCheck /> {tx("grantPermission", "Grant permission")}
+                </Button>
+              )}
             </div>
             <div className="mt-4 grid grid-cols-3 divide-x divide-border rounded-xl border bg-muted/25 rtl:divide-x-reverse">
               <div className="min-w-0 px-3 py-3 sm:px-5">
@@ -593,8 +638,12 @@ export default function HrAttendancePage() {
                           String(permission.toDate).slice(0, 10) &&
                           ` — ${String(permission.toDate).slice(0, 10)}`}
                         {canDeletePermission && (
-                          <Button variant="ghost" size="icon" className="size-5"
-                            permission="hr.attendance-permissions.delete" data-action="delete"
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-5"
+                            permission="hr.attendance-permissions.delete"
+                            data-action="delete"
                             type="button"
                             aria-label={t("common.delete")}
                             onClick={() => setDeletingPermission(permission)}
@@ -611,137 +660,163 @@ export default function HrAttendancePage() {
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <h3 className="flex items-center gap-2 text-base font-semibold tracking-tight">
                 <CalendarDays className="size-4 text-primary" />
-                {new Intl.DateTimeFormat(i18n.resolvedLanguage, { month: "long", year: "numeric" }).format(new Date(year, monthNumber - 1))}
+                {new Intl.DateTimeFormat(i18n.resolvedLanguage, {
+                  month: "long",
+                  year: "numeric",
+                }).format(new Date(year, monthNumber - 1))}
               </h3>
               <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-primary" />{tx("recordedDays", "Recorded days")}</span>
-                <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-destructive" />{tx("lostTime", "Lost time")}</span>
+                <span className="flex items-center gap-1.5">
+                  <span className="size-2 rounded-full bg-primary" />
+                  {tx("recordedDays", "Recorded days")}
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="size-2 rounded-full bg-destructive" />
+                  {tx("lostTime", "Lost time")}
+                </span>
               </div>
             </div>
             <div className="min-w-[840px] overflow-hidden rounded-xl border bg-border/70 shadow-xs">
-            <div className="grid grid-cols-7 gap-px border-b text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {Array.from({ length: 7 }, (_, i) => (
-                <div className="bg-muted px-3 py-3" key={i}>
-                  {new Intl.DateTimeFormat(i18n.resolvedLanguage, {
-                    weekday: "short",
-                  }).format(new Date(2024, 0, 7 + i))}
-                </div>
-              ))}
-            </div>
-            <div className="grid grid-cols-7 gap-px">
-              {Array.from({ length: firstOffset }, (_, i) => (
-                <div key={`empty-${i}`} className="bg-muted/70" aria-hidden="true" />
-              ))}
-              {days.map((day) => {
-                const schedule = selected
-                  ? scheduleForDay(selected, day.getDay())
-                  : null;
-                const dateKey = `${month}-${String(day.getDate()).padStart(2, "0")}`;
-                const row = recordsFor(selected?.id ?? "").find(
-                  (x) => String(x.attendanceDate).slice(0, 10) === dateKey,
-                );
-                const dayPermissions = (permissions.data ?? []).filter(
-                  (permission) =>
-                    permission.employeeId === selected?.id &&
-                    permission.status === "approved" &&
-                    String(permission.fromDate).slice(0, 10) <= dateKey &&
-                    String(permission.toDate).slice(0, 10) >= dateKey,
-                );
-                const lost = row ? lostMinutes(row, permissions.data ?? []) : 0;
-                const isToday = day.toDateString() === new Date().toDateString();
-                return (
+              <div className="grid grid-cols-7 gap-px border-b text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                {Array.from({ length: 7 }, (_, i) => (
+                  <div className="bg-muted px-3 py-3" key={i}>
+                    {new Intl.DateTimeFormat(i18n.resolvedLanguage, {
+                      weekday: "short",
+                    }).format(new Date(2024, 0, 7 + i))}
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-7 gap-px">
+                {Array.from({ length: firstOffset }, (_, i) => (
                   <div
-                    key={dateKey}
-                    aria-current={isToday ? "date" : undefined}
-                    className={`relative min-h-36 p-3 ${isToday ? "bg-primary/5 ring-2 ring-inset ring-primary" : row ? "bg-card" : "bg-background"}`}
-                  >
-                    <div className="mb-2 flex flex-wrap items-center justify-between gap-1">
-                      <span
-                        className={`grid size-8 place-items-center rounded-full text-sm font-semibold tabular-nums ${isToday ? "bg-primary text-primary-foreground" : "text-foreground"}`}
-                      >
-                        {day.getDate()}
-                      </span>
-                      {row && (
-                        <Badge
-                          variant="secondary"
-                          className={`max-w-full whitespace-normal px-2 py-0.5 text-[10px] ${lost > 0 ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}
+                    key={`empty-${i}`}
+                    className="bg-muted/70"
+                    aria-hidden="true"
+                  />
+                ))}
+                {days.map((day) => {
+                  const schedule = selected
+                    ? scheduleForDay(selected, day.getDay())
+                    : null;
+                  const dateKey = `${month}-${String(day.getDate()).padStart(2, "0")}`;
+                  const row = recordsFor(selected?.id ?? "").find(
+                    (x) => String(x.attendanceDate).slice(0, 10) === dateKey,
+                  );
+                  const dayPermissions = (permissions.data ?? []).filter(
+                    (permission) =>
+                      permission.employeeId === selected?.id &&
+                      permission.status === "approved" &&
+                      String(permission.fromDate).slice(0, 10) <= dateKey &&
+                      String(permission.toDate).slice(0, 10) >= dateKey,
+                  );
+                  const lost = row
+                    ? lostMinutes(row, permissions.data ?? [])
+                    : 0;
+                  const isToday =
+                    day.toDateString() === new Date().toDateString();
+                  return (
+                    <div
+                      key={dateKey}
+                      aria-current={isToday ? "date" : undefined}
+                      className={`relative min-h-36 p-3 ${isToday ? "bg-primary/5 ring-2 ring-inset ring-primary" : row ? "bg-card" : "bg-background"}`}
+                    >
+                      <div className="mb-2 flex flex-wrap items-center justify-between gap-1">
+                        <span
+                          className={`grid size-8 place-items-center rounded-full text-sm font-semibold tabular-nums ${isToday ? "bg-primary text-primary-foreground" : "text-foreground"}`}
                         >
-                          {t(`hr.${String(row.status)}`, {
-                            defaultValue: String(row.status),
-                          })}
-                        </Badge>
+                          {day.getDate()}
+                        </span>
+                        {row && (
+                          <Badge
+                            variant="secondary"
+                            className={`max-w-full whitespace-normal px-2 py-0.5 text-[10px] ${lost > 0 ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}
+                          >
+                            {t(`hr.${String(row.status)}`, {
+                              defaultValue: String(row.status),
+                            })}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="mb-3 text-[11px] tabular-nums text-muted-foreground">
+                        {schedule
+                          ? selected?.scheduleType === "dynamic"
+                            ? t("employeeSchedule.hours", {
+                                count: scheduledMinutes(schedule) / 60,
+                              })
+                            : `${String(schedule.checkInTime)}–${String(schedule.checkOutTime)}`
+                          : t("employeeSchedule.dayOff", {
+                              defaultValue: "Day off",
+                            })}
+                      </p>
+                      {row ? (
+                        <div className="space-y-2 text-xs tabular-nums">
+                          <div className="flex items-center justify-between gap-1 text-muted-foreground">
+                            <LogIn className="size-3.5 text-emerald-600" />
+                            <span>{time(row.checkIn)}</span>
+                          </div>
+                          <div className="flex items-center justify-between gap-1 text-muted-foreground">
+                            <LogOut className="size-3.5 text-amber-600" />
+                            <span>{time(row.checkOut)}</span>
+                          </div>
+                          <div className="mt-1 flex items-center justify-between gap-1 border-t pt-1 font-semibold">
+                            <span className="flex items-center gap-1 text-muted-foreground">
+                              <Clock3 className="size-3.5" />
+                              {tx("worked", "Worked")}
+                            </span>
+                            <span>
+                              {duration(Number(row.workedMinutes ?? 0))}
+                            </span>
+                          </div>
+                          <div
+                            className={`flex items-center justify-between gap-1 font-semibold ${lost ? "text-destructive" : "text-emerald-600"}`}
+                          >
+                            <span className="flex items-center gap-1">
+                              <TimerOff className="size-3.5" />
+                              {tx("lost", "Lost")}
+                            </span>
+                            <span>{duration(lost)}</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex min-h-10 items-end">
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-xs ${dayPermissions.length ? "bg-emerald-100 font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" : "bg-muted/70 text-muted-foreground/80"}`}
+                          >
+                            {dayPermissions.length
+                              ? tx(
+                                  String(dayPermissions[0].permissionType),
+                                  String(
+                                    dayPermissions[0].permissionType,
+                                  ).replaceAll("_", " "),
+                                )
+                              : !schedule
+                                ? t("employeeSchedule.dayOff", {
+                                    defaultValue: "Day off",
+                                  })
+                                : tx("noRecord", "No record")}
+                          </span>
+                        </div>
                       )}
                     </div>
-                    <p className="mb-3 text-[11px] tabular-nums text-muted-foreground">
-                      {schedule
-                        ? selected?.scheduleType === "dynamic"
-                          ? t("employeeSchedule.hours", {
-                              count: scheduledMinutes(schedule) / 60,
-                            })
-                          : `${String(schedule.checkInTime)}–${String(schedule.checkOutTime)}`
-                        : t("employeeSchedule.dayOff", {
-                            defaultValue: "Day off",
-                          })}
-                    </p>
-                    {row ? (
-                      <div className="space-y-2 text-xs tabular-nums">
-                        <div className="flex items-center justify-between gap-1 text-muted-foreground">
-                          <LogIn className="size-3.5 text-emerald-600" />
-                          <span>{time(row.checkIn)}</span>
-                        </div>
-                        <div className="flex items-center justify-between gap-1 text-muted-foreground">
-                          <LogOut className="size-3.5 text-amber-600" />
-                          <span>{time(row.checkOut)}</span>
-                        </div>
-                        <div className="mt-1 flex items-center justify-between gap-1 border-t pt-1 font-semibold">
-                          <span className="flex items-center gap-1 text-muted-foreground">
-                            <Clock3 className="size-3.5" />
-                            {tx("worked", "Worked")}
-                          </span>
-                          <span>
-                            {duration(Number(row.workedMinutes ?? 0))}
-                          </span>
-                        </div>
-                        <div
-                          className={`flex items-center justify-between gap-1 font-semibold ${lost ? "text-destructive" : "text-emerald-600"}`}
-                        >
-                          <span className="flex items-center gap-1">
-                            <TimerOff className="size-3.5" />
-                            {tx("lost", "Lost")}
-                          </span>
-                          <span>{duration(lost)}</span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex min-h-10 items-end">
-                        <span
-                          className={`rounded-full px-2.5 py-1 text-xs ${dayPermissions.length ? "bg-emerald-100 font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" : "bg-muted/70 text-muted-foreground/80"}`}
-                        >
-                          {dayPermissions.length
-                            ? tx(
-                                String(dayPermissions[0].permissionType),
-                                String(
-                                  dayPermissions[0].permissionType,
-                                ).replaceAll("_", " "),
-                              )
-                            : !schedule
-                              ? t("employeeSchedule.dayOff", { defaultValue: "Day off" })
-                              : tx("noRecord", "No record")}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-              {Array.from({ length: (7 - ((firstOffset + days.length) % 7)) % 7 }, (_, i) => (
-                <div key={`trailing-${i}`} className="bg-muted/70" aria-hidden="true" />
-              ))}
-            </div>
+                  );
+                })}
+                {Array.from(
+                  { length: (7 - ((firstOffset + days.length) % 7)) % 7 },
+                  (_, i) => (
+                    <div
+                      key={`trailing-${i}`}
+                      className="bg-muted/70"
+                      aria-hidden="true"
+                    />
+                  ),
+                )}
+              </div>
             </div>
           </div>
         </DialogContent>
       </Dialog>
-      <DeleteConfirmationDialog permission="hr.attendance-permissions.delete"
+      <DeleteConfirmationDialog
+        permission="hr.attendance-permissions.delete"
         alwaysRequirePassword
         key={deletingPermission?.id ?? "no-permission"}
         open={!!deletingPermission}

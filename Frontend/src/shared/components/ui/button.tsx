@@ -17,10 +17,8 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default:
-          "bg-primary text-white shadow hover:bg-primary/90",
-        destructive:
-          "bg-red-600 text-white shadow-sm hover:bg-red-700",
+        default: "bg-primary text-white shadow hover:bg-primary/90",
+        destructive: "bg-red-600 text-white shadow-sm hover:bg-red-700",
         outline:
           "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
         secondary:
@@ -52,10 +50,15 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, title, permission, ...props }, ref) => {
+  (
+    { className, variant, size, asChild = false, title, permission, ...props },
+    ref,
+  ) => {
     const { t, i18n } = useTranslation();
     const action = props["data-action"];
-    const allowed = useActionPermission(permission ?? (action === "edit" ? "update" : action));
+    const allowed = useActionPermission(
+      permission ?? (action === "edit" ? "update" : action),
+    );
     if (!allowed) return null;
     const tooltip =
       title ||

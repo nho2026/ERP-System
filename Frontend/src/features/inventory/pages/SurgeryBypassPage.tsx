@@ -39,7 +39,8 @@ export default function SurgeryBypassPage() {
     [busy, setBusy] = useState(false);
   const manage = hasPagePermission(storedUser(), "create", "update", "delete");
   const table = useServerTable<Row>("/inventory/surgery-bypass", { search });
-  const filtered = table.data ?? [], loading = table.isLoading;
+  const filtered = table.data ?? [],
+    loading = table.isLoading;
   return (
     <div className="space-y-4" dir={i18n.dir()}>
       <h1 className="text-xl font-bold">{t("bypass.title")}</h1>
@@ -95,7 +96,8 @@ export default function SurgeryBypassPage() {
                   </TableCell>
                   {manage && (
                     <TableCell>
-                      <Button permission="update"
+                      <Button
+                        permission="update"
                         variant="outline"
                         size="sm"
                         onClick={() => {
@@ -150,7 +152,8 @@ export default function SurgeryBypassPage() {
                   {error}
                 </p>
               )}
-              <Button permission="update"
+              <Button
+                permission="update"
                 disabled={busy}
                 onClick={async () => {
                   if (busy) return;

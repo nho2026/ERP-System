@@ -13,6 +13,7 @@ import PatientProductsReportPage from "@/features/inventory/pages/PatientProduct
 import ItemReductionPage from "@/features/inventory/pages/ItemReductionPage";
 import SurgeryBypassPage from "@/features/inventory/pages/SurgeryBypassPage";
 import IcuPage from "@/features/inventory/pages/IcuPage";
+import IcuModulePage from "@/features/icu/IcuModulePage";
 import ThresholdPage from "@/features/inventory/pages/ThresholdPage";
 import DirectoryPage from "@/features/inventory/pages/DirectoryPage";
 import RetailersPage from "@/features/inventory/pages/RetailersPage";
@@ -79,7 +80,9 @@ import { useTranslation } from "react-i18next";
 import type { ReactNode } from "react";
 import { RequireAccess } from "@/features/auth/RequireAccess";
 
-const secured = (element: ReactNode) => <RequireAccess>{element}</RequireAccess>;
+const secured = (element: ReactNode) => (
+  <RequireAccess>{element}</RequireAccess>
+);
 
 export default function App() {
   const { i18n } = useTranslation();
@@ -89,31 +92,122 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route element={<DashboardLayout />}>
-          <Route path="/building-expenses" element={secured(<BuildingDashboardPage />)} />
-          <Route path="/building-expenses/products" element={secured(<BuildingExpensesPage key="products" page="products" />)} />
-          <Route path="/building-expenses/requests" element={secured(<BuildingExpensesPage key="requests" page="requests" />)} />
-          <Route path="/building-expenses/purchases" element={secured(<BuildingExpensesPage key="purchases" page="purchases" />)} />
-          <Route path="/building-expenses/sales" element={secured(<BuildingExpensesPage key="sales" page="sales" />)} />
-          <Route path="/building-expenses/departments" element={secured(<BuildingExpensesPage key="departments" page="departments" />)} />
-          <Route path="/building-expenses/expenses" element={secured(<BuildingExpensesPage key="expenses" page="expenses" />)} />
-          <Route path="/laboratory/tickets" element={secured(<LaboratoryTicketsPage />)} />
-          <Route path="/laboratory/display" element={secured(<LaboratoryTicketsPage display />)} />
-          <Route path="/laboratory" element={secured(<LaboratoryDashboardPage />)} />
-          <Route path="/laboratory/reception" element={secured(<LaboratoryPage key="lab-reception" mode="reception" />)} />
-          <Route path="/laboratory/accounting" element={secured(<LaboratoryPage key="lab-accounting" mode="accounting" />)} />
-          <Route path="/laboratory/room" element={secured(<LaboratoryPage key="lab-room" mode="room" />)} />
-          <Route path="/laboratory/queue" element={secured(<LaboratoryPage key="lab-queue" mode="queue" />)} />
-          <Route path="/laboratory/completed" element={secured(<LaboratoryPage key="lab-completed" mode="completed" />)} />
-          <Route path="/laboratory/received" element={secured(<LaboratoryPage key="lab-received" mode="received" />)} />
-          <Route path="/laboratory/tests" element={secured(<LaboratoryTestsPage />)} />
           <Route
-            path="/dashboard"
-            element={secured(<DashboardPage />)}
+            path="/icu"
+            element={<Navigate to="/icu/dashboard" replace />}
           />
           <Route
-            path="/profile"
-            element={secured(<ProfilePage />)}
+            path="/icu/dashboard"
+            element={secured(<IcuModulePage page="dashboard" />)}
           />
+          <Route
+            path="/icu/cases"
+            element={secured(<IcuPage key="icu-module-cases" moduleMode />)}
+          />
+          <Route
+            path="/icu/staff"
+            element={secured(<IcuModulePage page="staff" />)}
+          />
+          <Route
+            path="/icu/operation-types"
+            element={secured(<IcuModulePage page="operation-types" />)}
+          />
+          <Route
+            path="/icu/storage"
+            element={secured(<IcuModulePage page="storage" />)}
+          />
+          <Route
+            path="/icu/item-reduction"
+            element={secured(<IcuModulePage page="item-reduction" />)}
+          />
+          <Route
+            path="/building-expenses"
+            element={secured(<BuildingDashboardPage />)}
+          />
+          <Route
+            path="/building-expenses/products"
+            element={secured(
+              <BuildingExpensesPage key="products" page="products" />,
+            )}
+          />
+          <Route
+            path="/building-expenses/requests"
+            element={secured(
+              <BuildingExpensesPage key="requests" page="requests" />,
+            )}
+          />
+          <Route
+            path="/building-expenses/purchases"
+            element={secured(
+              <BuildingExpensesPage key="purchases" page="purchases" />,
+            )}
+          />
+          <Route
+            path="/building-expenses/sales"
+            element={secured(<BuildingExpensesPage key="sales" page="sales" />)}
+          />
+          <Route
+            path="/building-expenses/departments"
+            element={secured(
+              <BuildingExpensesPage key="departments" page="departments" />,
+            )}
+          />
+          <Route
+            path="/building-expenses/expenses"
+            element={secured(
+              <BuildingExpensesPage key="expenses" page="expenses" />,
+            )}
+          />
+          <Route
+            path="/laboratory/tickets"
+            element={secured(<LaboratoryTicketsPage />)}
+          />
+          <Route
+            path="/laboratory/display"
+            element={secured(<LaboratoryTicketsPage display />)}
+          />
+          <Route
+            path="/laboratory"
+            element={secured(<LaboratoryDashboardPage />)}
+          />
+          <Route
+            path="/laboratory/reception"
+            element={secured(
+              <LaboratoryPage key="lab-reception" mode="reception" />,
+            )}
+          />
+          <Route
+            path="/laboratory/accounting"
+            element={secured(
+              <LaboratoryPage key="lab-accounting" mode="accounting" />,
+            )}
+          />
+          <Route
+            path="/laboratory/room"
+            element={secured(<LaboratoryPage key="lab-room" mode="room" />)}
+          />
+          <Route
+            path="/laboratory/queue"
+            element={secured(<LaboratoryPage key="lab-queue" mode="queue" />)}
+          />
+          <Route
+            path="/laboratory/completed"
+            element={secured(
+              <LaboratoryPage key="lab-completed" mode="completed" />,
+            )}
+          />
+          <Route
+            path="/laboratory/received"
+            element={secured(
+              <LaboratoryPage key="lab-received" mode="received" />,
+            )}
+          />
+          <Route
+            path="/laboratory/tests"
+            element={secured(<LaboratoryTestsPage />)}
+          />
+          <Route path="/dashboard" element={secured(<DashboardPage />)} />
+          <Route path="/profile" element={secured(<ProfilePage />)} />
           <Route
             path="/inventory/department-requests"
             element={secured(<DepartmentRequestsPage />)}
@@ -122,48 +216,18 @@ export default function App() {
             path="/employee-portal"
             element={secured(<EmployeePortalPage />)}
           />
-          <Route
-            path="/tasks/review"
-            element={secured(<TaskReviewPage />)}
-          />
-          <Route
-            path="/tasks/dashboard"
-            element={secured(<TasksPage />)}
-          />
-          <Route
-            path="/tasks"
-            element={secured(<TasksPage />)}
-          />
-          <Route
-            path="/meetings"
-            element={secured(null)}
-          />
-          <Route
-            path="/targets"
-            element={secured(<TargetsPage />)}
-          />
-          <Route
-            path="/tasks/:id"
-            element={secured(<TaskDetailPage />)}
-          />
-          <Route
-            path="/tasks/reports"
-            element={secured(<TaskReportsPage />)}
-          />
-          <Route
-            path="/feedback"
-            element={secured(<FeedbackPage />)}
-          />
+          <Route path="/tasks/review" element={secured(<TaskReviewPage />)} />
+          <Route path="/tasks/dashboard" element={secured(<TasksPage />)} />
+          <Route path="/tasks" element={secured(<TasksPage />)} />
+          <Route path="/meetings" element={secured(null)} />
+          <Route path="/targets" element={secured(<TargetsPage />)} />
+          <Route path="/tasks/:id" element={secured(<TaskDetailPage />)} />
+          <Route path="/tasks/reports" element={secured(<TaskReportsPage />)} />
+          <Route path="/feedback" element={secured(<FeedbackPage />)} />
           <Route path="/users" element={secured(<UsersPage />)} />
           <Route path="/roles" element={secured(<RolesPage />)} />
-          <Route
-            path="/system-logs"
-            element={secured(<SystemLogsPage />)}
-          />
-          <Route
-            path="/hr"
-            element={secured(<HrDashboardPage />)}
-          />
+          <Route path="/system-logs" element={secured(<SystemLogsPage />)} />
+          <Route path="/hr" element={secured(<HrDashboardPage />)} />
           <Route
             path="/employees"
             element={secured(<HrPage resource="employees" />)}
@@ -180,18 +244,9 @@ export default function App() {
             path="/hr-attendance"
             element={secured(<HrAttendancePage />)}
           />
-          <Route
-            path="/payrolls"
-            element={secured(<PayrollPage />)}
-          />
-          <Route
-            path="/hr/reports"
-            element={secured(<HrReportsPage />)}
-          />
-          <Route
-            path="/hr/warnings"
-            element={secured(<HrWarningsPage />)}
-          />
+          <Route path="/payrolls" element={secured(<PayrollPage />)} />
+          <Route path="/hr/reports" element={secured(<HrReportsPage />)} />
+          <Route path="/hr/warnings" element={secured(<HrWarningsPage />)} />
           <Route
             path="/salary-advances"
             element={secured(<HrPage resource="advances" />)}
@@ -213,19 +268,16 @@ export default function App() {
             path="/crm/leads"
             element={secured(<CrmPage resource="leads" />)}
           />
-          <Route
-            path="/crm/whatsapp"
-            element={secured(<WhatsappPage />)}
-          />
+          <Route path="/crm/whatsapp" element={secured(<WhatsappPage />)} />
           <Route
             path="/crm/leads/progress"
             element={secured(<LeadProgressPage />)}
           />
+          <Route path="/crm/leads/:id" element={secured(<LeadDetailPage />)} />
           <Route
-            path="/crm/leads/:id"
-            element={secured(<LeadDetailPage />)}
+            path="/crm/follow-up"
+            element={secured(<FollowUpPatientsPage />)}
           />
-          <Route path="/crm/follow-up" element={secured(<FollowUpPatientsPage />)} />
           <Route
             path="/crm/patients"
             element={secured(<CrmPage resource="patients" />)}
@@ -242,10 +294,7 @@ export default function App() {
             path="/crm/referrals"
             element={secured(<CrmPage resource="referrals" />)}
           />
-          <Route
-            path="/crm/forms"
-            element={secured(<CrmFormsPage />)}
-          />
+          <Route path="/crm/forms" element={secured(<CrmFormsPage />)} />
           <Route
             path="/crm/today-patients"
             element={secured(<TodayPatientsPage />)}
@@ -266,9 +315,18 @@ export default function App() {
             path="/crm/surgeries"
             element={secured(<CrmPage resource="surgeries" />)}
           />
-          <Route path="/accounting" element={secured(<AccountantDashboardPage />)} />
-          <Route path="/accounting/overview" element={secured(<FinanceOverview />)} />
-          <Route path="/accounting/income-expenses" element={secured(<IncomeExpensesPage />)} />
+          <Route
+            path="/accounting"
+            element={secured(<AccountantDashboardPage />)}
+          />
+          <Route
+            path="/accounting/overview"
+            element={secured(<FinanceOverview />)}
+          />
+          <Route
+            path="/accounting/income-expenses"
+            element={secured(<IncomeExpensesPage />)}
+          />
           <Route
             path="/accounting/accounts"
             element={secured(<AccountingPage resource="accounts" />)}
@@ -361,7 +419,8 @@ export default function App() {
             <Route
               key={page.path}
               path={page.path}
-              element={secured(page.path === "/warehouses/cases/surgery-bypass" ? (
+              element={secured(
+                page.path === "/warehouses/cases/surgery-bypass" ? (
                   <SurgeryBypassPage />
                 ) : page.path === "/warehouses/cases/icu" ? (
                   <IcuPage key="icu" />
@@ -388,7 +447,8 @@ export default function App() {
                   <PatientProductsReportPage />
                 ) : (
                   <TopProductsPage />
-                ))}
+                ),
+              )}
             />
           ))}
           <Route
@@ -411,10 +471,7 @@ export default function App() {
             path="/inventory/warehouses"
             element={secured(<InventoryPage resource="warehouses" />)}
           />
-          <Route
-            path="/inventory/stock"
-            element={secured(<StoragePage />)}
-          />
+          <Route path="/inventory/stock" element={secured(<StoragePage />)} />
           <Route
             path="/inventory/movements"
             element={<Navigate to="/inventory/stock" replace />}
@@ -423,33 +480,23 @@ export default function App() {
             path="/pos/sales"
             element={secured(<PosPage mode="sales" />)}
           />
-          <Route
-            path="/attendance"
-            element={secured(<AttendanceShell />)}
-          >
+          <Route path="/attendance" element={secured(<AttendanceShell />)}>
             <Route index element={<Navigate to="devices" replace />} />
-            <Route
-              path="devices"
-              element={secured(<DevicesPage />)}
-            />
-            <Route
-              path="users"
-              element={secured(<DeviceUsersPage />)}
-            />
-            <Route
-              path="events"
-              element={secured(<EventsPage />)}
-            />
+            <Route path="devices" element={secured(<DevicesPage />)} />
+            <Route path="users" element={secured(<DeviceUsersPage />)} />
+            <Route path="events" element={secured(<EventsPage />)} />
           </Route>
         </Route>
-        <Route
-          path="/pos/checkout"
-          element={secured(<HealthPosPage />)}
-        />
+        <Route path="/pos/checkout" element={secured(<HealthPosPage />)} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
       <AlertSounds />
-      <SingleAlertToaster dir={direction} richColors position="top-center" closeButton />
+      <SingleAlertToaster
+        dir={direction}
+        richColors
+        position="top-center"
+        closeButton
+      />
     </DirectionProvider>
   );
 }

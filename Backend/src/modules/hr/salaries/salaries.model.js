@@ -2,10 +2,15 @@ import { paginate } from "../../../shared/database/paginate.js";
 import { prisma } from "../../../shared/database/client.js";
 export const salaryModel = {
   findAll: (query = {}) =>
-    paginate("employeeSalary", query, {
-      include: { employee: true },
-      orderBy: { effectiveFrom: "desc" },
-    }, ["employee.firstName","employee.lastName","employee.employeeCode"]),
+    paginate(
+      "employeeSalary",
+      query,
+      {
+        include: { employee: true },
+        orderBy: { effectiveFrom: "desc" },
+      },
+      ["employee.firstName", "employee.lastName", "employee.employeeCode"],
+    ),
   create: (data) =>
     prisma.employeeSalary.create({
       data,

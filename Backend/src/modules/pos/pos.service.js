@@ -10,7 +10,11 @@ import {
 export const posService = {
   async list(raw) {
     const { page, pageSize, ...filters } = posSalesQuerySchema.parse(raw);
-    const [items, total] = await posModel.list((page - 1) * pageSize, pageSize, saleFiltersWhere(filters));
+    const [items, total] = await posModel.list(
+      (page - 1) * pageSize,
+      pageSize,
+      saleFiltersWhere(filters),
+    );
     return {
       items,
       pagination: {

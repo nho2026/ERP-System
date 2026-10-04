@@ -61,7 +61,12 @@ export default function LeadDetailPage() {
   const { id = "" } = useParams();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
-  const canManage = hasPagePermission(storedUser(), "create", "update", "delete");
+  const canManage = hasPagePermission(
+    storedUser(),
+    "create",
+    "update",
+    "delete",
+  );
   const lead = useApiResource(useCallback(() => crmApi.leads.get(id), [id]));
   if (!lead.data)
     return (
@@ -157,9 +162,16 @@ export default function LeadDetailPage() {
           </p>
           <h1 className="text-2xl font-bold">{String(item.name)}</h1>
         </div>
-        <Button permission="laboratory.orders.create" variant="outline" onClick={() => navigate(`/laboratory/reception?leadId=${id}`)}>{t("laboratory.title")}</Button>
+        <Button
+          permission="laboratory.orders.create"
+          variant="outline"
+          onClick={() => navigate(`/laboratory/reception?leadId=${id}`)}
+        >
+          {t("laboratory.title")}
+        </Button>
         {canManage && status !== "lost" && (
-          <Button permission="update"
+          <Button
+            permission="update"
             className="ms-auto"
             variant="destructive"
             onClick={() => void markAsLost()}
@@ -174,14 +186,16 @@ export default function LeadDetailPage() {
           <TrendingUp /> {t("crm.progress.detail.viewProgress")}
         </Button>
         {canManage && (
-          <Button permission="update"
+          <Button
+            permission="update"
             variant="outline"
             onClick={() => navigate(`/crm/leads?edit=${id}`)}
           >
             {t("common.edit", { defaultValue: "Edit" })}
           </Button>
         )}
-        <Button permission="healthcare.appointments.create"
+        <Button
+          permission="healthcare.appointments.create"
           onClick={() =>
             navigate(
               `/crm/appointments?patientName=${encodeURIComponent(String(item.name))}&patientPhone=${encodeURIComponent(String(item.phone))}`,
@@ -349,7 +363,8 @@ export default function LeadDetailPage() {
                       {String(attachment.fileName)}
                     </a>
                     {canManage && (
-                      <Button data-action="delete"
+                      <Button
+                        data-action="delete"
                         size="icon"
                         variant="ghost"
                         onClick={() =>

@@ -129,9 +129,26 @@ const hints: Record<string, string> = {
     "Used with the prefix for new invoices. Choose an unused sequence.",
 };
 const timezoneOptions = (() => {
-  const fallback = ["Asia/Baghdad", "Asia/Dubai", "Asia/Riyadh", "Asia/Tehran", "Asia/Kolkata", "Asia/Tokyo", "Europe/London", "Europe/Paris", "Europe/Istanbul", "America/New_York", "America/Chicago", "America/Los_Angeles", "Australia/Sydney"];
-  try { return [...new Set(["UTC", ...Intl.supportedValuesOf("timeZone")])].sort(); }
-  catch { return ["UTC", ...fallback].sort(); }
+  const fallback = [
+    "Asia/Baghdad",
+    "Asia/Dubai",
+    "Asia/Riyadh",
+    "Asia/Tehran",
+    "Asia/Kolkata",
+    "Asia/Tokyo",
+    "Europe/London",
+    "Europe/Paris",
+    "Europe/Istanbul",
+    "America/New_York",
+    "America/Chicago",
+    "America/Los_Angeles",
+    "Australia/Sydney",
+  ];
+  try {
+    return [...new Set(["UTC", ...Intl.supportedValuesOf("timeZone")])].sort();
+  } catch {
+    return ["UTC", ...fallback].sort();
+  }
 })();
 
 export default function SettingsPage() {
@@ -272,8 +289,15 @@ export default function SettingsPage() {
                       ) : key === "timezone" ? (
                         <SearchableFilter
                           value={String(value)}
-                          onValueChange={next => { if (admin && !busy) change(key, next); }}
-                          options={[...new Set([...timezoneOptions, String(value)])].filter(Boolean).sort().map(zone => ({ value: zone, label: zone }))}
+                          onValueChange={(next) => {
+                            if (admin && !busy) change(key, next);
+                          }}
+                          options={[
+                            ...new Set([...timezoneOptions, String(value)]),
+                          ]
+                            .filter(Boolean)
+                            .sort()
+                            .map((zone) => ({ value: zone, label: zone }))}
                           label={tr(labels[key] ?? key)}
                           className="w-full"
                           searchable
@@ -522,7 +546,11 @@ export default function SettingsPage() {
               <UpdatesPanel />
               <Card className="p-5">
                 <h2 className="font-semibold mb-3">{tr("Integrations")}</h2>
-                <Button permission="attendance.devices.view" asChild variant="outline">
+                <Button
+                  permission="attendance.devices.view"
+                  asChild
+                  variant="outline"
+                >
                   <Link to="/attendance/devices">
                     {tr("Manage attendance devices")}
                   </Link>
@@ -564,7 +592,8 @@ function BackupsPanel() {
           {tr(error)}
         </p>
       )}
-      <Button permission="settings.backups.create"
+      <Button
+        permission="settings.backups.create"
         disabled={busy}
         onClick={async () => {
           setBusy(true);

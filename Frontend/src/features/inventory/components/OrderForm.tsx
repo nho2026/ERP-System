@@ -68,9 +68,22 @@ const esc = (v: unknown) =>
       ]!,
   );
 export type EditableOrder = {
-  id: string; name: string; note: string;
-  items: { isNew: boolean; productId: string | null; name: string; size: string; code: string;
-    quantity: number; price: number; note: string; imageUrl?: string | null; arrived?: boolean; arrivedAt?: string | null }[];
+  id: string;
+  name: string;
+  note: string;
+  items: {
+    isNew: boolean;
+    productId: string | null;
+    name: string;
+    size: string;
+    code: string;
+    quantity: number;
+    price: number;
+    note: string;
+    imageUrl?: string | null;
+    arrived?: boolean;
+    arrivedAt?: string | null;
+  }[];
 };
 export function OrderForm({
   order,
@@ -93,7 +106,18 @@ export function OrderForm({
   );
   const [name, setName] = useState(order?.name ?? "");
   const [note, setNote] = useState(order?.note ?? "");
-  const [lines, setLines] = useState<Line[]>(() => order?.items.map((item, originalIndex) => ({ ...item, id: randomId(), originalIndex, productId: item.productId ?? "", imageUrl: item.imageUrl ?? "", quantity: String(item.quantity), price: String(item.price) })) ?? []);
+  const [lines, setLines] = useState<Line[]>(
+    () =>
+      order?.items.map((item, originalIndex) => ({
+        ...item,
+        id: randomId(),
+        originalIndex,
+        productId: item.productId ?? "",
+        imageUrl: item.imageUrl ?? "",
+        quantity: String(item.quantity),
+        price: String(item.price),
+      })) ?? [],
+  );
   const [draft, setDraft] = useState<Line | null>(null);
   const [draftError, setDraftError] = useState("");
   const [error, setError] = useState("");
@@ -101,7 +125,10 @@ export function OrderForm({
   const [busy, setBusy] = useState(false);
   const lock = useRef(false);
   const requestId = useRef(randomId());
-  const canSubmit = hasPermission(storedUser(), order ? "inventory.orders.update" : "inventory.orders.create");
+  const canSubmit = hasPermission(
+    storedUser(),
+    order ? "inventory.orders.update" : "inventory.orders.create",
+  );
   const money = (v: number) =>
     new Intl.NumberFormat(i18n.language, {
       minimumFractionDigits: 2,
@@ -211,23 +238,24 @@ export function OrderForm({
         method: order ? "PATCH" : "POST",
         url: order ? `/inventory/orders/${order.id}` : "/inventory/orders",
         data: {
-        originalItems: order?.items,
-        requestId: requestId.current,
-        name,
-        note,
-        items: lines.map((line) => ({
-          originalIndex: line.originalIndex,
-          isNew: line.isNew,
-          productId: line.isNew ? null : line.productId,
-          name: line.name,
-          size: line.size,
-          code: line.code,
-          quantity: Number(line.quantity),
-          price: Number(line.price),
-          note: line.note,
-          imageUrl: line.imageUrl || null,
-        })),
-      }});
+          originalItems: order?.items,
+          requestId: requestId.current,
+          name,
+          note,
+          items: lines.map((line) => ({
+            originalIndex: line.originalIndex,
+            isNew: line.isNew,
+            productId: line.isNew ? null : line.productId,
+            name: line.name,
+            size: line.size,
+            code: line.code,
+            quantity: Number(line.quantity),
+            price: Number(line.price),
+            note: line.note,
+            imageUrl: line.imageUrl || null,
+          })),
+        },
+      });
       setSaved(true);
       onSaved();
     } catch (cause) {
@@ -358,7 +386,9 @@ export function OrderForm({
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
-                          <Button permission="view" data-action="edit"
+                          <Button
+                            permission="view"
+                            data-action="edit"
                             type="button"
                             variant="outline"
                             size="icon"
@@ -371,7 +401,9 @@ export function OrderForm({
                           >
                             <Pencil className="size-4" />
                           </Button>
-                          <Button permission="view" data-action="delete"
+                          <Button
+                            permission="view"
+                            data-action="delete"
                             type="button"
                             variant="destructive"
                             size="icon"
@@ -415,15 +447,23 @@ export function OrderForm({
               {t("orderForm.another")}
             </Button>
           ) : (
-            <Button permission={order ? "update" : "create"}
+            <Button
+              permission={order ? "update" : "create"}
               type="submit"
               disabled={busy || !canSubmit}
               className="bg-primary text-primary-foreground hover:bg-primary/90"
             >
-              {t(busy ? "buyHistory.processing" : order ? "common.save" : "orderForm.submit")}
+              {t(
+                busy
+                  ? "buyHistory.processing"
+                  : order
+                    ? "common.save"
+                    : "orderForm.submit",
+              )}
             </Button>
           )}
-          <Button permission="print"
+          <Button
+            permission="print"
             type="button"
             className="bg-primary text-primary-foreground hover:bg-primary/90"
             onClick={print}
@@ -647,7 +687,8 @@ export function OrderForm({
                         if (file) void uploadImage(line.id, file);
                       }}
                     />
-                    <Button permission="inventory.products.create"
+                    <Button
+                      permission="inventory.products.create"
                       type="button"
                       variant="outline"
                       className="h-14 w-full justify-start gap-3"
@@ -719,4 +760,3 @@ export function OrderForm({
     </form>
   );
 }
-

@@ -105,7 +105,9 @@ export default function TaskDetailPage() {
       toast.success(
         status === "completed"
           ? t("tasks.reviewApproved")
-          : status === "rejected" ? t("tasks.statuses.rejected") : t("tasks.statuses." + status),
+          : status === "rejected"
+            ? t("tasks.statuses.rejected")
+            : t("tasks.statuses." + status),
       );
     } catch (error) {
       toast.error(
@@ -159,7 +161,11 @@ export default function TaskDetailPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Badge>{t(`tasks.priorities.${task.priority}`)}</Badge>
-          <Badge variant="outline">{t(`tasks.statuses.${task.status === "cancelled" ? "rejected" : task.status}`)}</Badge>
+          <Badge variant="outline">
+            {t(
+              `tasks.statuses.${task.status === "cancelled" ? "rejected" : task.status}`,
+            )}
+          </Badge>
         </div>
       </header>
 
@@ -378,17 +384,56 @@ export default function TaskDetailPage() {
                   {dateTime(task.reviewedAt)}
                 </p>
               )}
-              {(isHr || task.assignees.some(({ employee }) => employee.id === currentUser?.employee?.id)) && task.status !== "completed" && (
-                <div className="flex flex-wrap gap-2">
-                  {["todo", "in_progress", "incomplete", "review"].map(status => <Button key={status} permission="update" variant="outline" disabled={saving || task.status === status} onClick={() => void updateReview(status)}>{status === "review" ? t("tasks.submitForReview") : t(`tasks.statuses.${status}`)}</Button>)}
-                </div>
-              )}
-              {isHr && hasPermission(currentUser, "tasks.list.approve") && task.status === "review" && (
-                <div className="flex flex-wrap gap-2">
-                  <Button permission="approve" disabled={saving || !hasPermission(currentUser, "tasks.list.update")} onClick={() => void updateReview("completed")}>{t("tasks.approveCompletion")}</Button>
-                  <Button permission="approve" variant="outline" disabled={saving || !hasPermission(currentUser, "tasks.list.update")} onClick={() => void updateReview("rejected")}>{t("tasks.statuses.rejected")}</Button>
-                </div>
-              )}
+              {(isHr ||
+                task.assignees.some(
+                  ({ employee }) => employee.id === currentUser?.employee?.id,
+                )) &&
+                task.status !== "completed" && (
+                  <div className="flex flex-wrap gap-2">
+                    {["todo", "in_progress", "incomplete", "review"].map(
+                      (status) => (
+                        <Button
+                          key={status}
+                          permission="update"
+                          variant="outline"
+                          disabled={saving || task.status === status}
+                          onClick={() => void updateReview(status)}
+                        >
+                          {status === "review"
+                            ? t("tasks.submitForReview")
+                            : t(`tasks.statuses.${status}`)}
+                        </Button>
+                      ),
+                    )}
+                  </div>
+                )}
+              {isHr &&
+                hasPermission(currentUser, "tasks.list.approve") &&
+                task.status === "review" && (
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      permission="approve"
+                      disabled={
+                        saving ||
+                        !hasPermission(currentUser, "tasks.list.update")
+                      }
+                      onClick={() => void updateReview("completed")}
+                    >
+                      {t("tasks.approveCompletion")}
+                    </Button>
+                    <Button
+                      permission="approve"
+                      variant="outline"
+                      disabled={
+                        saving ||
+                        !hasPermission(currentUser, "tasks.list.update")
+                      }
+                      onClick={() => void updateReview("rejected")}
+                    >
+                      {t("tasks.statuses.rejected")}
+                    </Button>
+                  </div>
+                )}
               {task.status === "review" && (
                 <p className="text-sm text-amber-700 dark:text-amber-300">
                   {t("tasks.awaitingHrReview")}

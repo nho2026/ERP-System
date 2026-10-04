@@ -1,15 +1,24 @@
-import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/shared/components/ui/alert-dialog";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/shared/components/ui/alert-dialog";
 import { useSearchParams } from "react-router-dom";
 import { hasPagePermission } from "@/features/auth/access";
-import { useCallback, useDeferredValue, useEffect, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
 import {
-  ArrowRightLeft,
-  CircleSlash,
-  Eye,
-  Undo2,
-  Printer,
-} from "lucide-react";
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { useTranslation } from "react-i18next";
+import { ArrowRightLeft, CircleSlash, Eye, Undo2, Printer } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
@@ -71,7 +80,14 @@ const columns = [
   "price",
   "reason",
 ] as const;
-const statuses = ["pending", "approved", "completed", "rejected", "cancelled", "returned"];
+const statuses = [
+  "pending",
+  "approved",
+  "completed",
+  "rejected",
+  "cancelled",
+  "returned",
+];
 const esc = (v: unknown) =>
   String(v ?? "").replace(
     /[&<>"']/g,
@@ -101,9 +117,7 @@ export default function DepartmentOrdersPage() {
     { id: string; name: string }[]
   >([]);
   const [selected, setSelected] = useState<Order | null>(null);
-  const [mode, setMode] = useState<"details" | "comments">(
-    "details",
-  );
+  const [mode, setMode] = useState<"details" | "comments">("details");
   const [nextStatus, setNextStatus] = useState("pending");
   const [reason, setReason] = useState("");
   const [comment, setComment] = useState("");
@@ -118,7 +132,10 @@ export default function DepartmentOrdersPage() {
     setBusy(true);
     setReturnError("");
     try {
-      await apiClient.patch(`/inventory/department-orders/${returnOrder.id}`, { status: "returned", reason: returnOrder.reason || "" });
+      await apiClient.patch(`/inventory/department-orders/${returnOrder.id}`, {
+        status: "returned",
+        reason: returnOrder.reason || "",
+      });
       setReturnOrder(null);
       await result.refresh();
     } catch (cause) {
@@ -128,7 +145,13 @@ export default function DepartmentOrdersPage() {
       setBusy(false);
     }
   }
-  const canManage = hasPagePermission(storedUser(), "create", "update", "delete", "comment");
+  const canManage = hasPagePermission(
+    storedUser(),
+    "create",
+    "update",
+    "delete",
+    "comment",
+  );
   const result = useApiResource(
     useCallback(
       () =>
@@ -199,8 +222,15 @@ export default function DepartmentOrdersPage() {
     </span>
   );
   const tableValue = (row: Order, key: (typeof columns)[number]) => {
-    const raw = key === "date" ? row.createdAt : key === "totalProducts" ? row.items.length : row[key];
-    return raw == null || (typeof raw === "string" && !raw.trim()) ? emptyCell : value(row, key);
+    const raw =
+      key === "date"
+        ? row.createdAt
+        : key === "totalProducts"
+          ? row.items.length
+          : row[key];
+    return raw == null || (typeof raw === "string" && !raw.trim())
+      ? emptyCell
+      : value(row, key);
   };
   const open = (row: Order, nextMode: typeof mode) => {
     setSelected(row);
@@ -371,11 +401,17 @@ export default function DepartmentOrdersPage() {
                         (k === "deadline" && row.deadline) ? (
                           <Badge
                             variant="outline"
-                            className={k === "status" && ["rejected", "cancelled"].includes(row.status)
-                              ? "border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300"
-                              : k === "status" && ["approved", "completed"].includes(row.status)
-                                ? "border-green-200 bg-green-50 text-green-700 dark:border-green-900 dark:bg-green-950 dark:text-green-300"
-                                : "border-border bg-muted text-muted-foreground"}
+                            className={
+                              k === "status" &&
+                              ["rejected", "cancelled"].includes(row.status)
+                                ? "border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300"
+                                : k === "status" &&
+                                    ["approved", "completed"].includes(
+                                      row.status,
+                                    )
+                                  ? "border-green-200 bg-green-50 text-green-700 dark:border-green-900 dark:bg-green-950 dark:text-green-300"
+                                  : "border-border bg-muted text-muted-foreground"
+                            }
                           >
                             {tableValue(row, k)}
                           </Badge>
@@ -387,7 +423,8 @@ export default function DepartmentOrdersPage() {
                   <TableCell>
                     <div className="flex justify-end gap-1.5">
                       {canManage && row.status === "pending" && (
-                        <Button permission="update"
+                        <Button
+                          permission="update"
                           size="sm"
                           disabled={busy}
                           onClick={() => {
@@ -399,7 +436,8 @@ export default function DepartmentOrdersPage() {
                           {t("departmentOrders.startMovement")}
                         </Button>
                       )}
-                      <Button permission="print"
+                      <Button
+                        permission="print"
                         size="icon"
                         className="size-8"
                         aria-label={t("buyHistory.print")}
@@ -425,7 +463,10 @@ export default function DepartmentOrdersPage() {
                           aria-label={t("departmentOrders.returnOrder")}
                           title={t("departmentOrders.returnOrder")}
                           disabled={busy}
-                          onClick={() => { setReturnError(""); setReturnOrder(row); }}
+                          onClick={() => {
+                            setReturnError("");
+                            setReturnOrder(row);
+                          }}
                         >
                           <Undo2 className="size-4" />
                         </Button>
@@ -468,18 +509,39 @@ export default function DepartmentOrdersPage() {
           </div>
         </footer>
       </Card>
-      <AlertDialog open={!!returnOrder} onOpenChange={(open) => { if (!open && !returnLock.current) setReturnOrder(null); }}>
+      <AlertDialog
+        open={!!returnOrder}
+        onOpenChange={(open) => {
+          if (!open && !returnLock.current) setReturnOrder(null);
+        }}
+      >
         <AlertDialogContent dir={i18n.dir()}>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("departmentOrders.returnOrder")}</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t("departmentOrders.returnOrder")}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              {t("departmentOrders.returnConfirm", { department: returnOrder?.departmentName })}
+              {t("departmentOrders.returnConfirm", {
+                department: returnOrder?.departmentName,
+              })}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          {returnError && <p role="alert" className="text-sm text-destructive">{returnError}</p>}
+          {returnError && (
+            <p role="alert" className="text-sm text-destructive">
+              {returnError}
+            </p>
+          )}
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={busy}>{t("common.cancel")}</AlertDialogCancel>
-            <AlertDialogAction disabled={busy} onClick={(event) => { event.preventDefault(); void confirmReturn(); }}>
+            <AlertDialogCancel disabled={busy}>
+              {t("common.cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={busy}
+              onClick={(event) => {
+                event.preventDefault();
+                void confirmReturn();
+              }}
+            >
               {t("departmentOrders.confirmReturn")}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -536,7 +598,10 @@ export default function DepartmentOrdersPage() {
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
                   />
-                  <Button permission="comment" disabled={busy || !comment.trim()}>
+                  <Button
+                    permission="comment"
+                    disabled={busy || !comment.trim()}
+                  >
                     {t("departmentOrders.save")}
                   </Button>
                 </form>
@@ -567,7 +632,9 @@ export default function DepartmentOrdersPage() {
                         </TableCell>
                         <TableCell>{item.quantity}</TableCell>
                         <TableCell>
-                          {item.sellingPrice == null ? emptyCell : money(item.sellingPrice)}
+                          {item.sellingPrice == null
+                            ? emptyCell
+                            : money(item.sellingPrice)}
                         </TableCell>
                       </TableRow>
                     ))}

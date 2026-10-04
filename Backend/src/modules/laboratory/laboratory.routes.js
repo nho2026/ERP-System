@@ -18,12 +18,35 @@ const run =
       next(error);
     }
   };
-router.get("/overview", run(() => service.overview()));
-router.get("/accounting-queue", run(() => service.accountingQueue()));
-router.get("/orders/:id/queue-position", run((req) => service.queuePosition(req.params.id)));
-router.post("/orders/:id/request-patient", run((req) => service.requestPatient(req.params.id, req.user.name)));
-router.post("/orders/:id/call-ticket", run((req) => service.callAccountingTicket(req.params.id, req.user.name)));
-router.get("/dashboard", run((req) => service.dashboard(req.permissionKeys.has("*") || req.permissionKeys.has("laboratory.payments.view"))));
+router.get(
+  "/overview",
+  run(() => service.overview()),
+);
+router.get(
+  "/accounting-queue",
+  run(() => service.accountingQueue()),
+);
+router.get(
+  "/orders/:id/queue-position",
+  run((req) => service.queuePosition(req.params.id)),
+);
+router.post(
+  "/orders/:id/request-patient",
+  run((req) => service.requestPatient(req.params.id, req.user.name)),
+);
+router.post(
+  "/orders/:id/call-ticket",
+  run((req) => service.callAccountingTicket(req.params.id, req.user.name)),
+);
+router.get(
+  "/dashboard",
+  run((req) =>
+    service.dashboard(
+      req.permissionKeys.has("*") ||
+        req.permissionKeys.has("laboratory.payments.view"),
+    ),
+  ),
+);
 router.get(
   "/config",
   run(() => service.config()),
@@ -40,7 +63,10 @@ router.patch(
   "/tests/:id",
   run((req) => service.updateTest(req.params.id, req.body)),
 );
-router.delete("/tests/:id", run((req) => service.deleteTest(req.params.id)));
+router.delete(
+  "/tests/:id",
+  run((req) => service.deleteTest(req.params.id)),
+);
 router.get(
   "/lookups/:resource",
   run((req) => service.lookup(req.params.resource, req.query)),

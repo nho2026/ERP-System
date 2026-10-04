@@ -35,9 +35,7 @@ import {
 } from "@/shared/components/ui/dialog";
 import { DeleteConfirmationDialog } from "@/shared/components/ui/confirmation-dialog";
 import { ResourceState } from "@/shared/components/ui/table-resource-state";
-import {
-  PaginationControls,
-} from "@/shared/components/ui/pagination-controls";
+import { PaginationControls } from "@/shared/components/ui/pagination-controls";
 
 export default function RolesPage() {
   const { t } = useTranslation();

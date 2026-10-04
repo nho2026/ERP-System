@@ -13,7 +13,8 @@ const handle = (handler) => async (req, res, next) => {
 export const authController = {
   login: handle(async (req, res) => {
     const { user, token, maxAge } = await withLoginLockout(
-      req.validatedBody, req.ip ?? req.socket.remoteAddress ?? "unknown",
+      req.validatedBody,
+      req.ip ?? req.socket.remoteAddress ?? "unknown",
       (tx) => authService.login(req.validatedBody, tx),
     );
     req.auditUser = user;

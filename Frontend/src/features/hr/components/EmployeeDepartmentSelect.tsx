@@ -27,7 +27,10 @@ export function EmployeeDepartmentSelect({
   return (
     <div className="relative">
       <Select name={name} value={value} onValueChange={setValue} required>
-        <SelectTrigger ref={trigger} className={value ? "w-full pe-14" : "w-full"}>
+        <SelectTrigger
+          ref={trigger}
+          className={value ? "w-full pe-14" : "w-full"}
+        >
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent className="z-10000">
@@ -44,7 +47,9 @@ export function EmployeeDepartmentSelect({
           variant="ghost"
           size="icon"
           className="absolute end-1 top-1/2 size-7 -translate-y-1/2 text-muted-foreground"
-          aria-label={t("hr.clearDepartment", { defaultValue: "Clear department" })}
+          aria-label={t("hr.clearDepartment", {
+            defaultValue: "Clear department",
+          })}
           onClick={(event) => {
             event.preventDefault();
             setValue("");

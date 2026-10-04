@@ -14,10 +14,13 @@ export function useFullReportPrint<T>(load: () => Promise<T>) {
       flushSync(() => setPrintData(data));
       document.body.classList.add("printing-document");
       // Allow layout and fonts to settle before opening the print dialog.
-      await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+      await new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      );
       window.print();
-    } catch(error) { toast.error(apiErrorMessage(error)); }
-    finally {
+    } catch (error) {
+      toast.error(apiErrorMessage(error));
+    } finally {
       document.body.classList.remove("printing-document");
       setPrintData(null);
       setPrinting(false);

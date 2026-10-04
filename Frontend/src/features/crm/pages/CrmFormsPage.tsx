@@ -47,7 +47,12 @@ const blankField = (): DynamicFormField => ({
 
 export default function CrmFormsPage() {
   const { t } = useTranslation();
-  const canManage = hasPagePermission(storedUser(), "create", "update", "delete");
+  const canManage = hasPagePermission(
+    storedUser(),
+    "create",
+    "update",
+    "delete",
+  );
   const templates = useApiResource(
     useCallback(() => crmFormsApi.templates(), []),
   );
@@ -143,7 +148,8 @@ export default function CrmFormsPage() {
               </div>
               {canManage && (
                 <div className="mt-4 flex justify-end gap-2 border-t pt-3">
-                  <Button data-action="edit"
+                  <Button
+                    data-action="edit"
                     size="icon"
                     variant="ghost"
                     onClick={() => startEdit(template)}

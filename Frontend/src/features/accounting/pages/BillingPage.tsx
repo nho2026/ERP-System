@@ -6,7 +6,12 @@ import {
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Plus, Printer, Trash2 } from "lucide-react";
-import { billingApi, type Invoice, type Customer, type Payment } from "../api/billing.api";
+import {
+  billingApi,
+  type Invoice,
+  type Customer,
+  type Payment,
+} from "../api/billing.api";
 import { printDocument } from "../components/print-document";
 import { apiErrorMessage } from "@/shared/api/client";
 import { useApiResource } from "@/shared/hooks/useApiResource";
@@ -56,7 +61,11 @@ export default function BillingPage({ resource }: { resource: Resource }) {
     invoices = useApiResource(
       useCallback(() => billingApi.invoices.list(), []),
     ),
-    payments = useServerTable<Payment>("/billing/payments", {}, resource === "payments");
+    payments = useServerTable<Payment>(
+      "/billing/payments",
+      {},
+      resource === "payments",
+    );
   const [open, setOpen] = useState(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
@@ -68,9 +77,22 @@ export default function BillingPage({ resource }: { resource: Resource }) {
     setPrintInvoice(invoice);
     window.setTimeout(printDocument, 0);
   };
-  const customerRows = useServerTable<Customer>("/billing/customers", {}, resource === "customers");
-  const invoiceRows = useServerTable<Invoice>("/billing/invoices", {}, resource === "invoices");
-  const rows = resource === "customers" ? customerRows : resource === "invoices" ? invoiceRows : payments;
+  const customerRows = useServerTable<Customer>(
+    "/billing/customers",
+    {},
+    resource === "customers",
+  );
+  const invoiceRows = useServerTable<Invoice>(
+    "/billing/invoices",
+    {},
+    resource === "invoices",
+  );
+  const rows =
+    resource === "customers"
+      ? customerRows
+      : resource === "invoices"
+        ? invoiceRows
+        : payments;
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setBusy(true);
@@ -133,7 +155,8 @@ export default function BillingPage({ resource }: { resource: Resource }) {
             {t(`billing.${resource}Description`)}
           </p>
         </div>
-        <Button permission="create"
+        <Button
+          permission="create"
           onClick={() => {
             setError("");
             setItems([
@@ -202,7 +225,8 @@ export default function BillingPage({ resource }: { resource: Resource }) {
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap items-center gap-2">
-                        <Button permission="print"
+                        <Button
+                          permission="print"
                           size="icon"
                           variant="ghost"
                           title={t("billing.printInvoice")}
@@ -212,12 +236,16 @@ export default function BillingPage({ resource }: { resource: Resource }) {
                         </Button>
                         {x.status === "draft" && (
                           <>
-                            <Button permission="update"
+                            <Button
+                              permission="update"
                               size="sm"
                               variant="outline"
                               onClick={async () => {
                                 await billingApi.invoices.status(x.id, "sent");
-                                await Promise.all([invoices.refresh(), invoiceRows.refresh()]);
+                                await Promise.all([
+                                  invoices.refresh(),
+                                  invoiceRows.refresh(),
+                                ]);
                               }}
                             >
                               {t("billing.send")}
@@ -229,7 +257,10 @@ export default function BillingPage({ resource }: { resource: Resource }) {
                               className="text-destructive"
                               onClick={async () => {
                                 await billingApi.invoices.remove(x.id);
-                                await Promise.all([invoices.refresh(), invoiceRows.refresh()]);
+                                await Promise.all([
+                                  invoices.refresh(),
+                                  invoiceRows.refresh(),
+                                ]);
                               }}
                             >
                               <Trash2 className="size-4 text-white" />
@@ -301,11 +332,7 @@ export default function BillingPage({ resource }: { resource: Resource }) {
                   </Select>
                   <FormDatePicker name="issueDate" required />
                   <FormDatePicker name="dueDate" />
-                  <Input
-                    name="currency"
-                    value="USD" readOnly
-                    required
-                  />
+                  <Input name="currency" value="USD" readOnly required />
                 </div>
                 <div className="space-y-2">
                   {items.map((item, i) => (
@@ -346,7 +373,8 @@ export default function BillingPage({ resource }: { resource: Resource }) {
                           }
                         />
                       ))}
-                      <Button permission="view"
+                      <Button
+                        permission="view"
                         data-action="delete"
                         type="button"
                         variant="ghost"

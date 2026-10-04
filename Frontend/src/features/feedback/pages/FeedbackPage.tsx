@@ -44,9 +44,15 @@ const Stars = ({ value }: { value: number }) => (
 );
 export default function FeedbackPage() {
   const { t } = useTranslation();
-  const [status, setStatus] = useState("all"), [type, setType] = useState("all");
-  const table = useServerTable<Feedback>("/feedback", { status: status === "all" ? undefined : status, targetType: type === "all" ? undefined : type });
-  const items = table.data ?? [], loading = table.isLoading, error = table.error;
+  const [status, setStatus] = useState("all"),
+    [type, setType] = useState("all");
+  const table = useServerTable<Feedback>("/feedback", {
+    status: status === "all" ? undefined : status,
+    targetType: type === "all" ? undefined : type,
+  });
+  const items = table.data ?? [],
+    loading = table.isLoading,
+    error = table.error;
   const load = table.refresh;
   return (
     <div className="space-y-5">
@@ -125,7 +131,8 @@ export default function FeedbackPage() {
                     {item.comment}
                   </TableCell>
                   <TableCell>
-                    <Select permission="update"
+                    <Select
+                      permission="update"
                       value={item.status}
                       onValueChange={async (value) => {
                         await feedbackApi.status(item.id, value);
@@ -148,7 +155,11 @@ export default function FeedbackPage() {
                     <div className="flex flex-wrap items-center gap-2 justify-end">
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button data-action="delete" size="icon" variant="ghost">
+                          <Button
+                            data-action="delete"
+                            size="icon"
+                            variant="ghost"
+                          >
                             <Trash2 className="text-destructive" />
                           </Button>
                         </AlertDialogTrigger>
@@ -165,7 +176,8 @@ export default function FeedbackPage() {
                             <AlertDialogCancel>
                               {t("common.cancel")}
                             </AlertDialogCancel>
-                            <AlertDialogAction permission="delete"
+                            <AlertDialogAction
+                              permission="delete"
                               onClick={async () => {
                                 await feedbackApi.remove(item.id);
                                 await load();

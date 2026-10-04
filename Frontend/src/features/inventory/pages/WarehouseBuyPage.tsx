@@ -3,11 +3,7 @@ import { ShoppingCart } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 type BuyPage =
-  | "buyProduct"
-  | "buyHistory"
-  | "buyDebts"
-  | "order"
-  | "departmentOrders";
+  "buyProduct" | "buyHistory" | "buyDebts" | "order" | "departmentOrders";
 
 export default function WarehouseBuyPage({ page }: { page: BuyPage }) {
   const { t } = useTranslation();

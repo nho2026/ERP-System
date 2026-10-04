@@ -1,5 +1,12 @@
 import { useServerTable } from "@/shared/hooks/useServerTable";
-import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/shared/components/ui/table";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from "@/shared/components/ui/table";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { type TaskReport } from "../api/tasks.api";
@@ -14,9 +21,16 @@ const hours = (minutes: number) =>
   (minutes / 60).toLocaleString(undefined, { maximumFractionDigits: 1 });
 export default function TaskReportsPage() {
   const { t } = useTranslation();
-  const [month, setMonth] = useState(() => new Date().toISOString().slice(0,7));
-  const employees = useServerTable<TaskReport["employees"][number], {summary: TaskReport["summary"]}>("/tasks/reports/monthly", {month, section: "employees"});
-  const report = employees.pageData ? { summary: employees.pageData.summary, employees: employees.data ?? [] } : null;
+  const [month, setMonth] = useState(() =>
+    new Date().toISOString().slice(0, 7),
+  );
+  const employees = useServerTable<
+    TaskReport["employees"][number],
+    { summary: TaskReport["summary"] }
+  >("/tasks/reports/monthly", { month, section: "employees" });
+  const report = employees.pageData
+    ? { summary: employees.pageData.summary, employees: employees.data ?? [] }
+    : null;
   return (
     <div className="space-y-5 p-4 md:p-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
@@ -31,7 +45,11 @@ export default function TaskReportsPage() {
           <FormDatePicker mode="month" value={month} onValueChange={setMonth} />
         </label>
       </header>
-      {employees.error && <p role="alert" className="text-destructive">{employees.error}</p>}
+      {employees.error && (
+        <p role="alert" className="text-destructive">
+          {employees.error}
+        </p>
+      )}
       {report && (
         <>
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
@@ -87,9 +105,14 @@ export default function TaskReportsPage() {
                       </TableRow>
                     )}
                     {report.employees.map((x) => (
-                      <TableRow key={x.employeeId} className="border-b last:border-0">
+                      <TableRow
+                        key={x.employeeId}
+                        className="border-b last:border-0"
+                      >
                         <TableCell className="p-3">{x.employeeName}</TableCell>
-                        <TableCell className="p-3">{hours(x.minutes)}</TableCell>
+                        <TableCell className="p-3">
+                          {hours(x.minutes)}
+                        </TableCell>
                         <TableCell className="p-3">{x.entries}</TableCell>
                       </TableRow>
                     ))}

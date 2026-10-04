@@ -183,7 +183,9 @@ export default function TargetsPage() {
                         {employees.map((x) => (
                           <SelectItem key={x.id} value={x.id}>
                             {x.firstName} {x.lastName}
-                            {x.department?.managerId === x.id ? " (Department leader)" : ""}
+                            {x.department?.managerId === x.id
+                              ? " (Department leader)"
+                              : ""}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -224,7 +226,9 @@ export default function TargetsPage() {
                     <FormDatePicker name="dueDate" required />
                   </label>
                 </div>
-                <Button permission="create" type="submit">{t("pageText.assignTarget")}</Button>
+                <Button permission="create" type="submit">
+                  {t("pageText.assignTarget")}
+                </Button>
               </form>
             </DialogContent>
           </Dialog>
@@ -382,7 +386,13 @@ export default function TargetsPage() {
             </p>
             <label className="grid gap-1 text-sm font-medium">
               Reward amount (optional)
-              <Input name="amount" type="number" min="0" step="0.01" disabled={!hasPermission(user, "targets.reward")} />
+              <Input
+                name="amount"
+                type="number"
+                min="0"
+                step="0.01"
+                disabled={!hasPermission(user, "targets.reward")}
+              />
             </label>
             <label className="grid gap-1 text-sm font-medium">
               Reward reason

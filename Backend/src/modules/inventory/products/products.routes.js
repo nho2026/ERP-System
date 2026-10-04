@@ -3,8 +3,16 @@ import { manage, viewForPos } from "../shared/inventory.permissions.js";
 import { productsController } from "./products.controller.js";
 import { upload } from "./products.upload.js";
 const router = Router();
-router.patch("/products/:id/expiry-date", manage, productsController.updateExpiryDate);
-router.patch("/products/:id/special-price", manage, productsController.updateSpecialPrice);
+router.patch(
+  "/products/:id/expiry-date",
+  manage,
+  productsController.updateExpiryDate,
+);
+router.patch(
+  "/products/:id/special-price",
+  manage,
+  productsController.updateSpecialPrice,
+);
 router.patch("/products/special/:id", manage, productsController.updateSpecial);
 router.post("/products/special", manage, productsController.createSpecial);
 router.post(

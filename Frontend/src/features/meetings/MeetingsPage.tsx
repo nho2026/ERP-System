@@ -722,7 +722,9 @@ export default function MeetingsPage({
       return;
     }
     if (typeof navigator.mediaDevices?.getDisplayMedia !== "function") {
-      toast.error(t("liveMeetings.errors.screenUnsupported"), { duration: 10_000 });
+      toast.error(t("liveMeetings.errors.screenUnsupported"), {
+        duration: 10_000,
+      });
       return;
     }
     try {
@@ -922,7 +924,8 @@ export default function MeetingsPage({
                     ))}
                   </SelectContent>
                 </Select>
-                <Button permission="meetings.create"
+                <Button
+                  permission="meetings.create"
                   onClick={async () => {
                     try {
                       const meeting = await meetingsApi.create(
@@ -959,7 +962,10 @@ export default function MeetingsPage({
                 onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
                 placeholder={t("liveMeetings.roomCode")}
               />
-              <Button permission="meetings.join" onClick={() => void join(roomCode)}>
+              <Button
+                permission="meetings.join"
+                onClick={() => void join(roomCode)}
+              >
                 {t("liveMeetings.joinRoom")}
               </Button>
             </CardContent>
@@ -1178,302 +1184,306 @@ export default function MeetingsPage({
           </Card>,
           document.body,
         )}
-    <div
-      style={{ display: visible ? undefined : "none" }}
-      className="grid min-h-[calc(100svh-7.5rem)] gap-4 xl:grid-cols-[1fr_340px]"
-    >
-      <section className="flex min-w-0 flex-col gap-4">
-        <div className="sticky bottom-3 z-20 order-2 flex flex-wrap items-center justify-center gap-2 rounded-2xl border bg-card/95 p-3 shadow-lg backdrop-blur-xl xl:static xl:order-1 xl:justify-start xl:shadow-sm">
-          <div className="me-auto">
-            <b>{active.title}</b>
-            <p className="text-xs text-muted-foreground">
-              {active.department.name} ·{" "}
-              {t("liveMeetings.room", { code: active.roomCode })}
-            </p>
-          </div>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => {
-              navigator.clipboard.writeText(active.roomCode);
-              toast.success(t("liveMeetings.roomCodeCopied"));
-            }}
-          >
-            <Copy />
-          </Button>
-          {cameraStream ? (
-            <>
-              <Button
-                variant="outline"
-                onClick={() => void switchCamera()}
-                title={t("liveMeetings.switchCameraTitle")}
-              >
-                <SwitchCamera /> {t("liveMeetings.switch")}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => void stopStream(cameraStream, setCameraStream)}
-              >
-                <CameraOff /> {t("liveMeetings.stopCamera")}
-              </Button>
-            </>
-          ) : (
-            <Button onClick={() => void startCamera()}>
-              <Camera /> {t("liveMeetings.camera")}
-            </Button>
-          )}
-          {screenStream ? (
+      <div
+        style={{ display: visible ? undefined : "none" }}
+        className="grid min-h-[calc(100svh-7.5rem)] gap-4 xl:grid-cols-[1fr_340px]"
+      >
+        <section className="flex min-w-0 flex-col gap-4">
+          <div className="sticky bottom-3 z-20 order-2 flex flex-wrap items-center justify-center gap-2 rounded-2xl border bg-card/95 p-3 shadow-lg backdrop-blur-xl xl:static xl:order-1 xl:justify-start xl:shadow-sm">
+            <div className="me-auto">
+              <b>{active.title}</b>
+              <p className="text-xs text-muted-foreground">
+                {active.department.name} ·{" "}
+                {t("liveMeetings.room", { code: active.roomCode })}
+              </p>
+            </div>
             <Button
               variant="outline"
-              onClick={() => void stopStream(screenStream, setScreenStream)}
+              size="icon"
+              onClick={() => {
+                navigator.clipboard.writeText(active.roomCode);
+                toast.success(t("liveMeetings.roomCodeCopied"));
+              }}
             >
-              <MonitorUp /> {t("liveMeetings.stopSharing")}
+              <Copy />
             </Button>
-          ) : (
-            <Button onClick={() => void startScreen()}>
-              <MonitorUp /> {t("liveMeetings.shareScreen")}
-            </Button>
-          )}
-          <Button
-            variant={microphoneStream ? "outline" : "default"}
-            onClick={() =>
-              microphoneStream
-                ? void stopStream(microphoneStream, () => {
-                    setMicrophoneStream(null);
-                  })
-                : void startMicrophone()
-            }
-          >
-            {microphoneStream ? <MicOff /> : <Mic />}
-            {t(
-              microphoneStream
-                ? "liveMeetings.mute"
-                : "liveMeetings.microphone",
-            )}
-          </Button>
-          {(user?.permissions?.includes("*") ||
-            active.creator.id === user?.id) && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button permission="meetings.end" variant="destructive">
-                  {t("liveMeetings.endMeeting")}
+            {cameraStream ? (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => void switchCamera()}
+                  title={t("liveMeetings.switchCameraTitle")}
+                >
+                  <SwitchCamera /> {t("liveMeetings.switch")}
                 </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>
-                    {t("liveMeetings.closeMeetingTitle")}
-                  </AlertDialogTitle>
-                  <AlertDialogDescription>
-                    {t("liveMeetings.closeMeetingDescription")}
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-                  <AlertDialogAction permission="meetings.end" onClick={endMeeting}>
-                    {t("liveMeetings.closeMeeting")}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
-          <Button variant="outline" onClick={leave}>
-            <LogOut /> {t("liveMeetings.leave")}
-          </Button>
-        </div>
-        <div className="order-1 grid gap-3 md:grid-cols-2 xl:order-2">
-          {cameraStream && (
-            <VideoTile
-              stream={cameraStream}
-              label={`${user?.name} · ${t("liveMeetings.camera")}`}
-              muted
-              speaking={localSpeaking}
-            />
-          )}
-          {screenStream && (
-            <VideoTile
-              stream={screenStream}
-              label={`${user?.name} · ${t("liveMeetings.screen")}`}
-              muted
-            />
-          )}
-          {[...remoteStreams].map(([key, value]) =>
-            value.stream.getVideoTracks().length ? (
-              <VideoTile
-                key={key}
-                stream={value.stream}
-                label={value.name}
-                speaking={speakingPeers.has(value.peerId)}
-              />
+                <Button
+                  variant="outline"
+                  onClick={() => void stopStream(cameraStream, setCameraStream)}
+                >
+                  <CameraOff /> {t("liveMeetings.stopCamera")}
+                </Button>
+              </>
             ) : (
-              <AudioStream key={key} stream={value.stream} />
-            ),
-          )}
-          {!cameraStream &&
-            !screenStream &&
-            ![...remoteStreams.values()].some(
-              ({ stream }) => stream.getVideoTracks().length,
-            ) && (
-              <div className="col-span-full grid min-h-80 place-items-center rounded-2xl border border-dashed bg-muted/20 text-center text-muted-foreground">
+              <Button onClick={() => void startCamera()}>
+                <Camera /> {t("liveMeetings.camera")}
+              </Button>
+            )}
+            {screenStream ? (
+              <Button
+                variant="outline"
+                onClick={() => void stopStream(screenStream, setScreenStream)}
+              >
+                <MonitorUp /> {t("liveMeetings.stopSharing")}
+              </Button>
+            ) : (
+              <Button onClick={() => void startScreen()}>
+                <MonitorUp /> {t("liveMeetings.shareScreen")}
+              </Button>
+            )}
+            <Button
+              variant={microphoneStream ? "outline" : "default"}
+              onClick={() =>
+                microphoneStream
+                  ? void stopStream(microphoneStream, () => {
+                      setMicrophoneStream(null);
+                    })
+                  : void startMicrophone()
+              }
+            >
+              {microphoneStream ? <MicOff /> : <Mic />}
+              {t(
+                microphoneStream
+                  ? "liveMeetings.mute"
+                  : "liveMeetings.microphone",
+              )}
+            </Button>
+            {(user?.permissions?.includes("*") ||
+              active.creator.id === user?.id) && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button permission="meetings.end" variant="destructive">
+                    {t("liveMeetings.endMeeting")}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      {t("liveMeetings.closeMeetingTitle")}
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      {t("liveMeetings.closeMeetingDescription")}
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+                    <AlertDialogAction
+                      permission="meetings.end"
+                      onClick={endMeeting}
+                    >
+                      {t("liveMeetings.closeMeeting")}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+            <Button variant="outline" onClick={leave}>
+              <LogOut /> {t("liveMeetings.leave")}
+            </Button>
+          </div>
+          <div className="order-1 grid gap-3 md:grid-cols-2 xl:order-2">
+            {cameraStream && (
+              <VideoTile
+                stream={cameraStream}
+                label={`${user?.name} · ${t("liveMeetings.camera")}`}
+                muted
+                speaking={localSpeaking}
+              />
+            )}
+            {screenStream && (
+              <VideoTile
+                stream={screenStream}
+                label={`${user?.name} · ${t("liveMeetings.screen")}`}
+                muted
+              />
+            )}
+            {[...remoteStreams].map(([key, value]) =>
+              value.stream.getVideoTracks().length ? (
+                <VideoTile
+                  key={key}
+                  stream={value.stream}
+                  label={value.name}
+                  speaking={speakingPeers.has(value.peerId)}
+                />
+              ) : (
+                <AudioStream key={key} stream={value.stream} />
+              ),
+            )}
+            {!cameraStream &&
+              !screenStream &&
+              ![...remoteStreams.values()].some(
+                ({ stream }) => stream.getVideoTracks().length,
+              ) && (
+                <div className="col-span-full grid min-h-80 place-items-center rounded-2xl border border-dashed bg-muted/20 text-center text-muted-foreground">
+                  <div>
+                    <Video className="mx-auto mb-3 size-10" />
+                    <p>{t("liveMeetings.noSharing")}</p>
+                  </div>
+                </div>
+              )}
+          </div>
+        </section>
+        <aside className="flex min-h-130 flex-col overflow-hidden rounded-3xl border bg-card shadow-lg xl:max-h-[calc(100svh-9rem)]">
+          <div className="border-b p-4">
+            <div className="mb-3 flex items-center gap-2 font-semibold">
+              <Users className="size-4 text-primary" />{" "}
+              {t("liveMeetings.participants", { count: participants.length })}
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {participants.map((participant) => (
+                <span
+                  key={participant.id}
+                  className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition ${speakingPeers.has(participant.id) || (participant.id === selfPeerId && localSpeaking) ? "bg-emerald-500/15 text-emerald-700 ring-1 ring-emerald-400" : "bg-primary/8 text-primary"}`}
+                >
+                  {(speakingPeers.has(participant.id) ||
+                    (participant.id === selfPeerId && localSpeaking)) && (
+                    <Mic className="size-3 animate-pulse" />
+                  )}
+                  {participant.name}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div className="flex items-center justify-between gap-2 border-b p-4">
+            <span className="flex items-center gap-2 font-semibold">
+              <MessageSquare className="size-4 text-primary" />{" "}
+              {t("liveMeetings.meetingChat")}
+            </span>
+            <span
+              className={`text-[10px] font-medium ${chatConnected ? "text-emerald-600" : "text-amber-600"}`}
+            >
+              {t(
+                chatConnected
+                  ? "liveMeetings.connected"
+                  : "liveMeetings.connecting",
+              )}
+            </span>
+          </div>
+          <div className="content-scrollbar min-h-0 flex-1 space-y-3 overflow-y-auto bg-muted/15 p-4">
+            {messages.length === 0 && (
+              <div className="grid h-full min-h-48 place-items-center text-center text-muted-foreground">
                 <div>
-                  <Video className="mx-auto mb-3 size-10" />
-                  <p>{t("liveMeetings.noSharing")}</p>
+                  <MessageSquare className="mx-auto mb-2 size-8 opacity-50" />
+                  <p className="text-sm font-medium">
+                    {t("liveMeetings.noMessages")}
+                  </p>
+                  <p className="mt-1 text-xs">
+                    {t("liveMeetings.startConversation")}
+                  </p>
                 </div>
               </div>
             )}
-        </div>
-      </section>
-      <aside className="flex min-h-130 flex-col overflow-hidden rounded-3xl border bg-card shadow-lg xl:max-h-[calc(100svh-9rem)]">
-        <div className="border-b p-4">
-          <div className="mb-3 flex items-center gap-2 font-semibold">
-            <Users className="size-4 text-primary" />{" "}
-            {t("liveMeetings.participants", { count: participants.length })}
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {participants.map((participant) => (
-              <span
-                key={participant.id}
-                className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition ${speakingPeers.has(participant.id) || (participant.id === selfPeerId && localSpeaking) ? "bg-emerald-500/15 text-emerald-700 ring-1 ring-emerald-400" : "bg-primary/8 text-primary"}`}
+            {messages.map((item) => (
+              <div
+                key={item.id}
+                className={`w-fit max-w-[88%] rounded-2xl p-3 shadow-sm ${item.sender === user?.name ? "ms-auto rounded-ee-md bg-primary text-primary-foreground" : "me-auto rounded-es-md border bg-card"}`}
               >
-                {(speakingPeers.has(participant.id) ||
-                  (participant.id === selfPeerId && localSpeaking)) && (
-                  <Mic className="size-3 animate-pulse" />
-                )}
-                {participant.name}
-              </span>
-            ))}
-          </div>
-        </div>
-        <div className="flex items-center justify-between gap-2 border-b p-4">
-          <span className="flex items-center gap-2 font-semibold">
-            <MessageSquare className="size-4 text-primary" />{" "}
-            {t("liveMeetings.meetingChat")}
-          </span>
-          <span
-            className={`text-[10px] font-medium ${chatConnected ? "text-emerald-600" : "text-amber-600"}`}
-          >
-            {t(
-              chatConnected
-                ? "liveMeetings.connected"
-                : "liveMeetings.connecting",
-            )}
-          </span>
-        </div>
-        <div className="content-scrollbar min-h-0 flex-1 space-y-3 overflow-y-auto bg-muted/15 p-4">
-          {messages.length === 0 && (
-            <div className="grid h-full min-h-48 place-items-center text-center text-muted-foreground">
-              <div>
-                <MessageSquare className="mx-auto mb-2 size-8 opacity-50" />
-                <p className="text-sm font-medium">
-                  {t("liveMeetings.noMessages")}
-                </p>
-                <p className="mt-1 text-xs">
-                  {t("liveMeetings.startConversation")}
-                </p>
-              </div>
-            </div>
-          )}
-          {messages.map((item) => (
-            <div
-              key={item.id}
-              className={`w-fit max-w-[88%] rounded-2xl p-3 shadow-sm ${item.sender === user?.name ? "ms-auto rounded-ee-md bg-primary text-primary-foreground" : "me-auto rounded-es-md border bg-card"}`}
-            >
-              <div className="mb-1 flex justify-between gap-2 text-xs">
-                <b>{item.sender}</b>
-                <span
-                  className={
-                    item.sender === user?.name
-                      ? "text-primary-foreground/70"
-                      : "text-muted-foreground"
-                  }
-                >
-                  {new Date(item.at).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </span>
-              </div>
-              {item.text && <p className="text-sm">{item.text}</p>}
-              {item.fileName &&
-                (item.fileUrl ? (
-                  item.fileType?.startsWith("image/") ? (
-                    <div className="mt-2 overflow-hidden rounded-xl border bg-background">
+                <div className="mb-1 flex justify-between gap-2 text-xs">
+                  <b>{item.sender}</b>
+                  <span
+                    className={
+                      item.sender === user?.name
+                        ? "text-primary-foreground/70"
+                        : "text-muted-foreground"
+                    }
+                  >
+                    {new Date(item.at).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </div>
+                {item.text && <p className="text-sm">{item.text}</p>}
+                {item.fileName &&
+                  (item.fileUrl ? (
+                    item.fileType?.startsWith("image/") ? (
+                      <div className="mt-2 overflow-hidden rounded-xl border bg-background">
+                        <a
+                          href={item.fileUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          title={t("liveMeetings.openFullImage")}
+                        >
+                          <img
+                            src={item.fileUrl}
+                            alt={item.fileName}
+                            loading="lazy"
+                            className="max-h-72 w-full cursor-zoom-in object-contain transition hover:opacity-90"
+                          />
+                        </a>
+                        <a
+                          className="block truncate border-t px-3 py-2 text-xs font-medium text-primary hover:underline"
+                          href={item.fileUrl}
+                          download={item.fileName}
+                        >
+                          {item.fileName}
+                        </a>
+                      </div>
+                    ) : (
                       <a
-                        href={item.fileUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        title={t("liveMeetings.openFullImage")}
-                      >
-                        <img
-                          src={item.fileUrl}
-                          alt={item.fileName}
-                          loading="lazy"
-                          className="max-h-72 w-full cursor-zoom-in object-contain transition hover:opacity-90"
-                        />
-                      </a>
-                      <a
-                        className="block truncate border-t px-3 py-2 text-xs font-medium text-primary hover:underline"
+                        className="text-sm font-medium text-primary hover:underline"
                         href={item.fileUrl}
                         download={item.fileName}
                       >
                         {item.fileName}
                       </a>
-                    </div>
+                    )
                   ) : (
-                    <a
-                      className="text-sm font-medium text-primary hover:underline"
-                      href={item.fileUrl}
-                      download={item.fileName}
-                    >
-                      {item.fileName}
-                    </a>
-                  )
-                ) : (
-                  <p className="text-sm">
-                    {t("liveMeetings.sentFile", { fileName: item.fileName })}
-                  </p>
-                ))}
-            </div>
-          ))}
-          <div ref={chatEndRef} />
-        </div>
-        <div className="border-t bg-card p-3">
-          <div className="flex items-center gap-2 rounded-2xl border bg-muted/25 p-1.5 shadow-inner">
-            <Input
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-              placeholder={t("liveMeetings.writeMessage")}
-              className="border-0 bg-transparent shadow-none focus-visible:ring-0"
-            />
-            <Button permission="meetings.chat"
-              size="icon"
-              onClick={sendMessage}
-              disabled={!chatConnected || !message.trim()}
-            >
-              <Send />
-            </Button>
-            <label
-              className={`grid size-9 shrink-0 place-items-center rounded-md border ${dataPeers ? "cursor-pointer hover:bg-muted" : "cursor-not-allowed opacity-50"}`}
-            >
-              <FileUp className="size-4" />
-              <input
-                type="file"
-                className="hidden"
-                disabled={!dataPeers}
-                onChange={(e) => {
-                  void sendFile(e.target.files?.[0]);
-                  e.target.value = "";
-                }}
-              />
-            </label>
+                    <p className="text-sm">
+                      {t("liveMeetings.sentFile", { fileName: item.fileName })}
+                    </p>
+                  ))}
+              </div>
+            ))}
+            <div ref={chatEndRef} />
           </div>
-          <p className="mt-2 text-[10px] text-muted-foreground">
-            {t("liveMeetings.securityNote")}
-          </p>
-        </div>
-      </aside>
-    </div>
+          <div className="border-t bg-card p-3">
+            <div className="flex items-center gap-2 rounded-2xl border bg-muted/25 p-1.5 shadow-inner">
+              <Input
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                placeholder={t("liveMeetings.writeMessage")}
+                className="border-0 bg-transparent shadow-none focus-visible:ring-0"
+              />
+              <Button
+                permission="meetings.chat"
+                size="icon"
+                onClick={sendMessage}
+                disabled={!chatConnected || !message.trim()}
+              >
+                <Send />
+              </Button>
+              <label
+                className={`grid size-9 shrink-0 place-items-center rounded-md border ${dataPeers ? "cursor-pointer hover:bg-muted" : "cursor-not-allowed opacity-50"}`}
+              >
+                <FileUp className="size-4" />
+                <input
+                  type="file"
+                  className="hidden"
+                  disabled={!dataPeers}
+                  onChange={(e) => {
+                    void sendFile(e.target.files?.[0]);
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+            </div>
+            <p className="mt-2 text-[10px] text-muted-foreground">
+              {t("liveMeetings.securityNote")}
+            </p>
+          </div>
+        </aside>
+      </div>
     </>
   );
 }

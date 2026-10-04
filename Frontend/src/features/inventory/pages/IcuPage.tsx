@@ -9,7 +9,7 @@ import {
 } from "@/shared/components/ui/select";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Eye, Plus, Printer, Trash2 } from "lucide-react";
+import { Eye, Plus, Printer } from "lucide-react";
 import { apiClient, apiErrorMessage } from "@/shared/api/client";
 import { storedUser } from "@/features/auth/access";
 import { Button } from "@/shared/components/ui/button";
@@ -50,38 +50,53 @@ type Case = {
 };
 export default function IcuPage({
   unit = "icu",
+  moduleMode = false,
 }: {
   unit?: "icu" | "picu" | "cardiac-sw" | "cardiac-surgery" | "cardiology";
+  moduleMode?: boolean;
 }) {
   const isOp = unit === "cardiac-surgery";
-  const [part, setPart] = useState("all");
   const parts = ["scrubNurse", "anesthesia", "perfusion"];
-  const endpoint = `/inventory/${unit}-cases`;
+  const endpoint = moduleMode ? "/icu/cases" : `/inventory/${unit}-cases`;
+  const writeEndpoint = `/inventory/${unit}-cases`;
   const { t, i18n } = useTranslation();
   const manage = hasPagePermission(storedUser(), "create", "update", "delete");
   const [patients, setPatients] = useState<
     { id: string; patientCode: string; firstName: string; lastName: string }[]
   >([]);
+  const [patientSearch, setPatientSearch] = useState("");
+  const [patientPage, setPatientPage] = useState(1);
+  const [patientHasMore, setPatientHasMore] = useState(false);
+  const [patientLoading, setPatientLoading] = useState(false);
   useEffect(() => {
     const c = new AbortController();
+    setPatientLoading(true);
     apiClient
-      .get("/inventory/icu-cases/patients", { signal: c.signal })
-      .then((r) => setPatients(r.data))
+      .get("/inventory/icu-cases/patients", {
+        params: { page: patientPage, pageSize: 30, search: patientSearch },
+        signal: c.signal,
+      })
+      .then((r) => {
+        const rows = r.data.items ?? [];
+        setPatients((current) =>
+          patientPage === 1 ? rows : [...current, ...rows],
+        );
+        setPatientHasMore(patientPage < (r.data.pagination?.totalPages ?? 1));
+      })
       .catch((e) => {
         if (!c.signal.aborted) setError(apiErrorMessage(e));
+      })
+      .finally(() => {
+        if (!c.signal.aborted) setPatientLoading(false);
       });
     return () => c.abort();
-  }, []);
-  const [search, setSearch] = useState(""),
-    [start, setStart] = useState(""),
-    [end, setEnd] = useState(""),
-    [category, setCategory] = useState("all");
+  }, [patientPage, patientSearch]);
+  const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Case | null>(null),
-    [deleting, setDeleting] = useState<Case | null>(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [version, setVersion] = useState(0);
-  const table = useServerTable<Case, { totals: { count: number; price: number; cost: number } }>(endpoint, { search, start, end, category, part, version });
+  const table = useServerTable<Case>(endpoint, { search, version });
   const loading = table.isLoading;
   const money = (value: number) =>
     new Intl.NumberFormat(i18n.language, {
@@ -91,8 +106,6 @@ export default function IcuPage({
   const sum = (items: Item[], key: "price" | "cost") =>
     items.reduce((v, item) => v + item.quantity * item[key], 0);
   const filtered = table.data ?? [];
-  const rangeInvalid = !!(start && end && start > end);
-  const price = table.pageData?.totals.price ?? 0, cost = table.pageData?.totals.cost ?? 0;
   const esc = (v: unknown) =>
     String(v ?? "").replace(
       /[&<>"']/g,
@@ -113,7 +126,7 @@ export default function IcuPage({
     }
     win.opener = null;
     win.document.write(
-      `<html dir="${i18n.dir()}"><head><title>${esc(row.patientName)}</title></head><body><h1>${esc(row.patientName)}</h1><p>${esc(new Date(row.entry).toLocaleString(i18n.language))}</p><table>${row.items.map((item) => `<tr><td>${esc(item.name)}</td><td>${item.quantity}</td><td>${esc(money(item.price * item.quantity))}</td></tr>`).join("")}</table><p>${esc(t("icu.totalPrice"))}: ${esc(money(sum(row.items, "price")))}</p></body></html>`,
+      `<html dir="${i18n.dir()}"><head><title>${esc(row.patientName)}</title></head><body><h1>${esc(row.patientName)}</h1><p>${esc(new Date(row.entry).toLocaleString(i18n.language))}</p><table>${row.items.map((item) => `<tr><td>${esc(item.name)}</td><td>${item.quantity}</td>${moduleMode ? "" : `<td>${esc(money(item.price * item.quantity))}</td>`}</tr>`).join("")}</table>${moduleMode ? "" : `<p>${esc(t("icu.totalPrice"))}: ${esc(money(sum(row.items, "price")))}</p>`}</body></html>`,
     );
     win.document.close();
     win.print();
@@ -123,7 +136,8 @@ export default function IcuPage({
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-xl font-bold">{t(`${unit}.title`)}</h1>
         {manage && (
-          <Button permission="create"
+          <Button
+            permission="create"
             onClick={() => {
               setError("");
               setSelected({
@@ -139,7 +153,7 @@ export default function IcuPage({
           </Button>
         )}
       </div>
-      {(error || table.error) && !selected && !deleting && (
+      {(error || table.error) && !selected && (
         <p role="alert" className="text-destructive">
           {error}
         </p>
@@ -158,7 +172,7 @@ export default function IcuPage({
               {[
                 "id",
                 "patient",
-                "totalPrice",
+                ...(!moduleMode ? ["totalPrice"] : []),
                 ...(isOp ? parts : []),
                 "entry",
                 "exit",
@@ -172,7 +186,10 @@ export default function IcuPage({
           <TableBody {...table.tableProps}>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={isOp ? 10 : 7} className="h-24 text-center">
+                <TableCell
+                  colSpan={moduleMode ? 6 : isOp ? 10 : 7}
+                  className="h-24 text-center"
+                >
                   {t("resourceState.loading")}
                 </TableCell>
               </TableRow>
@@ -183,7 +200,9 @@ export default function IcuPage({
                     {row.id}
                   </TableCell>
                   <TableCell>{row.patientName}</TableCell>
-                  <TableCell>{money(sum(row.items, "price"))}</TableCell>
+                  {!moduleMode && (
+                    <TableCell>{money(sum(row.items, "price"))}</TableCell>
+                  )}
                   {isOp &&
                     parts.map((key) => (
                       <TableCell key={key}>
@@ -206,7 +225,8 @@ export default function IcuPage({
                   <TableCell>{row.items.length}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button permission="print"
+                      <Button
+                        permission="print"
                         variant="outline"
                         size="icon"
                         aria-label={t("icu.print")}
@@ -225,19 +245,6 @@ export default function IcuPage({
                       >
                         <Eye />
                       </Button>
-                      {manage && (
-                        <Button data-action="delete"
-                          variant="destructive"
-                          size="icon"
-                          aria-label={t("icu.delete")}
-                          onClick={() => {
-                            setError("");
-                            setDeleting(row);
-                          }}
-                        >
-                          <Trash2  className="size-4 text-white" />
-                        </Button>
-                      )}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -245,7 +252,7 @@ export default function IcuPage({
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={isOp ? 10 : 7}
+                  colSpan={moduleMode ? 6 : isOp ? 10 : 7}
                   className="h-24 text-center text-muted-foreground"
                 >
                   {t("resourceState.notFound")}
@@ -254,76 +261,6 @@ export default function IcuPage({
             )}
           </TableBody>
         </Table>
-      </Card>
-      <Card className="space-y-4 p-5">
-        <h2 className="font-semibold">{t(`${unit}.totals`)}</h2>
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="space-y-2">
-            <Label>{t("icu.start")}</Label>
-            <FormDatePicker value={start} onValueChange={setStart} />
-          </div>
-          <div className="space-y-2">
-            <Label>{t("icu.end")}</Label>
-            <FormDatePicker value={end} onValueChange={setEnd} />
-          </div>
-          <div className="space-y-2">
-            <Label>{t("icu.category")}</Label>
-            <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger aria-label={t("icu.category")}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent searchable={false}>
-                <SelectItem value="all">{t("icu.all")}</SelectItem>
-                <SelectItem value="pharmacy">
-                  {t("icu.onlyPharmacy")}
-                </SelectItem>
-                <SelectItem value="disposable">
-                  {t("icu.onlyDisposable")}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          {isOp && (
-            <div className="space-y-2">
-              <Label>{t("icu.opPart")}</Label>
-              <Select value={part} onValueChange={setPart}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent searchable={false}>
-                  <SelectItem value="all">{t("icu.allParts")}</SelectItem>
-                  {parts.map((key) => (
-                    <SelectItem key={key} value={key}>
-                      {t(`icu.${key}`)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-        </div>
-        {rangeInvalid && (
-          <p role="alert" className="text-destructive">
-            {t("icu.invalidDates")}
-          </p>
-        )}
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {[
-            ["count", table.pageData?.totals.count ?? 0],
-            ["totalPrice", money(price)],
-            ["totalCost", money(cost)],
-            ["profit", money(price - cost)],
-          ].map(([key, value]) => (
-            <Card key={key} className="space-y-2 bg-muted/30 p-4">
-              <p className="text-sm text-muted-foreground">{t(`icu.${key}`)}</p>
-              <p
-                className={`text-2xl font-bold ${key === "profit" ? "text-primary" : ""}`}
-              >
-                {value}
-              </p>
-            </Card>
-          ))}
-        </div>
       </Card>
       <Dialog
         open={!!selected}
@@ -349,10 +286,10 @@ export default function IcuPage({
                 try {
                   if (selected.id)
                     await apiClient.patch(
-                      `${endpoint}/${selected.id}`,
+                      `${writeEndpoint}/${selected.id}`,
                       selected,
                     );
-                  else await apiClient.post(endpoint, selected);
+                  else await apiClient.post(writeEndpoint, selected);
                   setSelected(null);
                   setVersion((v) => v + 1);
                 } catch (e) {
@@ -382,10 +319,34 @@ export default function IcuPage({
                           : "",
                       });
                     }}
-                    options={patients.map((patient) => ({
-                      value: patient.id,
-                      label: `${patient.firstName} ${patient.lastName} · ${patient.patientCode}`,
-                    }))}
+                    onSearchChange={(value) => {
+                      setPatients([]);
+                      setPatientPage(1);
+                      setPatientSearch(value);
+                    }}
+                    onLoadMore={() => {
+                      if (patientHasMore && !patientLoading)
+                        setPatientPage((page) => page + 1);
+                    }}
+                    hasMore={patientHasMore}
+                    loading={patientLoading}
+                    options={[
+                      ...(selected.patientId &&
+                      !patients.some(
+                        (patient) => patient.id === selected.patientId,
+                      )
+                        ? [
+                            {
+                              value: selected.patientId,
+                              label: selected.patientName,
+                            },
+                          ]
+                        : []),
+                      ...patients.map((patient) => ({
+                        value: patient.id,
+                        label: `${patient.firstName} ${patient.lastName} · ${patient.patientCode}`,
+                      })),
+                    ]}
                   />
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -545,49 +506,15 @@ export default function IcuPage({
                 </p>
               )}
               {manage && (
-                <Button permission={selected.id ? "update" : "create"} disabled={busy || !selected.patientId}>
+                <Button
+                  permission={selected.id ? "update" : "create"}
+                  disabled={busy || !selected.patientId}
+                >
                   {t("retailers.save")}
                 </Button>
               )}
             </form>
           )}
-        </DialogContent>
-      </Dialog>
-      <Dialog
-        open={!!deleting}
-        onOpenChange={(v) => {
-          if (!v && !busy) setDeleting(null);
-        }}
-      >
-        <DialogContent dir={i18n.dir()}>
-          <DialogHeader>
-            <DialogTitle>{t("icu.delete")}</DialogTitle>
-          </DialogHeader>
-          <p>{t("icu.confirm", { name: deleting?.patientName })}</p>
-          {error && (
-            <p role="alert" className="text-destructive">
-              {error}
-            </p>
-          )}
-          <Button permission="delete"
-            variant="destructive"
-            disabled={busy}
-            onClick={async () => {
-              if (!deleting || busy) return;
-              setBusy(true);
-              try {
-                await apiClient.delete(`${endpoint}/${deleting.id}`);
-                setDeleting(null);
-                setVersion((v) => v + 1);
-              } catch (e) {
-                setError(apiErrorMessage(e));
-              } finally {
-                setBusy(false);
-              }
-            }}
-          >
-            {t("icu.delete")}
-          </Button>
         </DialogContent>
       </Dialog>
     </div>

@@ -3277,6 +3277,7 @@
       ]
   },
   "pages": {
+    "/icu": "inventory.icu",
 "/building-expenses": "building-expenses",
     "/dashboard": "dashboard",
     "/profile": "profile",
@@ -3404,6 +3405,7 @@
       "/laboratory/tests": "laboratory.pages.tests"
   },
   "resources": [
+    { "pattern": "^/icu(?:/|$)", "resource": "inventory.icu" },
 {"pattern":"^/building-expenses(?:/|$)","resource":"building-expenses"},
     {
         "pattern": "^/laboratory/orders(?:/[^/]+)?$",

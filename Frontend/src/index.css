@@ -21,24 +21,24 @@
 
 @theme inline {
   /* Legacy teal utilities share the green brand palette. */
-  --color-teal-50: #F2F9F4;
-  --color-teal-100: #E8F5ED;
-  --color-teal-200: #CCE5D4;
-  --color-teal-300: #A8E4BC;
-  --color-teal-400: #74D394;
-  --color-teal-500: #00664F;
-  --color-teal-600: #007A59;
-  --color-teal-700: #00664F;
-  --color-teal-800: #00513E;
-  --color-teal-900: #003C30;
-  --color-teal-950: #071B0E;
+  --color-teal-50: #f2f9f4;
+  --color-teal-100: #e8f5ed;
+  --color-teal-200: #cce5d4;
+  --color-teal-300: #a8e4bc;
+  --color-teal-400: #74d394;
+  --color-teal-500: #00664f;
+  --color-teal-600: #007a59;
+  --color-teal-700: #00664f;
+  --color-teal-800: #00513e;
+  --color-teal-900: #003c30;
+  --color-teal-950: #071b0e;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
-  --color-brand-bright: #29AD49;
+  --color-brand-bright: #29ad49;
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
@@ -59,71 +59,71 @@
 }
 
 :root {
-  --background: #F2F9F4;
+  --background: #f2f9f4;
   --foreground: #173322;
   --card: #ffffff;
   --card-foreground: #173322;
   --popover: #ffffff;
   --popover-foreground: #173322;
-  --primary: #00664F;
+  --primary: #00664f;
   --primary-foreground: #ffffff;
-  --secondary: #E8F5ED;
-  --secondary-foreground: #007A59;
-  --muted: #EDF7F0;
+  --secondary: #e8f5ed;
+  --secondary-foreground: #007a59;
+  --muted: #edf7f0;
   --muted-foreground: #607567;
-  --accent: #D3EFDC;
-  --accent-foreground: #007A59;
+  --accent: #d3efdc;
+  --accent-foreground: #007a59;
   --destructive: #dc2626;
-  --border: #CCE5D4;
-  --input: #B8DAC4;
-  --ring: #00664F;
+  --border: #cce5d4;
+  --input: #b8dac4;
+  --ring: #00664f;
   --radius: 0.625rem;
   font-family: "Kurdish", system-ui, sans-serif;
   color-scheme: light;
 }
 
 :root[data-theme="dark"] {
-  --background: #0B120E;
+  --background: #0b120e;
   --foreground: #ffffff;
-  --card: #111D15;
+  --card: #111d15;
   --card-foreground: #ffffff;
-  --popover: #16251B;
+  --popover: #16251b;
   --popover-foreground: #ffffff;
-  --primary: #00664F;
+  --primary: #00664f;
   --primary-foreground: #ffffff;
-  --secondary: #1B3022;
+  --secondary: #1b3022;
   --secondary-foreground: #ffffff;
-  --muted: #19271F;
-  --muted-foreground: #A3B8AA;
-  --accent: #203D2A;
+  --muted: #19271f;
+  --muted-foreground: #a3b8aa;
+  --accent: #203d2a;
   --accent-foreground: #ffffff;
   --destructive: #fb7185;
-  --border: #2B4433;
-  --input: #36533F;
-  --ring: #00664F;
+  --border: #2b4433;
+  --input: #36533f;
+  --ring: #00664f;
   color-scheme: dark;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --background: #0B120E;
+    --background: #0b120e;
     --foreground: #ffffff;
-    --card: #111D15;
+    --card: #111d15;
     --card-foreground: #ffffff;
-    --popover: #16251B;
+    --popover: #16251b;
     --popover-foreground: #ffffff;
-    --primary: #00664F;
+    --primary: #00664f;
     --primary-foreground: #ffffff;
-    --secondary: #1B3022;
+    --secondary: #1b3022;
     --secondary-foreground: #ffffff;
-    --muted: #19271F;
-    --muted-foreground: #A3B8AA;
-    --accent: #203D2A;
+    --muted: #19271f;
+    --muted-foreground: #a3b8aa;
+    --accent: #203d2a;
     --accent-foreground: #ffffff;
     --destructive: #fb7185;
-    --border: #2B4433;
-    --input: #36533F;
-    --ring: #00664F;
+    --border: #2b4433;
+    --input: #36533f;
+    --ring: #00664f;
     color-scheme: dark;
   }
 }
@@ -325,12 +325,12 @@ html[lang="ku"] [data-sonner-toaster] {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    border-bottom: 2px solid #00664F;
+    border-bottom: 2px solid #00664f;
     padding-bottom: 14px;
     margin-bottom: 20px;
   }
   .salary-list-print h1 {
-    color: #00664F;
+    color: #00664f;
     font-size: 28px;
     font-weight: 800;
   }
@@ -358,7 +358,7 @@ html[lang="ku"] [data-sonner-toaster] {
     width: 45%;
     margin-inline-start: auto;
     margin-top: 18px;
-    border-top: 2px solid #00664F;
+    border-top: 2px solid #00664f;
     padding-top: 8px;
   }
   .salary-print-totals p {

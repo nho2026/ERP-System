@@ -42,7 +42,8 @@ const select = {
 };
 
 export const leadModel = {
-  counts: (where = {}) => prisma.crmLead.groupBy({ where, by: ["status"], _count: { _all: true } }),
+  counts: (where = {}) =>
+    prisma.crmLead.groupBy({ where, by: ["status"], _count: { _all: true } }),
   findAll: (skip, take, where) =>
     Promise.all([
       prisma.crmLead.findMany({
@@ -96,19 +97,19 @@ export const leadModel = {
       const firstName = parts.shift() || lead.name;
       const lastName = parts.join(" ") || "Patient";
       const patient = await createPatient(tx, {
-          firstName,
-          lastName,
-          phone: lead.phone,
-          email: lead.email,
-          dateOfBirth: lead.age
-            ? new Date(Date.UTC(new Date().getUTCFullYear() - lead.age, 0, 1))
-            : null,
-          gender: lead.gender,
-          address: lead.address,
-          medicalNotes: lead.notes
-            ? `Converted from CRM lead. ${lead.notes}`
-            : "Converted from CRM lead.",
-          status: "active",
+        firstName,
+        lastName,
+        phone: lead.phone,
+        email: lead.email,
+        dateOfBirth: lead.age
+          ? new Date(Date.UTC(new Date().getUTCFullYear() - lead.age, 0, 1))
+          : null,
+        gender: lead.gender,
+        address: lead.address,
+        medicalNotes: lead.notes
+          ? `Converted from CRM lead. ${lead.notes}`
+          : "Converted from CRM lead.",
+        status: "active",
       });
       const updated = await tx.crmLead.update({
         where: { id: lead.id },

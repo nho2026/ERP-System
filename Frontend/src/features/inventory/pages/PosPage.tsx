@@ -89,7 +89,8 @@ export default function PosPage({ mode }: { mode: "checkout" | "sales" }) {
     ),
     total = Math.max(0, subtotal + tax - discount);
   const stock = (p: RecordItem) =>
-    p.stocks?.find((s: RecordItem) => s.warehouseId === warehouseId)?.quantity ?? 0;
+    p.stocks?.find((s: RecordItem) => s.warehouseId === warehouseId)
+      ?.quantity ?? 0;
   const add = (id: string) =>
     setCart((c) => ({
       ...c,

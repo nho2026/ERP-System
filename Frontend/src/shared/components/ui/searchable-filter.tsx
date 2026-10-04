@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { Button } from "./button";
@@ -13,6 +13,10 @@ export function SearchableFilter({
   className,
   searchable,
   pageSize,
+  onSearchChange,
+  onLoadMore,
+  hasMore = false,
+  loading = false,
 }: {
   value: string;
   onValueChange: (value: string) => void;
@@ -21,6 +25,10 @@ export function SearchableFilter({
   className?: string;
   searchable?: boolean;
   pageSize?: number;
+  onSearchChange?: (value: string) => void;
+  onLoadMore?: () => void;
+  hasMore?: boolean;
+  loading?: boolean;
 }) {
   const { t, i18n } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -28,11 +36,17 @@ export function SearchableFilter({
   const [visibleCount, setVisibleCount] = useState(pageSize ?? Infinity);
   const input = useRef<HTMLInputElement>(null);
   const list = useRef<HTMLDivElement>(null);
+  const loadLock = useRef(false);
+  useEffect(() => {
+    if (!loading) loadLock.current = false;
+  }, [loading]);
   const showSearch = searchable ?? options.length > 7;
   const filtered = options.filter((option) =>
     option.label
       .toLocaleLowerCase()
-      .includes(showSearch ? search.trim().toLocaleLowerCase() : ""),
+      .includes(
+        showSearch && !onSearchChange ? search.trim().toLocaleLowerCase() : "",
+      ),
   );
   return (
     <Popover
@@ -42,6 +56,7 @@ export function SearchableFilter({
         setOpen(value);
         setSearch("");
         setVisibleCount(pageSize ?? Infinity);
+        if (!value) onSearchChange?.("");
       }}
     >
       <PopoverTrigger asChild>
@@ -79,6 +94,7 @@ export function SearchableFilter({
             onChange={(event) => {
               setSearch(event.target.value);
               setVisibleCount(pageSize ?? Infinity);
+              onSearchChange?.(event.target.value);
             }}
             onKeyDown={(event) => {
               if (event.key === "ArrowDown") {
@@ -94,14 +110,24 @@ export function SearchableFilter({
           onScrollCapture={(event) => {
             const viewport = event.target as HTMLElement;
             if (
-              pageSize &&
               viewport.hasAttribute("data-radix-scroll-area-viewport") &&
-              viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight < 80
+              viewport.scrollHeight -
+                viewport.scrollTop -
+                viewport.clientHeight <
+                80
             ) {
-              setVisibleCount((count) => Math.min(count + pageSize, filtered.length));
+              if (onLoadMore && hasMore && !loading && !loadLock.current) {
+                loadLock.current = true;
+                onLoadMore();
+              } else if (!onLoadMore && pageSize) {
+                setVisibleCount((count) =>
+                  Math.min(count + pageSize, filtered.length),
+                );
+              }
             }
           }}
-          className="min-h-0 max-h-60 [&_[data-radix-scroll-area-viewport]]:h-auto [&_[data-radix-scroll-area-viewport]]:max-h-[min(240px,calc(var(--radix-popover-content-available-height)-80px))]">
+          className="min-h-0 max-h-60 [&_[data-radix-scroll-area-viewport]]:h-auto [&_[data-radix-scroll-area-viewport]]:max-h-[min(240px,calc(var(--radix-popover-content-available-height)-80px))]"
+        >
           <div
             ref={list}
             className="space-y-0.5"
@@ -151,6 +177,11 @@ export function SearchableFilter({
             {!filtered.length && (
               <p className="p-3 text-sm text-muted-foreground" role="status">
                 {t("resourceState.notFound")}
+              </p>
+            )}
+            {onLoadMore && loading && (
+              <p className="p-2 text-center text-xs text-muted-foreground">
+                {t("resourceState.loading")}
               </p>
             )}
           </div>

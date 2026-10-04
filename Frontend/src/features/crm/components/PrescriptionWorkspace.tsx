@@ -1,5 +1,16 @@
-import { Popover, PopoverTrigger, PopoverContent } from "@/shared/components/ui/popover";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/shared/components/ui/table";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/shared/components/ui/popover";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/shared/components/ui/table";
 import DrugDoseCalculator, { type DrugProduct } from "./DrugDoseCalculator";
 import { randomId } from "@/shared/lib/random-id";
 import prescriptionPrintStyles from "./prescription-print.css?inline";
@@ -58,9 +69,19 @@ export default function PrescriptionWorkspace({
 }) {
   const { t, i18n } = useTranslation();
   const tr = (key: string) => t(`prescription.${key}`);
-  const money = (value: number) => value.toLocaleString(i18n.language, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const lineAmount = (line: Line) => Math.round(line.quantity * line.unitPrice * 100) / 100;
-  const invoiceTotal = (items: Line[]) => items.every(item => item.lineTotal != null && Number.isFinite(item.lineTotal)) ? items.reduce((sum, item) => sum + item.lineTotal!, 0) : null;
+  const money = (value: number) =>
+    value.toLocaleString(i18n.language, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  const lineAmount = (line: Line) =>
+    Math.round(line.quantity * line.unitPrice * 100) / 100;
+  const invoiceTotal = (items: Line[]) =>
+    items.every(
+      (item) => item.lineTotal != null && Number.isFinite(item.lineTotal),
+    )
+      ? items.reduce((sum, item) => sum + item.lineTotal!, 0)
+      : null;
   const settings = useSettings();
   const organization = settings?.organization;
   const [editing, setEditing] = useState(false);
@@ -84,9 +105,7 @@ export default function PrescriptionWorkspace({
     useCallback(
       () =>
         apiClient
-          .get<
-            DrugProduct[]
-          >("/crm/prescriptions/catalog")
+          .get<DrugProduct[]>("/crm/prescriptions/catalog")
           .then((r) => r.data),
       [],
     ),
@@ -145,7 +164,10 @@ export default function PrescriptionWorkspace({
     try {
       await apiClient.post(`/crm/prescriptions/patient/${patientId}`, {
         requestId: request.current,
-        items: lines.map(({ product, ...line }) => ({ ...line, ...(product && { productId: product.id }) })),
+        items: lines.map(({ product, ...line }) => ({
+          ...line,
+          ...(product && { productId: product.id }),
+        })),
         notes,
       });
       setLines([]);
@@ -169,7 +191,8 @@ export default function PrescriptionWorkspace({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-xl font-semibold">{tr("medications")}</h2>
         {canManage && !editing && (
-          <Button permission="crm.prescriptions.create"
+          <Button
+            permission="crm.prescriptions.create"
             onClick={() => {
               setEditing(true);
               setLines([newLine()]);
@@ -220,7 +243,13 @@ export default function PrescriptionWorkspace({
                       request.current = null;
                       setLines((rows) => [
                         ...rows,
-                        { ...newLine(`${product.name}${product.size ? ` (${product.size})` : ""}`), product, unitPrice: product.sellingPrice },
+                        {
+                          ...newLine(
+                            `${product.name}${product.size ? ` (${product.size})` : ""}`,
+                          ),
+                          product,
+                          unitPrice: product.sellingPrice,
+                        },
                       ]);
                     }}
                   >
@@ -249,20 +278,67 @@ export default function PrescriptionWorkspace({
                 <Plus />
                 {tr("add")}
               </Button>
-              <Table className="w-full min-w-[900px] table-fixed" aria-label={tr("medications")}>
+              <Table
+                className="w-full min-w-[900px] table-fixed"
+                aria-label={tr("medications")}
+              >
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-10 text-center">#</TableHead>
-                    {(["medicine", "dosage", "frequency", "quantity", "unitPrice", "lineTotal", "instructions"] as const).map(key => <TableHead key={key} className={key === "medicine" ? "w-[23%] text-start" : key === "quantity" ? "w-20 text-start" : "text-start"}>{tr(key)}</TableHead>)}
-                    <TableHead className="w-14 text-center"><span className="sr-only">{t("drugDose.title")}</span><Calculator aria-hidden="true" className="mx-auto size-4" /></TableHead>
-                    <TableHead className="w-14"><span className="sr-only">{tr("remove")}</span></TableHead>
+                    {(
+                      [
+                        "medicine",
+                        "dosage",
+                        "frequency",
+                        "quantity",
+                        "unitPrice",
+                        "lineTotal",
+                        "instructions",
+                      ] as const
+                    ).map((key) => (
+                      <TableHead
+                        key={key}
+                        className={
+                          key === "medicine"
+                            ? "w-[23%] text-start"
+                            : key === "quantity"
+                              ? "w-20 text-start"
+                              : "text-start"
+                        }
+                      >
+                        {tr(key)}
+                      </TableHead>
+                    ))}
+                    <TableHead className="w-14 text-center">
+                      <span className="sr-only">{t("drugDose.title")}</span>
+                      <Calculator
+                        aria-hidden="true"
+                        className="mx-auto size-4"
+                      />
+                    </TableHead>
+                    <TableHead className="w-14">
+                      <span className="sr-only">{tr("remove")}</span>
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody autoPaginate={false}>
                   {lines.map((line, index) => (
-                    <TableRow key={index} className="align-middle [&>td]:px-2 [&>td]:py-3">
-                      <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
-                      {(["medicine", "dosage", "frequency", "quantity", "unitPrice"] as const).map(key => (
+                    <TableRow
+                      key={index}
+                      className="align-middle [&>td]:px-2 [&>td]:py-3"
+                    >
+                      <TableCell className="text-center text-muted-foreground">
+                        {index + 1}
+                      </TableCell>
+                      {(
+                        [
+                          "medicine",
+                          "dosage",
+                          "frequency",
+                          "quantity",
+                          "unitPrice",
+                        ] as const
+                      ).map((key) => (
                         <TableCell key={key}>
                           <Input
                             className="h-9 min-w-0"
@@ -270,18 +346,52 @@ export default function PrescriptionWorkspace({
                             id={`rx-${index}-${key}`}
                             aria-label={`${tr(key)} ${index + 1}`}
                             required
-                            readOnly={(key === "medicine" || key === "unitPrice") && !!line.product}
-                            type={key === "quantity" || key === "unitPrice" ? "number" : "text"}
-                            min={key === "quantity" ? 1 : key === "unitPrice" ? 0 : undefined}
-                            max={key === "quantity" ? 100000 : key === "unitPrice" ? 100000000 : undefined}
-                            step={key === "quantity" ? 1 : key === "unitPrice" ? "any" : undefined}
+                            readOnly={
+                              (key === "medicine" || key === "unitPrice") &&
+                              !!line.product
+                            }
+                            type={
+                              key === "quantity" || key === "unitPrice"
+                                ? "number"
+                                : "text"
+                            }
+                            min={
+                              key === "quantity"
+                                ? 1
+                                : key === "unitPrice"
+                                  ? 0
+                                  : undefined
+                            }
+                            max={
+                              key === "quantity"
+                                ? 100000
+                                : key === "unitPrice"
+                                  ? 100000000
+                                  : undefined
+                            }
+                            step={
+                              key === "quantity"
+                                ? 1
+                                : key === "unitPrice"
+                                  ? "any"
+                                  : undefined
+                            }
                             maxLength={200}
                             value={line[key]}
-                            onChange={event => change(index, { [key]: key === "quantity" || key === "unitPrice" ? Number(event.target.value) : event.target.value })}
+                            onChange={(event) =>
+                              change(index, {
+                                [key]:
+                                  key === "quantity" || key === "unitPrice"
+                                    ? Number(event.target.value)
+                                    : event.target.value,
+                              })
+                            }
                           />
                         </TableCell>
                       ))}
-                      <TableCell className="text-end tabular-nums">{money(lineAmount(line))}</TableCell>
+                      <TableCell className="text-end tabular-nums">
+                        {money(lineAmount(line))}
+                      </TableCell>
                       <TableCell>
                         <Textarea
                           rows={1}
@@ -291,30 +401,76 @@ export default function PrescriptionWorkspace({
                           aria-label={`${tr("instructions")} ${index + 1}`}
                           maxLength={1000}
                           value={line.instructions}
-                          onChange={event => change(index, { instructions: event.target.value })}
+                          onChange={(event) =>
+                            change(index, { instructions: event.target.value })
+                          }
                         />
                       </TableCell>
                       <TableCell className="text-center">
-                        {line.product ? <Popover>
-                          <PopoverTrigger asChild><Button type="button" variant="outline" size="icon" className="size-9 border-primary/20 bg-primary/10 text-primary" aria-label={t("drugDose.title")} title={t("drugDose.title")}><Calculator className="size-4" /></Button></PopoverTrigger>
-                          <PopoverContent className="w-80 max-w-[90vw]" dir={i18n.dir()}>
-                            <p className="mb-2 font-semibold">{line.medicine}</p>
-                            <DrugDoseCalculator product={line.product} patientWeightKg={patientWeightKg} onApply={(dosage, frequency) => change(index, { dosage, frequency })} />
-                          </PopoverContent>
-                        </Popover> : <span className="text-muted-foreground">—</span>}
+                        {line.product ? (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                className="size-9 border-primary/20 bg-primary/10 text-primary"
+                                aria-label={t("drugDose.title")}
+                                title={t("drugDose.title")}
+                              >
+                                <Calculator className="size-4" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent
+                              className="w-80 max-w-[90vw]"
+                              dir={i18n.dir()}
+                            >
+                              <p className="mb-2 font-semibold">
+                                {line.medicine}
+                              </p>
+                              <DrugDoseCalculator
+                                product={line.product}
+                                patientWeightKg={patientWeightKg}
+                                onApply={(dosage, frequency) =>
+                                  change(index, { dosage, frequency })
+                                }
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
                       </TableCell>
                       <TableCell>
-                        <Button permission="view" data-action="delete" type="button" variant="ghost" size="icon" aria-label={`${tr("remove")} ${index + 1}`} onClick={() => {
-                          request.current = null;
-                          setLines(rows => rows.filter((_, i) => i !== index));
-                        }}><Trash2 className="size-4" /></Button>
+                        <Button
+                          permission="view"
+                          data-action="delete"
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          aria-label={`${tr("remove")} ${index + 1}`}
+                          onClick={() => {
+                            request.current = null;
+                            setLines((rows) =>
+                              rows.filter((_, i) => i !== index),
+                            );
+                          }}
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
-              <p className="text-end font-semibold" aria-live="polite">{tr("total")}: {money(lines.reduce((sum, line) => sum + lineAmount(line), 0))} {settings?.finance.currency}</p>
-              <p className="text-xs text-muted-foreground">{tr("billingHint")}</p>
+              <p className="text-end font-semibold" aria-live="polite">
+                {tr("total")}:{" "}
+                {money(lines.reduce((sum, line) => sum + lineAmount(line), 0))}{" "}
+                {settings?.finance.currency}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {tr("billingHint")}
+              </p>
               <Label htmlFor="rx-notes">{tr("notes")}</Label>
               <Textarea
                 id="rx-notes"
@@ -325,7 +481,11 @@ export default function PrescriptionWorkspace({
                   setNotes(e.target.value);
                 }}
               />
-              <Button permission="crm.prescriptions.create" type="submit" disabled={busy || !lines.length}>
+              <Button
+                permission="crm.prescriptions.create"
+                type="submit"
+                disabled={busy || !lines.length}
+              >
                 {busy ? tr("saving") : tr("save")}
               </Button>
             </fieldset>
@@ -354,16 +514,26 @@ export default function PrescriptionWorkspace({
                 <p className="text-sm text-muted-foreground">
                   {new Date(record.createdAt).toLocaleString(i18n.language)}
                 </p>
-                {invoiceTotal(record.items) != null && <p className="font-semibold">{tr("total")}: {money(invoiceTotal(record.items)!)} {record.items[0]?.currency}</p>}
+                {invoiceTotal(record.items) != null && (
+                  <p className="font-semibold">
+                    {tr("total")}: {money(invoiceTotal(record.items)!)}{" "}
+                    {record.items[0]?.currency}
+                  </p>
+                )}
                 <div className="mt-3 space-y-3">
                   {record.items.map((item, index) => (
                     <div key={index} className="space-y-1">
                       <p className="font-medium">{item.medicine}</p>
                       <p className="text-sm">
                         {tr("dosage")}: {item.dosage} · {tr("frequency")}:{" "}
-                        {item.frequency} ·{" "}
-                        {tr("quantity")}: {item.quantity}
-                        {item.lineTotal != null && <> · {tr("lineTotal")}: {money(item.lineTotal)} {item.currency}</>}
+                        {item.frequency} · {tr("quantity")}: {item.quantity}
+                        {item.lineTotal != null && (
+                          <>
+                            {" "}
+                            · {tr("lineTotal")}: {money(item.lineTotal)}{" "}
+                            {item.currency}
+                          </>
+                        )}
                       </p>
                       {item.instructions && (
                         <p className="whitespace-pre-wrap text-sm text-muted-foreground">
@@ -379,7 +549,11 @@ export default function PrescriptionWorkspace({
                   </p>
                 )}
               </div>
-              <Button permission="crm.prescriptions.print" variant="outline" onClick={() => print(record)}>
+              <Button
+                permission="crm.prescriptions.print"
+                variant="outline"
+                onClick={() => print(record)}
+              >
                 <Printer className="size-4" />
                 {tr("print")}
               </Button>

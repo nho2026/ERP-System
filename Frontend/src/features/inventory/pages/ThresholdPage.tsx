@@ -46,7 +46,10 @@ type Stock = Record<(typeof fields)[number], number> & {
 type ThresholdResponse = {
   items: Stock[];
   pagination: { page: number; total: number; totalPages: number };
-  filters: { warehouses: { id: string; name: string }[]; categories: { id: string; name: string }[] };
+  filters: {
+    warehouses: { id: string; name: string }[];
+    categories: { id: string; name: string }[];
+  };
 };
 export default function ThresholdPage() {
   const { t, i18n } = useTranslation();
@@ -59,10 +62,19 @@ export default function ThresholdPage() {
     [only, setOnly] = useState(false);
   const [page, setPage] = useState(1);
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [pagination, setPagination] = useState({ page: 1, total: 0, totalPages: 1 });
-  const [filterOptions, setFilterOptions] = useState<ThresholdResponse["filters"]>({ warehouses: [], categories: [] });
+  const [pagination, setPagination] = useState({
+    page: 1,
+    total: 0,
+    totalPages: 1,
+  });
+  const [filterOptions, setFilterOptions] = useState<
+    ThresholdResponse["filters"]
+  >({ warehouses: [], categories: [] });
   useEffect(() => {
-    const timer = setTimeout(() => { setDebouncedSearch(search); setPage(1); }, 300);
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 300);
     return () => clearTimeout(timer);
   }, [search]);
   const [selected, setSelected] = useState<Stock | null>(null),
@@ -75,7 +87,14 @@ export default function ThresholdPage() {
     apiClient
       .get<ThresholdResponse>("/inventory/thresholds", {
         signal: c.signal,
-        params: { page, pageSize: 50, search: debouncedSearch, warehouseId: warehouse === "all" ? undefined : warehouse, categoryId: category === "all" ? undefined : category, onlyLow: only },
+        params: {
+          page,
+          pageSize: 50,
+          search: debouncedSearch,
+          warehouseId: warehouse === "all" ? undefined : warehouse,
+          categoryId: category === "all" ? undefined : category,
+          onlyLow: only,
+        },
       })
       .then(({ data }) => {
         if (c.signal.aborted) return;
@@ -95,7 +114,9 @@ export default function ThresholdPage() {
   const low = (row: Stock) => row.quantity <= row.reorderLevel;
   const options = (kind: "warehouse" | "category") => [
     { value: "all", label: t(`thresholds.all${kind}`) },
-    ...filterOptions[kind === "warehouse" ? "warehouses" : "categories"].map((item) => ({ value: item.id, label: item.name })),
+    ...filterOptions[kind === "warehouse" ? "warehouses" : "categories"].map(
+      (item) => ({ value: item.id, label: item.name }),
+    ),
   ];
   return (
     <div className="space-y-4" dir={i18n.dir()}>
@@ -116,20 +137,29 @@ export default function ThresholdPage() {
           />
           <SearchableFilter
             value={warehouse}
-            onValueChange={(value) => { setWarehouse(value); setPage(1); }}
+            onValueChange={(value) => {
+              setWarehouse(value);
+              setPage(1);
+            }}
             options={options("warehouse")}
             label={t("thresholds.allwarehouse")}
           />
           <SearchableFilter
             value={category}
-            onValueChange={(value) => { setCategory(value); setPage(1); }}
+            onValueChange={(value) => {
+              setCategory(value);
+              setPage(1);
+            }}
             options={options("category")}
             label={t("thresholds.allcategory")}
           />
           <Label className="flex items-center gap-2">
             <Checkbox
               checked={only}
-              onCheckedChange={(v) => { setOnly(v === true); setPage(1); }}
+              onCheckedChange={(v) => {
+                setOnly(v === true);
+                setPage(1);
+              }}
             />
             {t("thresholds.only")}
           </Label>
@@ -183,8 +213,14 @@ export default function ThresholdPage() {
                   ))}
                   <TableCell>
                     <div className="flex flex-wrap items-center gap-2">
-                      {hasPagePermission(storedUser(), "create", "update", "delete") && (
-                        <Button data-action="edit"
+                      {hasPagePermission(
+                        storedUser(),
+                        "create",
+                        "update",
+                        "delete",
+                      ) && (
+                        <Button
+                          data-action="edit"
                           variant="outline"
                           size="icon"
                           aria-label={t("thresholds.edit")}
@@ -216,7 +252,9 @@ export default function ThresholdPage() {
           page={pagination.page}
           totalPages={pagination.totalPages}
           total={pagination.total}
-          onPageChange={(value) => { if (!loading) setPage(value); }}
+          onPageChange={(value) => {
+            if (!loading) setPage(value);
+          }}
         />
       </Card>
       <Dialog
@@ -282,7 +320,9 @@ export default function ThresholdPage() {
                   {error}
                 </p>
               )}
-              <Button permission="update" disabled={busy}>{t("retailers.save")}</Button>
+              <Button permission="update" disabled={busy}>
+                {t("retailers.save")}
+              </Button>
             </form>
           )}
         </DialogContent>

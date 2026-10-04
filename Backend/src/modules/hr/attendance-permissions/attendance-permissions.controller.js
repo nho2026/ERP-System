@@ -4,7 +4,11 @@ export const attendancePermissionController = {
   ...createCrudController(attendancePermissionService),
   async remove(req, res, next) {
     try {
-      await attendancePermissionService.remove(req.params.id, req.user, req.body?.password);
+      await attendancePermissionService.remove(
+        req.params.id,
+        req.user,
+        req.body?.password,
+      );
       res.status(204).end();
     } catch (error) {
       next(error);

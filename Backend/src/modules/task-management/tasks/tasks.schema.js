@@ -10,7 +10,14 @@ export const taskSchema = z
     description: z.string().trim().min(2).max(10000),
     priority: z.enum(["low", "medium", "high", "urgent"]).default("medium"),
     status: z
-      .enum(["todo", "in_progress", "incomplete", "review", "completed", "rejected"])
+      .enum([
+        "todo",
+        "in_progress",
+        "incomplete",
+        "review",
+        "completed",
+        "rejected",
+      ])
       .default("todo"),
     startDate: optionalDate,
     dueDate: optionalDate,
@@ -37,7 +44,14 @@ export const updateTaskSchema = z.object({
   description: z.string().trim().min(2).max(10000).optional(),
   priority: z.enum(["low", "medium", "high", "urgent"]).optional(),
   status: z
-    .enum(["todo", "in_progress", "incomplete", "review", "completed", "rejected"])
+    .enum([
+      "todo",
+      "in_progress",
+      "incomplete",
+      "review",
+      "completed",
+      "rejected",
+    ])
     .optional(),
   startDate: optionalDate,
   dueDate: optionalDate,

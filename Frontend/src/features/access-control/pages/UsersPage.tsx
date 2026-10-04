@@ -1,6 +1,14 @@
 import { useServerTable } from "@/shared/hooks/useServerTable";
 import { useCallback, useState } from "react";
-import { Eye, EyeOff, LockKeyholeOpen, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  LockKeyholeOpen,
+  Pencil,
+  Plus,
+  Search,
+  Trash2,
+} from "lucide-react";
 import { usersApi, rolesApi } from "../api/access.api";
 import type { User } from "../types/access.types";
 import { useApiResource } from "@/shared/hooks/useApiResource";
@@ -203,7 +211,14 @@ export default function UsersPage() {
       </div>
       <Card>
         <CardContent className="p-0">
-          {notice && <p role="status" className="mx-4 mt-4 text-sm text-muted-foreground">{notice}</p>}
+          {notice && (
+            <p
+              role="status"
+              className="mx-4 mt-4 text-sm text-muted-foreground"
+            >
+              {notice}
+            </p>
+          )}
           <div className="relative m-4 max-w-sm">
             <Search className="absolute inset-s-3 top-1/2 -translate-y-1/2" />
             <Input

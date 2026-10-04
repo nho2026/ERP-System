@@ -8,16 +8,38 @@ export const optionalText = z.preprocess(
   z.string().trim().nullable().optional(),
 );
 const productExpiry = z.preprocess(
-  value => value === "" || value === null ? null : value instanceof Date ? value.toISOString().slice(0, 10) : typeof value === "string" ? value.replace(/T00:00:00\.000Z$/, "") : value,
-  z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(value => {
-    const date = new Date(`${value}T00:00:00.000Z`);
-    return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
-  }, "Enter a valid calendar date.").transform(value => new Date(`${value}T00:00:00.000Z`)).nullable().optional(),
+  (value) =>
+    value === "" || value === null
+      ? null
+      : value instanceof Date
+        ? value.toISOString().slice(0, 10)
+        : typeof value === "string"
+          ? value.replace(/T00:00:00\.000Z$/, "")
+          : value,
+  z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .refine((value) => {
+      const date = new Date(`${value}T00:00:00.000Z`);
+      return (
+        !Number.isNaN(date.getTime()) &&
+        date.toISOString().slice(0, 10) === value
+      );
+    }, "Enter a valid calendar date.")
+    .transform((value) => new Date(`${value}T00:00:00.000Z`))
+    .nullable()
+    .optional(),
 );
-const optionalPositive = z.preprocess(value => value === "" ? null : value, z.coerce.number().finite().positive().nullable().optional());
+const optionalPositive = z.preprocess(
+  (value) => (value === "" ? null : value),
+  z.coerce.number().finite().positive().nullable().optional(),
+);
 export const productSchema = z.object({
   doseMgKgDay: optionalPositive,
-  dosesPerDay: z.preprocess(value => value === "" ? null : value, z.coerce.number().int().positive().max(24).nullable().optional()),
+  dosesPerDay: z.preprocess(
+    (value) => (value === "" ? null : value),
+    z.coerce.number().int().positive().max(24).nullable().optional(),
+  ),
   concentrationMg: optionalPositive,
   concentrationMl: optionalPositive,
 
@@ -91,13 +113,32 @@ export const specialProductSchema = z
     "Each product code must be unique.",
   );
 
-export const specialPriceSchema = z.object({
-  specialPrice: z.number().finite().min(0).max(100000000).refine(value => Math.abs(value * 100 - Math.round(value * 100)) < 0.000001, "Use at most two decimal places."),
-}).strict();
+export const specialPriceSchema = z
+  .object({
+    specialPrice: z
+      .number()
+      .finite()
+      .min(0)
+      .max(100000000)
+      .refine(
+        (value) => Math.abs(value * 100 - Math.round(value * 100)) < 0.000001,
+        "Use at most two decimal places.",
+      ),
+  })
+  .strict();
 
-export const expiryDateSchema = z.object({
-  expiryDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(value => {
-    const date = new Date(`${value}T00:00:00.000Z`);
-    return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
-  }, "Enter a valid calendar date.").nullable(),
-}).strict();
+export const expiryDateSchema = z
+  .object({
+    expiryDate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .refine((value) => {
+        const date = new Date(`${value}T00:00:00.000Z`);
+        return (
+          !Number.isNaN(date.getTime()) &&
+          date.toISOString().slice(0, 10) === value
+        );
+      }, "Enter a valid calendar date.")
+      .nullable(),
+  })
+  .strict();

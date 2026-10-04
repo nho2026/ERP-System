@@ -72,7 +72,8 @@ export function UpdatesPanel() {
             </Badge>
           )}
           <div className="flex flex-wrap gap-2">
-            <Button permission="settings.update"
+            <Button
+              permission="settings.update"
               variant="outline"
               disabled={
                 !state ||
@@ -89,12 +90,16 @@ export function UpdatesPanel() {
               {tr("Check for updates")}
             </Button>
             {state?.status === "available" && (
-              <Button permission="settings.update" onClick={() => void run(updater.download)}>
+              <Button
+                permission="settings.update"
+                onClick={() => void run(updater.download)}
+              >
                 {tr("Download update")}
               </Button>
             )}
             {state?.status === "ready" && (
-              <Button permission="settings.update"
+              <Button
+                permission="settings.update"
                 onClick={() =>
                   void run(() => updater.install(i18n.resolvedLanguage))
                 }

@@ -14,24 +14,56 @@ const departmentInclude = {
     _count: { select: { appointments: true } },
   };
 export const healthcareModel = {
-  getDepartment: id => prisma.department.findUnique({ where: { id }, include: { _count: { select: { healthStaff: true, appointments: true } } } }),
-  getStaff: id => prisma.healthStaff.findUniqueOrThrow({ where: { id } }),
+  getDepartment: (id) =>
+    prisma.department.findUnique({
+      where: { id },
+      include: {
+        _count: { select: { healthStaff: true, appointments: true } },
+      },
+    }),
+  getStaff: (id) => prisma.healthStaff.findUniqueOrThrow({ where: { id } }),
   listDepartments: (query = {}) =>
-    paginate("department", query, {
-      include: departmentInclude,
-      orderBy: { name: "asc" },
-    }, ["code","name"]),
+    paginate(
+      "department",
+      query,
+      {
+        include: departmentInclude,
+        orderBy: { name: "asc" },
+      },
+      ["code", "name"],
+    ),
   createDepartment: async (data) => {
     for (let attempt = 0; attempt < 10; attempt++) {
-      const departments = await prisma.department.findMany({ select: { code: true } });
-      const next = departments.reduce((max, { code }) => /^DEP-[1-9][0-9]*$/.test(code) ? (BigInt(code.slice(4)) > max ? BigInt(code.slice(4)) : max) : max, 0n) + 1n;
+      const departments = await prisma.department.findMany({
+        select: { code: true },
+      });
+      const next =
+        departments.reduce(
+          (max, { code }) =>
+            /^DEP-[1-9][0-9]*$/.test(code)
+              ? BigInt(code.slice(4)) > max
+                ? BigInt(code.slice(4))
+                : max
+              : max,
+          0n,
+        ) + 1n;
       try {
-        return await prisma.department.create({ data: { ...data, code: `DEP-${next}` }, include: departmentInclude });
+        return await prisma.department.create({
+          data: { ...data, code: `DEP-${next}` },
+          include: departmentInclude,
+        });
       } catch (error) {
-        if (error.code !== "P2002" || await prisma.department.findUnique({ where: { name: data.name } })) throw error;
+        if (
+          error.code !== "P2002" ||
+          (await prisma.department.findUnique({ where: { name: data.name } }))
+        )
+          throw error;
       }
     }
-    throw Object.assign(new Error("Unable to allocate a department code. Please retry."), { status: 409 });
+    throw Object.assign(
+      new Error("Unable to allocate a department code. Please retry."),
+      { status: 409 },
+    );
   },
   updateDepartment: (id, data) =>
     prisma.department.update({
@@ -46,25 +78,40 @@ export const healthcareModel = {
       data: { departmentId },
     }),
   listStaff: (q = {}) =>
-    paginate("healthStaff", q, {
-      where: {
-        ...(q.staffType && { staffType: String(q.staffType) }),
-        ...(q.departmentId && { departmentId: String(q.departmentId) }),
+    paginate(
+      "healthStaff",
+      q,
+      {
+        where: {
+          ...(q.staffType && { staffType: String(q.staffType) }),
+          ...(q.departmentId && { departmentId: String(q.departmentId) }),
+        },
+        include: staffInclude,
+        orderBy: { createdAt: "desc" },
       },
-      include: staffInclude,
-      orderBy: { createdAt: "desc" },
-    }, ["employee.firstName", "employee.lastName", "employee.employeeCode"]),
-  createStaff: (input) => prisma.$transaction(async tx => {
-    const { positionId, ...data } = input;
-    await setStaffPosition(tx, data.employeeId, positionId);
-    return tx.healthStaff.create({ data, include: staffInclude });
-  }),
-  updateStaff: (id, input) => prisma.$transaction(async tx => {
-    const { positionId, ...data } = input;
-    const current = await tx.healthStaff.findUniqueOrThrow({ where: { id } });
-    await setStaffPosition(tx, data.employeeId ?? current.employeeId, positionId);
-    return tx.healthStaff.update({ where: { id }, data, include: staffInclude });
-  }),
+      ["employee.firstName", "employee.lastName", "employee.employeeCode"],
+    ),
+  createStaff: (input) =>
+    prisma.$transaction(async (tx) => {
+      const { positionId, ...data } = input;
+      await setStaffPosition(tx, data.employeeId, positionId);
+      return tx.healthStaff.create({ data, include: staffInclude });
+    }),
+  updateStaff: (id, input) =>
+    prisma.$transaction(async (tx) => {
+      const { positionId, ...data } = input;
+      const current = await tx.healthStaff.findUniqueOrThrow({ where: { id } });
+      await setStaffPosition(
+        tx,
+        data.employeeId ?? current.employeeId,
+        positionId,
+      );
+      return tx.healthStaff.update({
+        where: { id },
+        data,
+        include: staffInclude,
+      });
+    }),
   removeStaff: (id) => prisma.healthStaff.delete({ where: { id } }),
   publicDepartments: () =>
     prisma.department.findMany({
@@ -98,8 +145,13 @@ async function setStaffPosition(tx, employeeId, positionId) {
       tx.position.findUnique({ where: { id: positionId } }),
       tx.employee.findUnique({ where: { id: employeeId } }),
     ]);
-    if (!position || (position.status !== "active" && employee?.positionId !== positionId))
-      throw Object.assign(new Error("Select an active position."), { status: 400 });
+    if (
+      !position ||
+      (position.status !== "active" && employee?.positionId !== positionId)
+    )
+      throw Object.assign(new Error("Select an active position."), {
+        status: 400,
+      });
   }
   await tx.employee.update({ where: { id: employeeId }, data: { positionId } });
 }

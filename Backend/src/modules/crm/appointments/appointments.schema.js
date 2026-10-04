@@ -38,4 +38,6 @@ export const bookingSchema = appointmentSchema
       ),
   });
 
-export const appointmentCreateSchema = appointmentSchema.extend({ patientId: z.string().min(1).optional() });
+export const appointmentCreateSchema = appointmentSchema.extend({
+  patientId: z.string().min(1).optional(),
+});

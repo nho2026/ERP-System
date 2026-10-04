@@ -12,8 +12,14 @@ export const employeeSchema = z.object({
     .array(
       z.object({
         day: z.number().int().min(0).max(6),
-        checkInTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).optional(),
-        checkOutTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).optional(),
+        checkInTime: z
+          .string()
+          .regex(/^([01]\d|2[0-3]):[0-5]\d$/)
+          .optional(),
+        checkOutTime: z
+          .string()
+          .regex(/^([01]\d|2[0-3]):[0-5]\d$/)
+          .optional(),
         hours: z.number().positive().max(24).optional(),
       }),
     )
@@ -24,7 +30,14 @@ export const employeeSchema = z.object({
       "Working days must be unique",
     )
     .refine(
-      (days) => days.every((day) => day.hours != null || (day.checkInTime && day.checkOutTime && day.checkInTime !== day.checkOutTime)),
+      (days) =>
+        days.every(
+          (day) =>
+            day.hours != null ||
+            (day.checkInTime &&
+              day.checkOutTime &&
+              day.checkInTime !== day.checkOutTime),
+        ),
       "Check-in and check-out must be different",
     )
     .optional(),

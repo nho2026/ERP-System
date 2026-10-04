@@ -6,7 +6,12 @@ import { env } from "../../../config/environment.js";
 
 function requireLiveWhatsapp(conversation) {
   if (conversation.channel !== "whatsapp" || conversation.isDemo)
-    throw Object.assign(new Error("Sending is unavailable for demo or disconnected-channel conversations."), { status: 409 });
+    throw Object.assign(
+      new Error(
+        "Sending is unavailable for demo or disconnected-channel conversations.",
+      ),
+      { status: 409 },
+    );
 }
 
 const normalizePhone = (value = "") => String(value).replace(/\D/g, "");
@@ -101,9 +106,15 @@ export const whatsappService = {
           data: { status: status.status },
         });
       }
-      if (value.messages?.length && env.whatsapp.phoneNumberId &&
-          String(value.metadata?.phone_number_id ?? "") !== env.whatsapp.phoneNumberId.trim()) {
-        console.warn("WhatsApp webhook skipped: metadata.phone_number_id does not match WHATSAPP_PHONE_NUMBER_ID. Use Meta's phone number ID, not the display phone number.");
+      if (
+        value.messages?.length &&
+        env.whatsapp.phoneNumberId &&
+        String(value.metadata?.phone_number_id ?? "") !==
+          env.whatsapp.phoneNumberId.trim()
+      ) {
+        console.warn(
+          "WhatsApp webhook skipped: metadata.phone_number_id does not match WHATSAPP_PHONE_NUMBER_ID. Use Meta's phone number ID, not the display phone number.",
+        );
         continue;
       }
       for (const message of value.messages ?? []) {
@@ -125,8 +136,12 @@ export const whatsappService = {
               direction: "inbound",
               messageType: message.type ?? "unknown",
               body: textFromMessage(message),
-              status: autoReplyConfigured(env) && message.type === "text" && message.text?.body?.trim()
-                ? "ai_pending" : "received",
+              status:
+                autoReplyConfigured(env) &&
+                message.type === "text" &&
+                message.text?.body?.trim()
+                  ? "ai_pending"
+                  : "received",
               sentAt: message.timestamp
                 ? new Date(Number(message.timestamp) * 1000)
                 : new Date(),
@@ -182,37 +197,120 @@ export const whatsappService = {
     graphVersion: env.whatsapp.graphVersion,
   }),
   async sendMedia(conversationId, file, voice = false, caption = "") {
-    if (!env.whatsapp.accessToken || !env.whatsapp.phoneNumberId) throw Object.assign(new Error("WhatsApp Cloud API is not configured."), { status: 503 });
-    const conversation = await prisma.crmWhatsappConversation.findUniqueOrThrow({ where: { id: conversationId } });
+    if (!env.whatsapp.accessToken || !env.whatsapp.phoneNumberId)
+      throw Object.assign(new Error("WhatsApp Cloud API is not configured."), {
+        status: 503,
+      });
+    const conversation = await prisma.crmWhatsappConversation.findUniqueOrThrow(
+      { where: { id: conversationId } },
+    );
     requireLiveWhatsapp(conversation);
     const media = await prepareMedia(file, voice);
     const headers = { Authorization: `Bearer ${env.whatsapp.accessToken}` };
     const base = `https://graph.facebook.com/${env.whatsapp.graphVersion}`;
     const form = new FormData();
-    form.set("messaging_product", "whatsapp"); form.set("type", media.mime);
-    form.set("file", new Blob([media.buffer], {type:media.mime}), media.filename);
-    const upload = await fetch(`${base}/${env.whatsapp.phoneNumberId}/media`, { method:"POST", headers, body:form, signal:AbortSignal.timeout(60000) });
+    form.set("messaging_product", "whatsapp");
+    form.set("type", media.mime);
+    form.set(
+      "file",
+      new Blob([media.buffer], { type: media.mime }),
+      media.filename,
+    );
+    const upload = await fetch(`${base}/${env.whatsapp.phoneNumberId}/media`, {
+      method: "POST",
+      headers,
+      body: form,
+      signal: AbortSignal.timeout(60000),
+    });
     const uploaded = await upload.json();
-    if (!upload.ok || !uploaded.id) throw Object.assign(new Error(uploaded.error?.message || "Media upload failed."), { status:502 });
-    const payload = { id: uploaded.id, ...(media.type === "document" ? { filename:media.filename } : {}), ...(["image","video","document"].includes(media.type) && caption ? {caption} : {}) };
-    const response = await fetch(`${base}/${env.whatsapp.phoneNumberId}/messages`, {method:"POST",headers:{...headers,"Content-Type":"application/json"},body:JSON.stringify({messaging_product:"whatsapp",to:conversation.phone,type:media.type,[media.type]:payload}),signal:AbortSignal.timeout(30000)});
+    if (!upload.ok || !uploaded.id)
+      throw Object.assign(
+        new Error(uploaded.error?.message || "Media upload failed."),
+        { status: 502 },
+      );
+    const payload = {
+      id: uploaded.id,
+      ...(media.type === "document" ? { filename: media.filename } : {}),
+      ...(["image", "video", "document"].includes(media.type) && caption
+        ? { caption }
+        : {}),
+    };
+    const response = await fetch(
+      `${base}/${env.whatsapp.phoneNumberId}/messages`,
+      {
+        method: "POST",
+        headers: { ...headers, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: conversation.phone,
+          type: media.type,
+          [media.type]: payload,
+        }),
+        signal: AbortSignal.timeout(30000),
+      },
+    );
     const result = await response.json();
-    if (!response.ok) throw Object.assign(new Error(result.error?.message || "Media message failed."), {status:502});
-    const message = await prisma.crmWhatsappMessage.create({data:{conversationId,externalId:result.messages?.[0]?.id,direction:"outbound",messageType:media.type,body:caption || media.filename,status:"sent",rawPayload:{[media.type]:{id:uploaded.id,mime_type:media.mime,filename:media.filename},voice}}});
-    await prisma.crmWhatsappConversation.update({where:{id:conversationId},data:{lastMessageAt:new Date()}});
+    if (!response.ok)
+      throw Object.assign(
+        new Error(result.error?.message || "Media message failed."),
+        { status: 502 },
+      );
+    const message = await prisma.crmWhatsappMessage.create({
+      data: {
+        conversationId,
+        externalId: result.messages?.[0]?.id,
+        direction: "outbound",
+        messageType: media.type,
+        body: caption || media.filename,
+        status: "sent",
+        rawPayload: {
+          [media.type]: {
+            id: uploaded.id,
+            mime_type: media.mime,
+            filename: media.filename,
+          },
+          voice,
+        },
+      },
+    });
+    await prisma.crmWhatsappConversation.update({
+      where: { id: conversationId },
+      data: { lastMessageAt: new Date() },
+    });
     return message;
   },
   async media(messageId) {
-    const message = await prisma.crmWhatsappMessage.findUniqueOrThrow({where:{id:messageId}});
+    const message = await prisma.crmWhatsappMessage.findUniqueOrThrow({
+      where: { id: messageId },
+    });
     const media = message.rawPayload?.[message.messageType];
-    if (!media?.id) throw Object.assign(new Error("This attachment is unavailable."), {status:404});
-    const headers = {Authorization:`Bearer ${env.whatsapp.accessToken}`};
-    const lookup = await fetch(`https://graph.facebook.com/${env.whatsapp.graphVersion}/${encodeURIComponent(media.id)}`,{headers,signal:AbortSignal.timeout(15000)});
+    if (!media?.id)
+      throw Object.assign(new Error("This attachment is unavailable."), {
+        status: 404,
+      });
+    const headers = { Authorization: `Bearer ${env.whatsapp.accessToken}` };
+    const lookup = await fetch(
+      `https://graph.facebook.com/${env.whatsapp.graphVersion}/${encodeURIComponent(media.id)}`,
+      { headers, signal: AbortSignal.timeout(15000) },
+    );
     const data = await lookup.json();
-    if (!lookup.ok || !data.url) throw Object.assign(new Error("The attachment is no longer available from WhatsApp."),{status:502});
-    const response = await fetch(data.url,{headers,signal:AbortSignal.timeout(30000)});
-    if (!response.ok) throw Object.assign(new Error("Attachment download failed."),{status:502});
-    return {buffer:Buffer.from(await response.arrayBuffer()),mime:media.mime_type || data.mime_type || "application/octet-stream"};
+    if (!lookup.ok || !data.url)
+      throw Object.assign(
+        new Error("The attachment is no longer available from WhatsApp."),
+        { status: 502 },
+      );
+    const response = await fetch(data.url, {
+      headers,
+      signal: AbortSignal.timeout(30000),
+    });
+    if (!response.ok)
+      throw Object.assign(new Error("Attachment download failed."), {
+        status: 502,
+      });
+    return {
+      buffer: Buffer.from(await response.arrayBuffer()),
+      mime: media.mime_type || data.mime_type || "application/octet-stream",
+    };
   },
   async send(conversationId, body) {
     if (!env.whatsapp.accessToken || !env.whatsapp.phoneNumberId)

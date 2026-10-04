@@ -4,7 +4,9 @@ import { eventsController as c } from "./events.controller.js";
 import { syncEventsSchema } from "./events.schema.js";
 import { requirePermission } from "../../../shared/middleware/permission.middleware.js";
 import { subscribeToAttendanceEvents } from "./events.live.js";
-const router = Router(), view = requirePermission("employees.view"), manage = requirePermission("employees.manage");
+const router = Router(),
+  view = requirePermission("employees.view"),
+  manage = requirePermission("employees.manage");
 router.get("/", view, c.list);
 router.get("/stream", view, (req, res) => {
   res.status(200).set({
@@ -14,7 +16,9 @@ router.get("/stream", view, (req, res) => {
     "X-Accel-Buffering": "no",
   });
   res.flushHeaders();
-  res.write(`event: connected\ndata: ${JSON.stringify({ connected: true })}\n\n`);
+  res.write(
+    `event: connected\ndata: ${JSON.stringify({ connected: true })}\n\n`,
+  );
   let closed = false;
   const unsubscribe = subscribeToAttendanceEvents((event) => {
       if (!res.destroyed && !res.writableEnded)

@@ -25,13 +25,20 @@ export class HikvisionClient {
     const c = this.digestChallenge;
     if (!c) return undefined;
     const nc = (++this.digestNonceCount).toString(16).padStart(8, "0");
-    const cnonce = this.digestCnonce ??= crypto.randomBytes(8).toString("hex");
-    const qop = c.qop?.split(",").map(value => value.trim()).find(value => value === "auth");
+    const cnonce = (this.digestCnonce ??= crypto
+      .randomBytes(8)
+      .toString("hex"));
+    const qop = c.qop
+      ?.split(",")
+      .map((value) => value.trim())
+      .find((value) => value === "auth");
     const ha1 = md5(`${this.username}:${c.realm}:${this.password}`);
     const ha2 = md5(`${method}:${path}`);
-    const response = md5(qop
-      ? `${ha1}:${c.nonce}:${nc}:${cnonce}:${qop}:${ha2}`
-      : `${ha1}:${c.nonce}:${ha2}`);
+    const response = md5(
+      qop
+        ? `${ha1}:${c.nonce}:${nc}:${cnonce}:${qop}:${ha2}`
+        : `${ha1}:${c.nonce}:${ha2}`,
+    );
     return `Digest username="${this.username}", realm="${c.realm}", nonce="${c.nonce}", uri="${path}", response="${response}"${qop ? `, qop=${qop}, nc=${nc}, cnonce="${cnonce}"` : ""}${c.opaque ? `, opaque="${c.opaque}"` : ""}`;
   }
   request(
@@ -50,11 +57,13 @@ export class HikvisionClient {
               ? body
               : JSON.stringify(body);
         const connectionFailed = (error) => {
-          if (!error.status) error.status = error.code === "ETIMEDOUT" ? 504 : 502;
+          if (!error.status)
+            error.status = error.code === "ETIMEDOUT" ? 504 : 502;
           error.deviceConnection = true;
-          error.message = error.code === "ETIMEDOUT"
-            ? "The attendance device did not respond in time. Check its power and network connection, and verify the result before retrying."
-            : "The attendance device connection was interrupted. Check its power and network connection, and verify the result before retrying.";
+          error.message =
+            error.code === "ETIMEDOUT"
+              ? "The attendance device did not respond in time. Check its power and network connection, and verify the result before retrying."
+              : "The attendance device connection was interrupted. Check its power and network connection, and verify the result before retrying.";
           reject(error);
         };
         const req = http.request(
@@ -85,7 +94,9 @@ export class HikvisionClient {
             const chunks = [];
             res.on("error", connectionFailed);
             res.on("aborted", () => {
-              const error = new Error("Device response ended before completion.");
+              const error = new Error(
+                "Device response ended before completion.",
+              );
               error.code = "ECONNRESET";
               connectionFailed(error);
             });
@@ -111,11 +122,16 @@ export class HikvisionClient {
         if (payload) req.write(payload);
         req.end();
       });
-    const cachedAuth = this.reuseDigest ? this.digestAuthorization(method, path) : undefined;
+    const cachedAuth = this.reuseDigest
+      ? this.digestAuthorization(method, path)
+      : undefined;
     return send(cachedAuth).then(async (first) => {
       const authenticate = async (challengeResponse) => {
         const challenge = challengeResponse.headers["www-authenticate"];
-        if (challengeResponse.status !== 401 || !/^Digest\s/i.test(challenge ?? ""))
+        if (
+          challengeResponse.status !== 401 ||
+          !/^Digest\s/i.test(challenge ?? "")
+        )
           return challengeResponse;
         this.digestChallenge = parseChallenge(challenge);
         this.digestNonceCount = 0;
@@ -257,7 +273,10 @@ export class HikvisionClient {
       throw error;
     }
     const responseType = String(result.headers["content-type"] ?? "");
-    if (responseType.startsWith("image/") || responseType.startsWith("application/octet-stream"))
+    if (
+      responseType.startsWith("image/") ||
+      responseType.startsWith("application/octet-stream")
+    )
       return result.buffer;
     if (responseType.startsWith("multipart/")) {
       const boundary = responseType.match(/boundary=(?:"([^"]+)"|([^;\s]+))/i);
@@ -265,13 +284,26 @@ export class HikvisionClient {
         const delimiter = Buffer.from(`--${boundary[1] ?? boundary[2]}`);
         let start = result.buffer.indexOf(delimiter);
         while (start !== -1) {
-          const next = result.buffer.indexOf(delimiter, start + delimiter.length);
+          const next = result.buffer.indexOf(
+            delimiter,
+            start + delimiter.length,
+          );
           if (next === -1) break;
           const headerEnd = result.buffer.indexOf("\r\n\r\n", start);
           if (headerEnd !== -1 && headerEnd < next) {
-            const headers = result.buffer.subarray(start + delimiter.length, headerEnd).toString();
-            if (/content-type:\s*(?:image\/[^\s;]+|application\/octet-stream)/i.test(headers)) {
-              const end = result.buffer.subarray(next - 2, next).equals(Buffer.from("\r\n")) ? next - 2 : next;
+            const headers = result.buffer
+              .subarray(start + delimiter.length, headerEnd)
+              .toString();
+            if (
+              /content-type:\s*(?:image\/[^\s;]+|application\/octet-stream)/i.test(
+                headers,
+              )
+            ) {
+              const end = result.buffer
+                .subarray(next - 2, next)
+                .equals(Buffer.from("\r\n"))
+                ? next - 2
+                : next;
               return result.buffer.subarray(headerEnd + 4, end);
             }
           }

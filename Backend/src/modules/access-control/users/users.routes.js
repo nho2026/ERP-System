@@ -11,7 +11,17 @@ import {
 import { userModel } from "./users.model.js";
 const router = Router();
 router.use(requireAuth);
-router.get("/storage-options", requirePermission("users.view"), async (_req, res, next) => { try { res.json(await userModel.storageOptions()); } catch (error) { next(error); } });
+router.get(
+  "/storage-options",
+  requirePermission("users.view"),
+  async (_req, res, next) => {
+    try {
+      res.json(await userModel.storageOptions());
+    } catch (error) {
+      next(error);
+    }
+  },
+);
 router.get("/", requirePermission("users.view"), userController.list);
 router.post(
   "/",
@@ -25,7 +35,11 @@ router.patch(
   validate(updateUserSchema),
   userController.update,
 );
-router.post("/:id/unlock-attempts", requirePermission("users.update"), userController.unlockAttempts);
+router.post(
+  "/:id/unlock-attempts",
+  requirePermission("users.update"),
+  userController.unlockAttempts,
+);
 router.delete("/:id", requirePermission("users.delete"), userController.remove);
 router.post(
   "/:id/password",

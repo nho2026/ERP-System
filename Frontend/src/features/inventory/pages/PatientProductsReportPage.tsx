@@ -95,7 +95,8 @@ function ReportChart({
     <Card className="gap-3 p-4">
       <div className="flex items-center justify-between gap-2">
         <h2 className="font-semibold 2xl:text-xl">{title}</h2>
-        <Button permission="export"
+        <Button
+          permission="export"
           variant="outline"
           size="sm"
           disabled={!groups.length}
@@ -204,10 +205,34 @@ export default function PatientProductsReportPage() {
     key: "date",
     descending: true,
   });
-  type ReportPage = Page<PatientProductRow> & { totals: ReturnType<typeof reportTotals>; productGroups: {name:string;values:number[]}[]; departmentGroups: {name:string;values:number[]}[] };
-  const query = JSON.stringify({ ...filters, sort: sort.key, descending: String(sort.descending), locale: i18n.language });
-  const resource = useApiResource(useCallback(() => apiClient.get<ReportPage>("/inventory/reports/products-per-patient", { params: { ...JSON.parse(query), page, pageSize: 20 } }).then(response => response.data), [query, page]));
-  const loadExport = () => apiClient.get<PatientProductRow[]>("/inventory/reports/products-per-patient", { params: JSON.parse(query) }).then(response => response.data);
+  type ReportPage = Page<PatientProductRow> & {
+    totals: ReturnType<typeof reportTotals>;
+    productGroups: { name: string; values: number[] }[];
+    departmentGroups: { name: string; values: number[] }[];
+  };
+  const query = JSON.stringify({
+    ...filters,
+    sort: sort.key,
+    descending: String(sort.descending),
+    locale: i18n.language,
+  });
+  const resource = useApiResource(
+    useCallback(
+      () =>
+        apiClient
+          .get<ReportPage>("/inventory/reports/products-per-patient", {
+            params: { ...JSON.parse(query), page, pageSize: 20 },
+          })
+          .then((response) => response.data),
+      [query, page],
+    ),
+  );
+  const loadExport = () =>
+    apiClient
+      .get<PatientProductRow[]>("/inventory/reports/products-per-patient", {
+        params: JSON.parse(query),
+      })
+      .then((response) => response.data);
   const [printError, setPrintError] = useState("");
   const chartsRef = useRef<HTMLDivElement>(null);
   const update = (patch: Partial<ReportFilters>) => {
@@ -259,7 +284,9 @@ export default function PatientProductsReportPage() {
         ? number(row.quantity)
         : cellValue(row, column) || "—";
   const productGroups = resource.data?.productGroups ?? [];
-  const departmentGroups = (resource.data?.departmentGroups ?? []).map(group => ({ ...group, name: department(group.name) }));
+  const departmentGroups = (resource.data?.departmentGroups ?? []).map(
+    (group) => ({ ...group, name: department(group.name) }),
+  );
   const unavailable = resource.isLoading || !!resource.error || invalid;
   const filterSummary = [
     filters.department === "all"
@@ -275,7 +302,16 @@ export default function PatientProductsReportPage() {
     .join(" · ");
   async function exportCsv() {
     let sorted: PatientProductRow[];
-    try { sorted = await loadExport(); } catch { setPrintError(t("resourceState.error", {defaultValue: "Unable to load the full report."})); return; }
+    try {
+      sorted = await loadExport();
+    } catch {
+      setPrintError(
+        t("resourceState.error", {
+          defaultValue: "Unable to load the full report.",
+        }),
+      );
+      return;
+    }
     const data = [
       displayedColumns.map((column) => tr(column)),
       ...sorted.map((row) =>
@@ -325,7 +361,13 @@ export default function PatientProductsReportPage() {
     const numeric = (column: Column) =>
       ["quantity", "cost", "price", "profit"].includes(column);
     let sorted: PatientProductRow[];
-    try { sorted = await loadExport(); } catch { win.close(); setPrintError("Unable to load the full report."); return; }
+    try {
+      sorted = await loadExport();
+    } catch {
+      win.close();
+      setPrintError("Unable to load the full report.");
+      return;
+    }
     win.document
       .write(`<!doctype html><html lang="${esc(i18n.language)}" dir="${i18n.dir()}"><head><meta charset="utf-8"><title>${esc(tr("title"))}</title><style>${printStyles}${fontStyles}</style></head><body><main class="report">
       <button class="print-button" onclick="window.print()">${esc(tr("print"))}</button>
@@ -450,7 +492,8 @@ export default function PatientProductsReportPage() {
               <RefreshCw className="size-4" />
               {tr("refresh")}
             </Button>
-            <Button permission="export"
+            <Button
+              permission="export"
               className="bg-green-600 text-white hover:bg-green-700"
               disabled={unavailable || !totalRows}
               onClick={exportCsv}
@@ -458,7 +501,8 @@ export default function PatientProductsReportPage() {
               <Download className="size-4" />
               {tr("export")}
             </Button>
-            <Button permission="print"
+            <Button
+              permission="print"
               variant="outline"
               disabled={unavailable || !totalRows}
               onClick={print}
@@ -574,33 +618,32 @@ export default function PatientProductsReportPage() {
                 </TableHeader>
                 <TableBody autoPaginate={false}>
                   {sorted.length ? (
-                    sorted
-                      .map((row) => (
-                        <TableRow key={row.id}>
-                          {displayedColumns.map((column) => (
-                            <TableCell
-                              key={column}
-                              className={
-                                column === "profit"
-                                  ? row.profit < 0
-                                    ? "text-destructive"
-                                    : "text-emerald-600"
-                                  : ""
-                              }
-                            >
-                              {column === "department" ||
-                              (column === "departmentType" &&
-                                row.departmentType) ? (
-                                <Badge variant="outline">
-                                  {cellText(row, column)}
-                                </Badge>
-                              ) : (
-                                cellText(row, column)
-                              )}
-                            </TableCell>
-                          ))}
-                        </TableRow>
-                      ))
+                    sorted.map((row) => (
+                      <TableRow key={row.id}>
+                        {displayedColumns.map((column) => (
+                          <TableCell
+                            key={column}
+                            className={
+                              column === "profit"
+                                ? row.profit < 0
+                                  ? "text-destructive"
+                                  : "text-emerald-600"
+                                : ""
+                            }
+                          >
+                            {column === "department" ||
+                            (column === "departmentType" &&
+                              row.departmentType) ? (
+                              <Badge variant="outline">
+                                {cellText(row, column)}
+                              </Badge>
+                            ) : (
+                              cellText(row, column)
+                            )}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))
                   ) : (
                     <TableRow>
                       <TableCell

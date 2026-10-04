@@ -6,14 +6,26 @@ export const purchasesController = {
   list: inventoryAction(purchasesService.list, 200),
   returnPurchase: async (req, res, next) => {
     try {
-      res.json(await purchasesService.returnPurchase({ id: req.params.id, body: req.body, passwordHash: req.user?.passwordHash }));
+      res.json(
+        await purchasesService.returnPurchase({
+          id: req.params.id,
+          body: req.body,
+          passwordHash: req.user?.passwordHash,
+        }),
+      );
     } catch (error) {
       next(error);
     }
   },
   remove: async (req, res, next) => {
     try {
-      res.json(await purchasesService.remove({ id: req.params.id, body: req.body, passwordHash: req.user?.passwordHash }));
+      res.json(
+        await purchasesService.remove({
+          id: req.params.id,
+          body: req.body,
+          passwordHash: req.user?.passwordHash,
+        }),
+      );
     } catch (error) {
       next(error);
     }

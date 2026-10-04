@@ -4,7 +4,11 @@ import { Router } from "express";
 import { requireAuth } from "../../shared/middleware/auth.middleware.js";
 import { validate } from "../../shared/middleware/validation.middleware.js";
 import { crmController } from "./crm.controller.js";
-import { crmSchemas, isCrmResource, patientUpdateSchema } from "./crm.schema.js";
+import {
+  crmSchemas,
+  isCrmResource,
+  patientUpdateSchema,
+} from "./crm.schema.js";
 import leadRoutes from "./lead/lead.routes.js";
 import patientRoutes from "./patient/patient.routes.js";
 import formsRoutes from "./forms/forms.routes.js";

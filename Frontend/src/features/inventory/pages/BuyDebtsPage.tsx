@@ -1,6 +1,9 @@
 import { Badge } from "@/shared/components/ui/badge";
 import { debtPrintStyles } from "../lib/debt-print";
-import { PurchaseFilters, type PurchaseExtraFilters } from "../components/PurchaseFilters";
+import {
+  PurchaseFilters,
+  type PurchaseExtraFilters,
+} from "../components/PurchaseFilters";
 import { hasPermission } from "@/features/auth/access";
 import { randomId } from "@/shared/lib/random-id";
 import { Card } from "@/shared/components/ui/card";
@@ -15,12 +18,7 @@ import {
   TableCell,
 } from "@/shared/components/ui/table";
 import { Label } from "@/shared/components/ui/label";
-import {
-  useCallback,
-  useDeferredValue,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useDeferredValue, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Eye, PieChart, Printer } from "lucide-react";
 import { apiClient, apiErrorMessage } from "@/shared/api/client";
@@ -110,7 +108,15 @@ export default function BuyDebtsPage() {
               outstanding: number;
             };
           }>("/inventory/purchase-debts", {
-            params: { ...extraFilters, search: query, retailer, hasInvoice, status, page, pageSize: 10 },
+            params: {
+              ...extraFilters,
+              search: query,
+              retailer,
+              hasInvoice,
+              status,
+              page,
+              pageSize: 10,
+            },
           })
           .then((r) => r.data),
       [query, retailer, hasInvoice, status, page, extraFilters],
@@ -135,24 +141,32 @@ export default function BuyDebtsPage() {
         : "unpaid";
   const label = (key: Column) =>
     t(
-      key === "hasInvoice" ? "buyHistory.invoiceFilter" : ["status", "date", "paid"].includes(key)
-        ? `buyDebts.${key}`
-        : key === "totalProducts"
-          ? "buyHistory.totalProducts"
-          : `buyProductForm.${key}`,
+      key === "hasInvoice"
+        ? "buyHistory.invoiceFilter"
+        : ["status", "date", "paid"].includes(key)
+          ? `buyDebts.${key}`
+          : key === "totalProducts"
+            ? "buyHistory.totalProducts"
+            : `buyProductForm.${key}`,
     );
   const value = (row: Debt, key: Column): string | number =>
-    key === "hasInvoice" ? t(row.hasInvoice ? "buyHistory.withInvoice" : "buyHistory.withoutInvoice") : key === "totalProducts"
-      ? row.items.length
-      : key === "date"
-        ? new Date(row.buyDate).toLocaleDateString(i18n.language)
-        : key === "paid"
-          ? money(row.paidAmount)
-          : key === "totalPrice"
-            ? money(row.totalPrice)
-            : key === "status"
-              ? t(`buyDebts.${state(row)}`)
-              : row[key] || "—";
+    key === "hasInvoice"
+      ? t(
+          row.hasInvoice
+            ? "buyHistory.withInvoice"
+            : "buyHistory.withoutInvoice",
+        )
+      : key === "totalProducts"
+        ? row.items.length
+        : key === "date"
+          ? new Date(row.buyDate).toLocaleDateString(i18n.language)
+          : key === "paid"
+            ? money(row.paidAmount)
+            : key === "totalPrice"
+              ? money(row.totalPrice)
+              : key === "status"
+                ? t(`buyDebts.${state(row)}`)
+                : row[key] || "—";
   const print = (rows: Debt[], invoice = false) => {
     const win = window.open("", "_blank", "width=900,height=1000");
     if (!win) {
@@ -162,23 +176,52 @@ export default function BuyDebtsPage() {
     win.opener = null;
     const row = invoice ? rows[0] : undefined;
     const heading = (key: string) => esc(t(key));
-    const printedTotal = rows.reduce((sum, debt) => sum + Math.round(Number(debt.totalPrice) * 100), 0) / 100;
-    const printedPaid = rows.reduce((sum, debt) => sum + Math.round(Number(debt.paidAmount) * 100), 0) / 100;
-    const total = row ? row.totalPrice : result.data?.summary.totalPrice ?? 0;
-    const paid = row ? row.paidAmount : result.data?.summary.paidAmount ?? 0;
-    const remaining = row ? balance(row) : result.data?.summary.outstanding ?? 0;
+    const printedTotal =
+      rows.reduce(
+        (sum, debt) => sum + Math.round(Number(debt.totalPrice) * 100),
+        0,
+      ) / 100;
+    const printedPaid =
+      rows.reduce(
+        (sum, debt) => sum + Math.round(Number(debt.paidAmount) * 100),
+        0,
+      ) / 100;
+    const total = row ? row.totalPrice : (result.data?.summary.totalPrice ?? 0);
+    const paid = row ? row.paidAmount : (result.data?.summary.paidAmount ?? 0);
+    const remaining = row
+      ? balance(row)
+      : (result.data?.summary.outstanding ?? 0);
     const metric = (key: string, amount: string | number, emphasized = false) =>
       `<div class="metric${emphasized ? " balance" : ""}"><span>${heading(key)}</span><strong>${esc(money(amount))}</strong></div>`;
-    const numberCell = (amount: string | number) => `<td class="number">${esc(money(amount))}</td>`;
-    const statusLabel = (debt: Debt) => `<span class="status ${state(debt)}">${heading(`buyDebts.${state(debt)}`)}</span>`;
+    const numberCell = (amount: string | number) =>
+      `<td class="number">${esc(money(amount))}</td>`;
+    const statusLabel = (debt: Debt) =>
+      `<span class="status ${state(debt)}">${heading(`buyDebts.${state(debt)}`)}</span>`;
     const metadata = row
       ? `<div class="details">${[
           ["buyProductForm.invoiceNumber", row.invoiceNumber],
           ["buyProductForm.retailer", row.retailer],
-          ["buyDebts.date", new Date(row.buyDate).toLocaleDateString(i18n.language)],
+          [
+            "buyDebts.date",
+            new Date(row.buyDate).toLocaleDateString(i18n.language),
+          ],
           ["buyProductForm.salesperson", row.salesperson || "—"],
-          ["buyHistory.invoiceFilter", t(row.hasInvoice ? "buyHistory.withInvoice" : "buyHistory.withoutInvoice")],
-        ].map(([key, content]) => `<p><span class="muted">${heading(key)}</span><br><strong>${esc(content)}</strong></p>`).join("")}<p><span class="muted">${heading("buyDebts.status")}</span><br>${statusLabel(row)}</p></div>`
+          [
+            "buyHistory.invoiceFilter",
+            t(
+              row.hasInvoice
+                ? "buyHistory.withInvoice"
+                : "buyHistory.withoutInvoice",
+            ),
+          ],
+        ]
+          .map(
+            ([key, content]) =>
+              `<p><span class="muted">${heading(key)}</span><br><strong>${esc(content)}</strong></p>`,
+          )
+          .join(
+            "",
+          )}<p><span class="muted">${heading("buyDebts.status")}</span><br>${statusLabel(row)}</p></div>`
       : `<p class="muted">${heading("buyDebts.printScope")}</p>`;
     const itemTable = row
       ? `<h2>${heading("buyProductForm.items")}</h2><table><colgroup><col style="width:32%"><col style="width:20%"><col style="width:16%"><col style="width:15%"><col style="width:17%"></colgroup><thead><tr>${["product", "storage", "quantity", "price", "totalPrice"].map((key, index) => `<th${index >= 2 ? ' class="number"' : ""}>${heading(`buyProductForm.${key}`)}</th>`).join("")}</tr></thead><tbody>${row.items.map((item) => `<tr><td>${esc(item.productName || "—")}</td><td>${esc(item.warehouseName || "—")}</td><td class="number">${esc(item.quantity ?? "—")}</td>${numberCell(item.price)}${numberCell(item.totalPrice)}</tr>`).join("")}<tr class="total-row"><td colspan="4">${heading("buyProductForm.totalPrice")}</td>${numberCell(row.totalPrice)}</tr></tbody></table>`
@@ -189,7 +232,8 @@ export default function BuyDebtsPage() {
     const reportReference = row
       ? `${heading("buyProductForm.invoiceNumber")} · ${esc(row.invoiceNumber)}`
       : heading("buyDebts.summary");
-    win.document.write(`<!doctype html><html lang="${esc(i18n.language)}" dir="${i18n.dir()}">
+    win.document
+      .write(`<!doctype html><html lang="${esc(i18n.language)}" dir="${i18n.dir()}">
       <head><meta charset="utf-8"><title>${heading("warehouseModule.buyDebts")}${row ? ` · ${esc(row.invoiceNumber)}` : ""}</title><style>${debtPrintStyles}</style></head>
       <body>
         <header>
@@ -273,14 +317,22 @@ export default function BuyDebtsPage() {
               setPage(1);
             }}
           />
-          <PurchaseFilters value={{ ...extraFilters, retailer, hasInvoice, status }} onApply={(filters) => {
-            const { retailer: _retailer, hasInvoice: _hasInvoice, status: _status, ...extra } = filters;
-            setExtraFilters(extra);
-            setRetailer(filters.retailer);
-            setHasInvoice(filters.hasInvoice);
-            setStatus(filters.status ?? "");
-            setPage(1);
-          }} />
+          <PurchaseFilters
+            value={{ ...extraFilters, retailer, hasInvoice, status }}
+            onApply={(filters) => {
+              const {
+                retailer: _retailer,
+                hasInvoice: _hasInvoice,
+                status: _status,
+                ...extra
+              } = filters;
+              setExtraFilters(extra);
+              setRetailer(filters.retailer);
+              setHasInvoice(filters.hasInvoice);
+              setStatus(filters.status ?? "");
+              setPage(1);
+            }}
+          />
           <Button
             className="bg-primary text-white hover:bg-primary/90"
             size="icon"
@@ -331,10 +383,7 @@ export default function BuyDebtsPage() {
                 </TableRow>
               ) : (
                 result.data.items.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    className="border-t"
-                  >
+                  <TableRow key={row.id} className="border-t">
                     {columns
                       .filter((k) => visible.includes(k))
                       .map((key) => (
@@ -353,7 +402,8 @@ export default function BuyDebtsPage() {
                       ))}
                     <TableCell className="px-2 py-2">
                       <div className="flex justify-end gap-1.5">
-                        <Button permission="print"
+                        <Button
+                          permission="print"
                           size="icon"
                           className="size-8 bg-primary text-white hover:bg-primary/90"
                           aria-label={`${t("buyHistory.print")} ${row.invoiceNumber}`}
@@ -371,7 +421,8 @@ export default function BuyDebtsPage() {
                           <Eye className="size-3.5" />
                         </Button>
                         {canPay && (
-                          <Button permission="inventory.purchases.pay"
+                          <Button
+                            permission="inventory.purchases.pay"
                             size="sm"
                             className="h-8 bg-primary text-white hover:bg-primary/90"
                             disabled={balance(row) <= 0}
@@ -403,7 +454,8 @@ export default function BuyDebtsPage() {
             })}
           </span>
           <div className="flex gap-2">
-            <Button permission="print"
+            <Button
+              permission="print"
               size="icon"
               className="size-8 bg-primary text-white hover:bg-primary/90"
               disabled={
@@ -628,7 +680,8 @@ export default function BuyDebtsPage() {
               >
                 {t("buyHistory.cancel")}
               </Button>
-              <Button permission="inventory.purchases.pay"
+              <Button
+                permission="inventory.purchases.pay"
                 type="submit"
                 disabled={saving}
                 className="bg-primary text-white hover:bg-primary/90"

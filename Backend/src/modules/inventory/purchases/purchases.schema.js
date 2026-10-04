@@ -11,7 +11,8 @@ const purchaseFields = z.object({
   attachmentUrl: z
     .string()
     .regex(/^\/public\/product-images\/[a-zA-Z0-9.-]+$/)
-    .nullable().default(null),
+    .nullable()
+    .default(null),
   items: z
     .array(
       z.object({
@@ -34,10 +35,19 @@ const purchaseFields = z.object({
     .max(100),
 });
 
-const invoiceOptions = { message: "Invoice attachment is required when invoice is available.", path: ["attachmentUrl"] };
-const validInvoice = (input) => input.hasInvoice !== true || Boolean(input.attachmentUrl);
-export const purchaseSchema = purchaseFields.refine(validInvoice, invoiceOptions);
-export const purchaseEditSchema = purchaseFields.omit({ requestId: true }).refine(validInvoice, invoiceOptions);
+const invoiceOptions = {
+  message: "Invoice attachment is required when invoice is available.",
+  path: ["attachmentUrl"],
+};
+const validInvoice = (input) =>
+  input.hasInvoice !== true || Boolean(input.attachmentUrl);
+export const purchaseSchema = purchaseFields.refine(
+  validInvoice,
+  invoiceOptions,
+);
+export const purchaseEditSchema = purchaseFields
+  .omit({ requestId: true })
+  .refine(validInvoice, invoiceOptions);
 
 export const paymentSchema = z.object({
   requestId: z.string().uuid(),
@@ -55,5 +65,8 @@ export const paymentSchema = z.object({
 export const debtStatusSchema = z.enum(["", "paid", "unpaid", "partial"]);
 
 export const returnPurchaseSchema = z.object({
-  password: z.string().min(1, "Password is required to return a purchase.").max(128),
+  password: z
+    .string()
+    .min(1, "Password is required to return a purchase.")
+    .max(128),
 });

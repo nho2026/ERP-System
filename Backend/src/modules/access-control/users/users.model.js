@@ -1,14 +1,38 @@
 import { paginate } from "../../../shared/database/paginate.js";
 import { prisma } from "../../../shared/database/client.js";
-const include = { warehouse: { select: { id: true, name: true } }, roles: { include: { role: true } } };
+const include = {
+  warehouse: { select: { id: true, name: true } },
+  roles: { include: { role: true } },
+};
 export const userModel = {
-  storageOptions: () => prisma.inventoryWarehouse.findMany({ where: { status: "active" }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
-  findWarehouse: id => prisma.inventoryWarehouse.findUnique({ where: { id }, select: { id: true, status: true } }),
-  isHospitalDepartment: name => name ? prisma.department.count({ where: { name, type: "hospital", status: "active" } }).then(count => count > 0) : Promise.resolve(false),
-  hasSuperadminRole: (roleIds) => prisma.role.count({ where: { id: { in: roleIds }, name: "Super Administrator" } }).then(count => count > 0),
-  findById: id => prisma.user.findUniqueOrThrow({ where: { id }, include }),
+  storageOptions: () =>
+    prisma.inventoryWarehouse.findMany({
+      where: { status: "active" },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+  findWarehouse: (id) =>
+    prisma.inventoryWarehouse.findUnique({
+      where: { id },
+      select: { id: true, status: true },
+    }),
+  isHospitalDepartment: (name) =>
+    name
+      ? prisma.department
+          .count({ where: { name, type: "hospital", status: "active" } })
+          .then((count) => count > 0)
+      : Promise.resolve(false),
+  hasSuperadminRole: (roleIds) =>
+    prisma.role
+      .count({ where: { id: { in: roleIds }, name: "Super Administrator" } })
+      .then((count) => count > 0),
+  findById: (id) => prisma.user.findUniqueOrThrow({ where: { id }, include }),
   findAll: (query = {}) =>
-    paginate("user", query, { include, orderBy: { createdAt: "desc" } }, ["name","username","email"]),
+    paginate("user", query, { include, orderBy: { createdAt: "desc" } }, [
+      "name",
+      "username",
+      "email",
+    ]),
   create: (data) => prisma.user.create({ data, include }),
   update: (id, data) => prisma.user.update({ where: { id }, data, include }),
   remove: (id, replacementUserId) =>

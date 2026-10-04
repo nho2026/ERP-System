@@ -5,7 +5,12 @@ import { OrderForm } from "../components/OrderForm";
 import OrderHistoryPage from "./OrderHistoryPage";
 import { hasPermission, storedUser } from "@/features/auth/access";
 import { Button } from "@/shared/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/shared/components/ui/dialog";
 
 export default function OrderPage() {
   const { t, i18n } = useTranslation();
@@ -26,7 +31,8 @@ export default function OrderPage() {
         title="warehouseModule.order"
         headerAction={
           canSubmit && (
-            <Button permission="create"
+            <Button
+              permission="create"
               className="ms-auto"
               onClick={() => {
                 setSaved(false);

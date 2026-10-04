@@ -350,7 +350,11 @@ export default function EventsPage() {
     () => ({ ...filters, deviceId: selectedDeviceId }),
     [filters, selectedDeviceId],
   );
-  const events = useServerTable<AttendanceEvent>("/attendance/events", { ...deviceFilters, sort: dateSort }, Boolean(selectedDeviceId)),
+  const events = useServerTable<AttendanceEvent>(
+      "/attendance/events",
+      { ...deviceFilters, sort: dateSort },
+      Boolean(selectedDeviceId),
+    ),
     people = useApiResource(
       useCallback(
         () =>
@@ -415,7 +419,10 @@ export default function EventsPage() {
         void refresh();
       }, 300);
     });
-    return () => { clearTimeout(timer); stream.close(); };
+    return () => {
+      clearTimeout(timer);
+      stream.close();
+    };
   }, [events.refresh]);
   const chooseDateRange = (range?: DateRange) => {
     setDateRange(range);
@@ -489,7 +496,8 @@ export default function EventsPage() {
               defaultValue: "matching events",
             })}
           </Badge>
-          <Button permission="sync"
+          <Button
+            permission="sync"
             variant="outline"
             className="ms-auto"
             disabled={syncing || !selectedDeviceId}

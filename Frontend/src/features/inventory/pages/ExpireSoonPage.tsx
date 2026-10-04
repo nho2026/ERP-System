@@ -56,17 +56,25 @@ export default function ExpireSoonPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [printing, setPrinting] = useState(false);
   useEffect(() => {
-    const timer = setTimeout(() => { setDebouncedSearch(search); setPage(1); }, 300);
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 300);
     return () => clearTimeout(timer);
   }, [search]);
-  const filters = useCallback(() => ({
-    search: debouncedSearch,
-    ...(warehouse !== "all" && { warehouseId: warehouse }),
-    ...(category !== "all" && { categoryId: category }),
-    status,
-    maximum,
-  }), [debouncedSearch, warehouse, category, status, maximum]);
-  const result = useApiResource(useCallback(() => inventoryApi.expiry(page, filters()), [page, filters]));
+  const filters = useCallback(
+    () => ({
+      search: debouncedSearch,
+      ...(warehouse !== "all" && { warehouseId: warehouse }),
+      ...(category !== "all" && { categoryId: category }),
+      status,
+      maximum,
+    }),
+    [debouncedSearch, warehouse, category, status, maximum],
+  );
+  const result = useApiResource(
+    useCallback(() => inventoryApi.expiry(page, filters()), [page, filters]),
+  );
   const days = (p: RecordItem) =>
     p.expiryDate && result.data
       ? Math.round(dayNumber(p.expiryDate) - dayNumber(result.data.today))
@@ -118,29 +126,37 @@ export default function ExpireSoonPage() {
     setPrinting(true);
     setError("");
     try {
-      const first = await inventoryApi.expiry(1, { ...filters(), pageSize: "100" });
+      const first = await inventoryApi.expiry(1, {
+        ...filters(),
+        pageSize: "100",
+      });
       const printRows = [...first.items];
       for (let next = 2; next <= first.pagination.totalPages; next++) {
-        const data = await inventoryApi.expiry(next, { ...filters(), pageSize: "100" });
+        const data = await inventoryApi.expiry(next, {
+          ...filters(),
+          pageSize: "100",
+        });
         printRows.push(...data.items);
       }
-    popup.document.write(
-      `<html dir="${i18n.dir()}"><head><meta charset="utf-8"><title>${escape(t("warehouseModule.expireSoon"))}</title><style>body{font:12px Arial;padding:24px}table{width:100%;border-collapse:collapse}th,td{padding:8px;border-bottom:1px solid #ddd;text-align:start}@page{size:A4 landscape}</style></head><body><h1>${escape(t("warehouseModule.expireSoon"))}</h1><p>${escape(result.data?.today)}</p><table><thead><tr>${headings.map((k) => `<th>${escape(t(`expiry.${k}`))}</th>`).join("")}</tr></thead><tbody>${printRows
-        .map(
-          (p) =>
-            `<tr>${cells(p)
-              .map((value) => `<td>${escape(value)}</td>`)
-              .join("")}</tr>`,
-        )
-        .join("")}</tbody></table></body></html>`,
-    );
-    popup.document.close();
-    popup.focus();
-    popup.print();
+      popup.document.write(
+        `<html dir="${i18n.dir()}"><head><meta charset="utf-8"><title>${escape(t("warehouseModule.expireSoon"))}</title><style>body{font:12px Arial;padding:24px}table{width:100%;border-collapse:collapse}th,td{padding:8px;border-bottom:1px solid #ddd;text-align:start}@page{size:A4 landscape}</style></head><body><h1>${escape(t("warehouseModule.expireSoon"))}</h1><p>${escape(result.data?.today)}</p><table><thead><tr>${headings.map((k) => `<th>${escape(t(`expiry.${k}`))}</th>`).join("")}</tr></thead><tbody>${printRows
+          .map(
+            (p) =>
+              `<tr>${cells(p)
+                .map((value) => `<td>${escape(value)}</td>`)
+                .join("")}</tr>`,
+          )
+          .join("")}</tbody></table></body></html>`,
+      );
+      popup.document.close();
+      popup.focus();
+      popup.print();
     } catch (cause) {
       popup.close();
       setError(apiErrorMessage(cause));
-    } finally { setPrinting(false); }
+    } finally {
+      setPrinting(false);
+    }
   }
   return (
     <div className="space-y-5" dir={i18n.dir()}>
@@ -276,7 +292,8 @@ export default function ExpireSoonPage() {
           </TableBody>
         </Table>
         <div className="flex flex-wrap items-center justify-between gap-3 border-t p-4">
-          <Button permission="print"
+          <Button
+            permission="print"
             variant="outline"
             disabled={!total || result.isLoading || printing}
             onClick={print}

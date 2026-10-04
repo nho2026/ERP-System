@@ -5,7 +5,12 @@ import { BuyProductForm } from "../components/BuyProductForm";
 import BuyHistoryPage from "./BuyHistoryPage";
 import { hasPermission, storedUser } from "@/features/auth/access";
 import { Button } from "@/shared/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/shared/components/ui/dialog";
 
 export default function BuyProductPage() {
   const { t, i18n } = useTranslation();
@@ -26,7 +31,8 @@ export default function BuyProductPage() {
         title="warehouseModule.buyProduct"
         headerAction={
           canBuy && (
-            <Button permission="create"
+            <Button
+              permission="create"
               className="ms-auto"
               onClick={() => {
                 setSaved(false);

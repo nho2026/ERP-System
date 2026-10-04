@@ -69,18 +69,35 @@ function windowFromEvent(event) {
 }
 
 ipcMain.handle("ticket:print", async (event, token, height) => {
-  if (!windowFromEvent(event) || typeof token !== "string" || !/^nho-ticket-[a-f0-9-]{36}$/.test(token) || !Number.isFinite(height) || height < 80 || height > 2000)
+  if (
+    !windowFromEvent(event) ||
+    typeof token !== "string" ||
+    !/^nho-ticket-[a-f0-9-]{36}$/.test(token) ||
+    !Number.isFinite(height) ||
+    height < 80 ||
+    height > 2000
+  )
     throw new Error("Invalid ticket print request.");
-  const ticket = BrowserWindow.getAllWindows().find((window) =>
-    window.webContents.getTitle() === token && window.webContents.getURL() === "about:blank",
+  const ticket = BrowserWindow.getAllWindows().find(
+    (window) =>
+      window.webContents.getTitle() === token &&
+      window.webContents.getURL() === "about:blank",
   );
   if (!ticket) throw new Error("Ticket print window was closed.");
   try {
     await new Promise((resolve, reject) => {
-      ticket.webContents.print({ silent: true, printBackground: true, margins: { marginType: "none" }, pageSize: { width: 80000, height: Math.ceil(height * 1000) } }, (success, reason) => {
-        if (success) resolve();
-        else reject(new Error(reason || "Ticket printing failed."));
-      });
+      ticket.webContents.print(
+        {
+          silent: true,
+          printBackground: true,
+          margins: { marginType: "none" },
+          pageSize: { width: 80000, height: Math.ceil(height * 1000) },
+        },
+        (success, reason) => {
+          if (success) resolve();
+          else reject(new Error(reason || "Ticket printing failed."));
+        },
+      );
     });
   } finally {
     if (!ticket.isDestroyed()) ticket.close();
@@ -212,6 +229,7 @@ app.on("window-all-closed", () => {
 });
 
 ipcMain.handle("inbox:open-whatsapp", async (_event, phone) => {
-  if (typeof phone !== "string" || !/^\d{5,20}$/.test(phone)) throw new Error("Invalid phone number");
+  if (typeof phone !== "string" || !/^\d{5,20}$/.test(phone))
+    throw new Error("Invalid phone number");
   await shell.openExternal(`https://web.whatsapp.com/send?phone=${phone}`);
 });

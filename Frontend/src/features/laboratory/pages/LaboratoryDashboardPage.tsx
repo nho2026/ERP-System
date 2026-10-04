@@ -111,15 +111,16 @@ export default function LaboratoryDashboardPage() {
           </Button>
         </div>
         <div className="relative mt-6 flex flex-wrap gap-3">
-          {hasPermission(user, "laboratory.pages.reception.view") && hasPermission(user, "laboratory.orders.create") && (
-            <Button
-              className="bg-white text-teal-950 hover:bg-teal-50"
-              onClick={() => navigate("/laboratory/reception")}
-            >
-              {t("laboratory.newRequest")}
-              <ArrowRight className="size-4 rtl:rotate-180" />
-            </Button>
-          )}
+          {hasPermission(user, "laboratory.pages.reception.view") &&
+            hasPermission(user, "laboratory.orders.create") && (
+              <Button
+                className="bg-white text-teal-950 hover:bg-teal-50"
+                onClick={() => navigate("/laboratory/reception")}
+              >
+                {t("laboratory.newRequest")}
+                <ArrowRight className="size-4 rtl:rotate-180" />
+              </Button>
+            )}
           <Button
             variant="outline"
             className="border-white/25 bg-transparent text-white hover:bg-white/10 hover:text-white"
@@ -341,7 +342,6 @@ export default function LaboratoryDashboardPage() {
           </Card>
         )}
       </div>
-
     </div>
   );
 }

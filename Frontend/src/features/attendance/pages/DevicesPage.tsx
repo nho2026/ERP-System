@@ -26,9 +26,7 @@ import {
 import { Badge } from "@/shared/components/ui/badge";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import {
-  PaginationControls,
-} from "@/shared/components/ui/pagination-controls";
+import { PaginationControls } from "@/shared/components/ui/pagination-controls";
 export default function DevicesPage() {
   const { t } = useTranslation();
   const devices = useServerTable<Device>("/attendance/devices");
@@ -159,10 +157,16 @@ export default function DevicesPage() {
                   <span
                     className={`grid size-12 shrink-0 place-items-center rounded-2xl ring-1 ring-inset ${d.status === "online" ? "bg-emerald-500/10 text-emerald-700 ring-emerald-600/15 dark:text-emerald-400" : "bg-muted text-muted-foreground ring-border"}`}
                   >
-                    {d.status === "online" ? <Wifi className="size-5" /> : <WifiOff className="size-5" />}
+                    {d.status === "online" ? (
+                      <Wifi className="size-5" />
+                    ) : (
+                      <WifiOff className="size-5" />
+                    )}
                   </span>
                   <div className="min-w-0">
-                    <h2 className="truncate font-semibold tracking-tight">{d.name}</h2>
+                    <h2 className="truncate font-semibold tracking-tight">
+                      {d.name}
+                    </h2>
                     <p className="mt-1 truncate text-xs text-muted-foreground">
                       {d.model}
                     </p>
@@ -172,12 +176,17 @@ export default function DevicesPage() {
                   variant="outline"
                   className={`shrink-0 gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium capitalize ${d.status === "online" ? "border-emerald-600/20 bg-emerald-500/5 text-emerald-700 dark:text-emerald-400" : "text-muted-foreground"}`}
                 >
-                  <span className={`size-1.5 rounded-full ${d.status === "online" ? "bg-emerald-500" : "bg-slate-400"}`} />
+                  <span
+                    className={`size-1.5 rounded-full ${d.status === "online" ? "bg-emerald-500" : "bg-slate-400"}`}
+                  />
                   {d.status}
                 </Badge>
               </div>
               <div className="mx-5 rounded-xl border border-border/60 bg-muted/35 px-3.5 py-3">
-                <p className="font-mono text-sm font-medium tracking-tight" dir="ltr">
+                <p
+                  className="font-mono text-sm font-medium tracking-tight"
+                  dir="ltr"
+                >
                   {d.ipAddress}:{d.port}
                 </p>
                 <p className="mt-1 truncate text-[11px] text-muted-foreground">
@@ -324,7 +333,8 @@ export default function DevicesPage() {
           )}
         </DialogContent>
       </Dialog>
-      <DeleteConfirmationDialog permission="attendance.events.delete"
+      <DeleteConfirmationDialog
+        permission="attendance.events.delete"
         open={!!clearingEvents}
         title={t("attendance.device.clearEventsTitle")}
         description={t("attendance.device.clearEventsDescription", {

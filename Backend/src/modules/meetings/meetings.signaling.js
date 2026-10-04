@@ -53,9 +53,19 @@ export function attachMeetingSignaling(
       socket.data.isSuperAdmin = user.roles.some(
         ({ role }) => role.name === "Super Administrator",
       );
-      socket.data.permissionKeys = new Set(user.roles.flatMap(({ role }) => role.permissions.map(({ permission }) => permission.key)));
+      socket.data.permissionKeys = new Set(
+        user.roles.flatMap(({ role }) =>
+          role.permissions.map(({ permission }) => permission.key),
+        ),
+      );
       if (socket.data.isSuperAdmin) socket.data.permissionKeys.add("*");
-      if (!socket.data.permissionKeys.has("*") && (!["meetings.view", "meetings.join"].every((key) => socket.data.permissionKeys.has(key)))) throw new Error("Meeting permission required");
+      if (
+        !socket.data.permissionKeys.has("*") &&
+        !["meetings.view", "meetings.join"].every((key) =>
+          socket.data.permissionKeys.has(key),
+        )
+      )
+        throw new Error("Meeting permission required");
       next();
     } catch {
       next(new Error("Authentication required"));
@@ -63,7 +73,9 @@ export function attachMeetingSignaling(
   });
 
   io.on("connection", (socket) => {
-    const allowed = (action) => socket.data.permissionKeys.has("*") || socket.data.permissionKeys.has(`meetings.${action}`);
+    const allowed = (action) =>
+      socket.data.permissionKeys.has("*") ||
+      socket.data.permissionKeys.has(`meetings.${action}`);
     socket.on("meeting:join", async ({ roomCode }, callback = () => {}) => {
       try {
         const meeting = await prisma.meeting.findUnique({
@@ -93,12 +105,10 @@ export function attachMeetingSignaling(
             data: { meetingId: meeting.id, userId: socket.data.user.id },
           })
         ).id;
-        socket
-          .to(roomCode)
-          .emit("meeting:peer-joined", {
-            id: socket.id,
-            name: socket.data.user.name,
-          });
+        socket.to(roomCode).emit("meeting:peer-joined", {
+          id: socket.id,
+          name: socket.data.user.name,
+        });
         callback({
           ok: true,
           meeting: {
@@ -121,7 +131,11 @@ export function attachMeetingSignaling(
     for (const event of ["webrtc:offer", "webrtc:answer", "webrtc:ice"]) {
       socket.on(event, ({ target, payload }) => {
         const targetSocket = io.sockets.sockets.get(target);
-        if (socket.data.roomCode && targetSocket && targetSocket.data.roomCode === socket.data.roomCode)
+        if (
+          socket.data.roomCode &&
+          targetSocket &&
+          targetSocket.data.roomCode === socket.data.roomCode
+        )
           targetSocket.emit(event, {
             from: socket.id,
             name: socket.data.user.name,
@@ -131,7 +145,11 @@ export function attachMeetingSignaling(
     }
 
     socket.on("meeting:chat", ({ text } = {}, callback = () => {}) => {
-      if (!allowed("chat")) return callback({ ok: false, message: "Missing permission: meetings.chat" });
+      if (!allowed("chat"))
+        return callback({
+          ok: false,
+          message: "Missing permission: meetings.chat",
+        });
       const roomCode = socket.data.roomCode;
       const cleanText = typeof text === "string" ? text.trim() : "";
       if (!roomCode)
@@ -164,7 +182,8 @@ export function attachMeetingSignaling(
 
     socket.on("meeting:end", async ({ roomCode }, callback = () => {}) => {
       try {
-        if (!allowed("end")) throw new Error("Missing permission: meetings.end");
+        if (!allowed("end"))
+          throw new Error("Missing permission: meetings.end");
         const meeting = await prisma.meeting.findUnique({
           where: { roomCode },
         });
