@@ -85,7 +85,7 @@ export function SurgeryAppointmentCalendar({
   );
   return (
     <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">
-      <div className="bg-gradient-to-r from-violet-950 via-teal-950 to-teal-800 p-5 text-white">
+      <div className="bg-linear-to-r from-violet-950 via-teal-950 to-teal-800 p-5 text-white">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <span className="grid size-11 place-items-center rounded-xl bg-white/10">
@@ -253,7 +253,7 @@ export function SurgeryAppointmentCalendar({
                     className="relative w-full overflow-hidden rounded-xl border bg-card p-4 ps-5 text-start shadow-sm hover:border-primary/40 hover:shadow-md"
                   >
                     <span
-                      className={`absolute inset-y-0 start-0 w-1 ${dots[String(item.status)] ?? dots.scheduled}`}
+                      className={`absolute inset-y-0 inset-s-0 w-1 ${dots[String(item.status)] ?? dots.scheduled}`}
                     />
                     <div className="flex justify-between gap-2">
                       <span className="flex items-center gap-1.5 font-bold">

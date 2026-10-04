@@ -12,8 +12,7 @@ const canonicalMode = (value) => {
   if (["fp", "finger", "fingerprint"].includes(mode)) return "fingerprint";
   if (mode === "face") return "face";
   if (mode === "card") return "card";
-  if (["pin", "pw", "password", "employeenoandpw"].includes(mode))
-    return "pin";
+  if (["pin", "pw", "password", "employeenoandpw"].includes(mode)) return "pin";
   return null;
 };
 
@@ -36,7 +35,11 @@ export function verificationMethod(event) {
 
 export function attendanceEventType(event) {
   const value = String(
-    event.attendanceStatus ?? event.eventType ?? event.direction ?? event.inOut ?? "",
+    event.attendanceStatus ??
+      event.eventType ??
+      event.direction ??
+      event.inOut ??
+      "",
   )
     .replaceAll(/[^a-z]/gi, "")
     .toLowerCase();

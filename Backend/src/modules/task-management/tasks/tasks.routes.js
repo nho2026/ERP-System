@@ -35,12 +35,10 @@ router.get("/assignees", c.assignees);
 router.get("/reports/monthly", (req, res, next) => {
   const result = monthlyReportSchema.safeParse(req.query);
   if (!result.success)
-    return res
-      .status(422)
-      .json({
-        message: "Validation failed.",
-        errors: result.error.flatten().fieldErrors,
-      });
+    return res.status(422).json({
+      message: "Validation failed.",
+      errors: result.error.flatten().fieldErrors,
+    });
   req.validatedBody = result.data;
   c.monthlyReport(req, res, next);
 });

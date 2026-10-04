@@ -7,11 +7,7 @@ const router = Router();
 for (const definition of directoryDefinitions) {
   const { path } = definition;
   const controller = createDirectoryController(definition);
-  router.get(
-    `/${path}`,
-    requirePermission("inventory.view"),
-    controller.list,
-  );
+  router.get(`/${path}`, requirePermission("inventory.view"), controller.list);
   router.post(`/${path}`, manage, controller.create);
   router.patch(`/${path}/:id`, manage, controller.update);
   router.delete(`/${path}/:id`, manage, controller.remove);

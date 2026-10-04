@@ -2,14 +2,16 @@ import { taskModel } from "./tasks.model.js";
 const fail = (status, message) => {
   throw Object.assign(new Error(message), { status });
 };
-const isHr = (permissions) => permissions?.has("*") || permissions?.has("tasks.list.manage_all");
+const isHr = (permissions) =>
+  permissions?.has("*") || permissions?.has("tasks.list.manage_all");
 const canSee = (task, user, permissions) =>
   isHr(permissions) ||
   task.createdById === user.id ||
   task.assignees.some(
     ({ employeeId, employee }) =>
       employeeId === user.employee?.id ||
-      (Boolean(user.employee?.id) && employee.department?.managerId === user.employee.id),
+      (Boolean(user.employee?.id) &&
+        employee.department?.managerId === user.employee.id),
   );
 const ensureLeader = (user, permissions) => {
   if (!isHr(permissions) && !user.employee?.isDepartmentLeader)
@@ -21,7 +23,9 @@ const validateAssignees = async (ids, user, permissions) => {
     fail(422, "One or more selected employees do not exist.");
   if (
     !isHr(permissions) &&
-    employees.some(({ department }) => department?.managerId !== user.employee?.id)
+    employees.some(
+      ({ department }) => department?.managerId !== user.employee?.id,
+    )
   )
     fail(403, "Department leaders can assign tasks only to their employees.");
   return employees;
@@ -31,7 +35,11 @@ const notifyStatus = async (task, actorId, status) => {
   const employeeIds = task.assignees.map(({ employeeId }) => employeeId);
   const employees = await taskModel.employeeScopes(employeeIds);
   const assigneeUserIds = employees.map(({ userId }) => userId).filter(Boolean);
-  const leaderIds = [...new Set(employees.map(({ department }) => department?.managerId).filter(Boolean))];
+  const leaderIds = [
+    ...new Set(
+      employees.map(({ department }) => department?.managerId).filter(Boolean),
+    ),
+  ];
   const leaders = await taskModel.employeeScopes(leaderIds);
   const recipients = [
     task.createdById,
@@ -52,21 +60,30 @@ const split = ({ assigneeIds, attachments, ...data }) => ({
 });
 export const taskService = {
   async departments(user, permissions) {
-    const where = isHr(permissions) ? { status: "active" } : { id: user.employee?.departmentId ?? "__none__", status: "active" };
+    const where = isHr(permissions)
+      ? { status: "active" }
+      : { id: user.employee?.departmentId ?? "__none__", status: "active" };
     return taskModel.listDepartments(where);
   },
   async projects(user, permissions, departmentId) {
     const hr = isHr(permissions);
     const ownDepartmentId = user.employee?.departmentId;
-    if (!hr && (!ownDepartmentId || departmentId !== ownDepartmentId)) fail(403, "You can only view projects in your department.");
+    if (!hr && (!ownDepartmentId || departmentId !== ownDepartmentId))
+      fail(403, "You can only view projects in your department.");
     return taskModel.listProjects({ departmentId, status: "active" });
   },
   async createProject(user, permissions, input) {
     ensureLeader(user, permissions);
     const department = await taskModel.findDepartment(input.departmentId);
     if (!department) fail(404, "Department not found.");
-    if (!isHr(permissions) && department.managerId !== user.employee?.id) fail(403, "You can create projects only for your department.");
-    return taskModel.createProject({ name: input.name, description: input.description || null, departmentId: input.departmentId, createdById: user.id });
+    if (!isHr(permissions) && department.managerId !== user.employee?.id)
+      fail(403, "You can create projects only for your department.");
+    return taskModel.createProject({
+      name: input.name,
+      description: input.description || null,
+      departmentId: input.departmentId,
+      createdById: user.id,
+    });
   },
   authorizeAssignment(user, permissions) {
     ensureLeader(user, permissions);
@@ -83,7 +100,9 @@ export const taskService = {
                 { assignees: { some: { employeeId: user.employee.id } } },
                 {
                   assignees: {
-                    some: { employee: { department: { managerId: user.employee.id } } },
+                    some: {
+                      employee: { department: { managerId: user.employee.id } },
+                    },
                   },
                 },
               ],
@@ -95,7 +114,9 @@ export const taskService = {
         AND: [access],
         ...(q.status && { status: String(q.status) }),
         ...(q.projectId && { projectId: String(q.projectId) }),
-        ...(q.departmentId && { project: { departmentId: String(q.departmentId) } }),
+        ...(q.departmentId && {
+          project: { departmentId: String(q.departmentId) },
+        }),
         ...(q.priority && { priority: String(q.priority) }),
         ...(q.assigneeId && {
           assignees: { some: { employeeId: String(q.assigneeId) } },
@@ -115,7 +136,8 @@ export const taskService = {
   },
   async get(id, user, permissions) {
     const access = await taskModel.findAccess(id);
-    if (!canSee(access, user, permissions)) fail(403, "You cannot view this task.");
+    if (!canSee(access, user, permissions))
+      fail(403, "You cannot view this task.");
     return taskModel.findById(id);
   },
   assignees(user, permissions) {
@@ -126,14 +148,25 @@ export const taskService = {
   },
   async create(user, permissions, input) {
     ensureLeader(user, permissions);
-    if (["completed", "rejected"].includes(input.status)) fail(403, "Create a task before submitting it for review.");
+    if (["completed", "rejected"].includes(input.status))
+      fail(403, "Create a task before submitting it for review.");
     const { data, assigneeIds, attachments } = split(input);
     if (data.projectId) {
       const project = await taskModel.findProject(data.projectId);
-      if (!project || project.status !== "active") fail(422, "Select an active project.");
-      if (!isHr(permissions) && project.department.managerId !== user.employee?.id) fail(403, "You can create tasks only in your department project.");
+      if (!project || project.status !== "active")
+        fail(422, "Select an active project.");
+      if (
+        !isHr(permissions) &&
+        project.department.managerId !== user.employee?.id
+      )
+        fail(403, "You can create tasks only in your department project.");
       const employees = await validateAssignees(assigneeIds, user, permissions);
-      if (employees.some(({ department }) => department?.id !== project.departmentId)) fail(422, "Assignees must belong to the project's department.");
+      if (
+        employees.some(
+          ({ department }) => department?.id !== project.departmentId,
+        )
+      )
+        fail(422, "Assignees must belong to the project's department.");
     } else await validateAssignees(assigneeIds, user, permissions);
     return taskModel.create(user.id, {
       ...data,
@@ -143,24 +176,35 @@ export const taskService = {
   },
   async update(id, user, permissions, input) {
     const current = await taskModel.findAccess(id);
-    if (!canSee(current, user, permissions)) fail(403, "You cannot update this task.");
+    if (!canSee(current, user, permissions))
+      fail(403, "You cannot update this task.");
     const hr = isHr(permissions);
     const { assigneeIds, adjustment, ...data } = input;
     if (assigneeIds) {
       ensureLeader(user, permissions);
       await validateAssignees(assigneeIds, user, permissions);
     }
-    if (["completed", "rejected"].includes(data.status) &&
-        !(hr && (permissions?.has("*") || permissions?.has("tasks.list.approve"))))
+    if (
+      ["completed", "rejected"].includes(data.status) &&
+      !(hr && (permissions?.has("*") || permissions?.has("tasks.list.approve")))
+    )
       fail(403, "Only authorized reviewers can approve or reject tasks.");
     if (!hr) {
-      if (!current.assignees.some(({ employeeId }) => employeeId === user.employee?.id))
+      if (
+        !current.assignees.some(
+          ({ employeeId }) => employeeId === user.employee?.id,
+        )
+      )
         fail(403, "You can update only your assigned tasks.");
-      if (current.status === "completed") fail(403, "Approved tasks cannot be changed by employees.");
+      if (current.status === "completed")
+        fail(403, "Approved tasks cannot be changed by employees.");
       const allowed = new Set(["status", "reviewNote"]);
       if (Object.keys(data).some((key) => !allowed.has(key)) || assigneeIds)
         fail(403, "Employees may update only task progress.");
-      if (data.status && !["todo", "in_progress", "incomplete", "review"].includes(data.status))
+      if (
+        data.status &&
+        !["todo", "in_progress", "incomplete", "review"].includes(data.status)
+      )
         fail(403, "Submit completed work for HR review.");
     }
     if (data.status === "completed") {
@@ -170,8 +214,16 @@ export const taskService = {
       data.completedAt = new Date();
       data.reviewedAt = new Date();
       data.reviewedBy = { connect: { id: user.id } };
-      if (adjustment && !current.assignees.some(({ employeeId }) => employeeId === adjustment.employeeId))
-        fail(422, "The reward or punishment employee must be assigned to this task.");
+      if (
+        adjustment &&
+        !current.assignees.some(
+          ({ employeeId }) => employeeId === adjustment.employeeId,
+        )
+      )
+        fail(
+          422,
+          "The reward or punishment employee must be assigned to this task.",
+        );
     } else if (data.status === "rejected") {
       if (!hr) fail(403, "Only HR can reject a task.");
       if (current.status !== "review")
@@ -187,7 +239,10 @@ export const taskService = {
       }
     }
     if (adjustment && data.status !== "completed")
-      fail(422, "A reward or punishment can be added only when approving the task.");
+      fail(
+        422,
+        "A reward or punishment can be added only when approving the task.",
+      );
     const updateData = {
       ...data,
       ...(assigneeIds && {
@@ -206,34 +261,43 @@ export const taskService = {
   },
   async remove(id, user, permissions) {
     const task = await taskModel.findAccess(id);
-    if (!canSee(task, user, permissions)) fail(403, "You cannot delete this task.");
+    if (!canSee(task, user, permissions))
+      fail(403, "You cannot delete this task.");
     return taskModel.remove(id);
   },
   addAttachments: async (id, files, user, permissions) => {
     const task = await taskModel.findAccess(id);
-    if (!canSee(task, user, permissions)) fail(403, "You cannot update this task.");
+    if (!canSee(task, user, permissions))
+      fail(403, "You cannot update this task.");
     await taskModel.addAttachments(id, files);
     return taskModel.findById(id);
   },
   async addComment(id, authorId, body, user, permissions) {
     const task = await taskModel.findAccess(id);
-    if (!canSee(task, user, permissions)) fail(403, "You cannot comment on this task.");
+    if (!canSee(task, user, permissions))
+      fail(403, "You cannot comment on this task.");
     return taskModel.addComment(id, authorId, body);
   },
   async addTime(id, recordedById, data, user, permissions) {
     const task = await taskModel.findAccess(id);
-    if (!canSee(task, user, permissions)) fail(403, "You cannot record time for this task.");
+    if (!canSee(task, user, permissions))
+      fail(403, "You cannot record time for this task.");
     if (
       !isHr(permissions) &&
       data.employeeId !== user.employee?.id &&
-      !(user.employee?.isDepartmentLeader &&
+      !(
+        user.employee?.isDepartmentLeader &&
         task.assignees.some(
           ({ employeeId, employee }) =>
             employeeId === data.employeeId &&
             employee.department?.managerId === user.employee.id,
-        ))
+        )
+      )
     )
-      fail(403, "You can record time only for yourself or your department employees.");
+      fail(
+        403,
+        "You can record time only for yourself or your department employees.",
+      );
     return taskModel.addTime(id, recordedById, data);
   },
   async monthlyReport(month) {

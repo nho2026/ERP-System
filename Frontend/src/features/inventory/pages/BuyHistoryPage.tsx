@@ -1,7 +1,10 @@
 import axios from "axios";
 import { purchaseInvoiceHtml } from "../lib/purchase-invoice";
 import type { Settings } from "@/features/settings/settings";
-import { PurchaseFilters, type PurchaseExtraFilters } from "../components/PurchaseFilters";
+import {
+  PurchaseFilters,
+  type PurchaseExtraFilters,
+} from "../components/PurchaseFilters";
 import { BuyProductForm } from "../components/BuyProductForm";
 import type { ReactNode } from "react";
 import { Card } from "@/shared/components/ui/card";
@@ -13,14 +16,17 @@ import {
   TableBody,
   TableCell,
 } from "@/shared/components/ui/table";
-import {
-  useCallback,
-  useDeferredValue,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useDeferredValue, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { CircleAlert, Eye, Pencil, Printer, RotateCcw, Search, Trash2 } from "lucide-react";
+import {
+  CircleAlert,
+  Eye,
+  Pencil,
+  Printer,
+  RotateCcw,
+  Search,
+  Trash2,
+} from "lucide-react";
 import { apiClient, apiErrorMessage } from "@/shared/api/client";
 import { useApiResource } from "@/shared/hooks/useApiResource";
 import { hasPermission, storedUser } from "@/features/auth/access";
@@ -92,13 +98,17 @@ export default function BuyHistoryPage({
     kind: "return" | "delete";
   } | null>(null);
   const [returnPassword, setReturnPassword] = useState("");
-  const [stockConflict, setStockConflict] = useState<{ product: string; warehouse: string; required: number; available: number } | null>(null);
+  const [stockConflict, setStockConflict] = useState<{
+    product: string;
+    warehouse: string;
+    required: number;
+    available: number;
+  } | null>(null);
   const [busy, setBusy] = useState(false);
   const lock = useRef(false);
   const [error, setError] = useState("");
   const canReturn = hasPermission(storedUser(), "inventory.purchases.return");
-  const canDelete =
-    hasPermission(storedUser(), "inventory.purchases.delete");
+  const canDelete = hasPermission(storedUser(), "inventory.purchases.delete");
   const result = useApiResource(
     useCallback(
       () =>
@@ -107,7 +117,14 @@ export default function BuyHistoryPage({
             items: Purchase[];
             pagination: { total: number; totalPages: number };
           }>("/inventory/purchases", {
-            params: { ...extraFilters, page, pageSize: 10, search: query, retailer, hasInvoice },
+            params: {
+              ...extraFilters,
+              page,
+              pageSize: 10,
+              search: query,
+              retailer,
+              hasInvoice,
+            },
           })
           .then((r) => r.data),
       [page, query, retailer, hasInvoice, extraFilters],
@@ -120,16 +137,24 @@ export default function BuyHistoryPage({
     }).format(Number(value));
   const label = (column: Column) =>
     t(
-      column === "hasInvoice" ? "buyHistory.invoiceFilter" : column === "totalProducts"
-        ? "buyHistory.totalProducts"
-        : `buyProductForm.${column}`,
+      column === "hasInvoice"
+        ? "buyHistory.invoiceFilter"
+        : column === "totalProducts"
+          ? "buyHistory.totalProducts"
+          : `buyProductForm.${column}`,
     );
   const value = (row: Purchase, column: Column) =>
-    column === "hasInvoice" ? t(row.hasInvoice ? "buyHistory.withInvoice" : "buyHistory.withoutInvoice") : column === "totalProducts"
-      ? row.items.length
-      : column === "totalPrice"
-        ? money(row.totalPrice)
-        : row[column] || "—";
+    column === "hasInvoice"
+      ? t(
+          row.hasInvoice
+            ? "buyHistory.withInvoice"
+            : "buyHistory.withoutInvoice",
+        )
+      : column === "totalProducts"
+        ? row.items.length
+        : column === "totalPrice"
+          ? money(row.totalPrice)
+          : row[column] || "—";
   const print = async (row: Purchase) => {
     const target = window.open("", "_blank", "width=1000,height=800");
     if (!target) {
@@ -142,9 +167,19 @@ export default function BuyHistoryPage({
       const { data } = await apiClient.get<Settings>("/settings/runtime");
       if (target.closed) return;
       target.document.open();
-      target.document.write(purchaseInvoiceHtml(row, data.organization, t, i18n.language, i18n.dir()));
+      target.document.write(
+        purchaseInvoiceHtml(
+          row,
+          data.organization,
+          t,
+          i18n.language,
+          i18n.dir(),
+        ),
+      );
       target.document.close();
-      await Promise.all(Array.from(target.document.images).map((image) => image.decode()));
+      await Promise.all(
+        Array.from(target.document.images).map((image) => image.decode()),
+      );
       await target.document.fonts.ready;
       if (target.closed) return;
       target.focus();
@@ -158,14 +193,18 @@ export default function BuyHistoryPage({
     if (!action || lock.current || !returnPassword) return;
     lock.current = true;
     setBusy(true);
-    setError(""); setStockConflict(null);
+    setError("");
+    setStockConflict(null);
     try {
       if (action.kind === "return")
         await apiClient.post(
           `/inventory/purchases/${action.purchase.id}/return`,
           { password: returnPassword },
         );
-      else await apiClient.delete(`/inventory/purchases/${action.purchase.id}`, { data: { password: returnPassword } });
+      else
+        await apiClient.delete(`/inventory/purchases/${action.purchase.id}`, {
+          data: { password: returnPassword },
+        });
       setReturnPassword("");
       setAction(null);
       if (
@@ -176,7 +215,10 @@ export default function BuyHistoryPage({
         setPage((p) => p - 1);
       else await result.refresh();
     } catch (cause) {
-      if (axios.isAxiosError(cause) && cause.response?.data?.code === "PURCHASE_INSUFFICIENT_STOCK") {
+      if (
+        axios.isAxiosError(cause) &&
+        cause.response?.data?.code === "PURCHASE_INSUFFICIENT_STOCK"
+      ) {
         setStockConflict(cause.response.data.details);
         setReturnPassword("");
       } else {
@@ -205,7 +247,7 @@ export default function BuyHistoryPage({
       <Card className="overflow-hidden rounded-xl border bg-card">
         <div className="flex flex-wrap gap-3 p-3">
           <div className="relative w-full sm:w-80">
-            <Search className="absolute start-3 top-3 size-4 text-muted-foreground" />
+            <Search className="absolute inset-s-3 top-3 size-4 text-muted-foreground" />
             <Input
               className="ps-9"
               aria-label={t("buyHistory.search")}
@@ -217,13 +259,21 @@ export default function BuyHistoryPage({
               }}
             />
           </div>
-          <PurchaseFilters value={{ ...extraFilters, retailer, hasInvoice }} onApply={(filters) => {
-            const { retailer: _retailer, hasInvoice: _hasInvoice, status: _status, ...extra } = filters;
-            setExtraFilters(extra);
-            setRetailer(filters.retailer);
-            setHasInvoice(filters.hasInvoice);
-            setPage(1);
-          }} />
+          <PurchaseFilters
+            value={{ ...extraFilters, retailer, hasInvoice }}
+            onApply={(filters) => {
+              const {
+                retailer: _retailer,
+                hasInvoice: _hasInvoice,
+                status: _status,
+                ...extra
+              } = filters;
+              setExtraFilters(extra);
+              setRetailer(filters.retailer);
+              setHasInvoice(filters.hasInvoice);
+              setPage(1);
+            }}
+          />
           <div className="ms-auto"></div>
         </div>
         <div className="overflow-x-auto">
@@ -302,8 +352,7 @@ export default function BuyHistoryPage({
                             icon: Printer,
                             label: "print",
                             onClick: () => print(row),
-                            color:
-                              "bg-primary text-white hover:bg-primary/90",
+                            color: "bg-primary text-white hover:bg-primary/90",
                             disabled: false,
                           },
                           {
@@ -313,10 +362,17 @@ export default function BuyHistoryPage({
                             color: "border bg-background hover:bg-muted",
                             disabled: false,
                           },
-                          ...(canEdit ? [{
-                            icon: Pencil, label: "edit", onClick: () => setEditing(row),
-                            color: "border bg-background hover:bg-muted", disabled: row.status !== "completed",
-                          }] : []),
+                          ...(canEdit
+                            ? [
+                                {
+                                  icon: Pencil,
+                                  label: "edit",
+                                  onClick: () => setEditing(row),
+                                  color: "border bg-background hover:bg-muted",
+                                  disabled: row.status !== "completed",
+                                },
+                              ]
+                            : []),
                           ...(canReturn
                             ? [
                                 {
@@ -324,10 +380,13 @@ export default function BuyHistoryPage({
                                   label: "return",
                                   onClick: () => {
                                     if (row.hasInvoice && !row.attachmentUrl) {
-                                      setError(t("buyProductForm.attachmentRequired"));
+                                      setError(
+                                        t("buyProductForm.attachmentRequired"),
+                                      );
                                       return;
                                     }
-                                    setError(""); setStockConflict(null);
+                                    setError("");
+                                    setStockConflict(null);
                                     setReturnPassword("");
                                     setAction({
                                       purchase: row,
@@ -346,11 +405,17 @@ export default function BuyHistoryPage({
                                   icon: Trash2,
                                   label: "delete",
                                   onClick: () => {
-                                    if (row.hasInvoice !== false && !row.attachmentUrl) {
-                                      setError(t("buyProductForm.attachmentRequired"));
+                                    if (
+                                      row.hasInvoice !== false &&
+                                      !row.attachmentUrl
+                                    ) {
+                                      setError(
+                                        t("buyProductForm.attachmentRequired"),
+                                      );
                                       return;
                                     }
-                                    setError(""); setStockConflict(null);
+                                    setError("");
+                                    setStockConflict(null);
                                     setReturnPassword("");
                                     setAction({
                                       purchase: row,
@@ -372,7 +437,10 @@ export default function BuyHistoryPage({
                             disabled,
                           }) => (
                             <Button
-                              permission={key === "edit" ? "update" : key} data-action={key === "delete" ? "delete" : undefined}
+                              permission={key === "edit" ? "update" : key}
+                              data-action={
+                                key === "delete" ? "delete" : undefined
+                              }
                               key={key}
                               variant="ghost"
                               size="icon"
@@ -425,15 +493,32 @@ export default function BuyHistoryPage({
           </div>
         </footer>
       </Card>
-      <Dialog open={!!editing} onOpenChange={(open) => { if (!open && !editBusy) setEditing(null); }}>
-        <DialogContent dir={i18n.dir()} className="flex max-h-[90dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-[min(96vw,1200px)]">
+      <Dialog
+        open={!!editing}
+        onOpenChange={(open) => {
+          if (!open && !editBusy) setEditing(null);
+        }}
+      >
+        <DialogContent
+          dir={i18n.dir()}
+          className="flex max-h-[90dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-[min(96vw,1200px)]"
+        >
           <DialogHeader className="shrink-0 px-6 py-5">
-            <DialogTitle>{t("buyHistory.edit")} · {editing?.invoiceNumber}</DialogTitle>
+            <DialogTitle>
+              {t("buyHistory.edit")} · {editing?.invoiceNumber}
+            </DialogTitle>
           </DialogHeader>
-          {editing && <BuyProductForm key={editing.id} purchase={editing} onBusy={setEditBusy} onSaved={() => {
-            setEditing(null);
-            void result.refresh();
-          }} />}
+          {editing && (
+            <BuyProductForm
+              key={editing.id}
+              purchase={editing}
+              onBusy={setEditBusy}
+              onSaved={() => {
+                setEditing(null);
+                void result.refresh();
+              }}
+            />
+          )}
         </DialogContent>
       </Dialog>
       <Dialog
@@ -524,7 +609,8 @@ export default function BuyHistoryPage({
                   {t("buyProductForm.attachment")}
                 </a>
               )}
-              <Button permission="print"
+              <Button
+                permission="print"
                 onClick={() => print(selected)}
                 className="bg-primary text-white hover:bg-primary/90"
               >
@@ -538,7 +624,10 @@ export default function BuyHistoryPage({
       <Dialog
         open={!!action}
         onOpenChange={(open) => {
-          if (!open && !busy) { setReturnPassword(""); setAction(null); }
+          if (!open && !busy) {
+            setReturnPassword("");
+            setAction(null);
+          }
         }}
       >
         <DialogContent>
@@ -561,7 +650,13 @@ export default function BuyHistoryPage({
           </DialogHeader>
           {action && !stockConflict && (
             <div className="space-y-2">
-              <Label htmlFor="purchase-return-password">{t(action?.kind === "return" ? "buyHistory.returnPassword" : "buyHistory.deletePassword")}</Label>
+              <Label htmlFor="purchase-return-password">
+                {t(
+                  action?.kind === "return"
+                    ? "buyHistory.returnPassword"
+                    : "buyHistory.deletePassword",
+                )}
+              </Label>
               <Input
                 id="purchase-return-password"
                 type="password"
@@ -572,29 +667,68 @@ export default function BuyHistoryPage({
                 maxLength={128}
                 autoFocus
                 onKeyDown={(event) => {
-                  if (event.key === "Enter" && returnPassword && !busy) { event.preventDefault(); void confirm(); }
+                  if (event.key === "Enter" && returnPassword && !busy) {
+                    event.preventDefault();
+                    void confirm();
+                  }
                 }}
                 required
               />
             </div>
           )}
           {stockConflict && (
-            <div role="alert" className="space-y-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-950 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
+            <div
+              role="alert"
+              className="space-y-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-950 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100"
+            >
               <div className="flex items-start gap-3">
-                <CircleAlert className="mt-0.5 size-5 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+                <CircleAlert
+                  className="mt-0.5 size-5 shrink-0 text-amber-600 dark:text-amber-400"
+                  aria-hidden="true"
+                />
                 <div>
-                  <p className="font-semibold">{t("buyHistory.stockBlockedTitle")}</p>
-                  <p className="mt-1 text-sm opacity-80">{t("buyHistory.stockBlockedDescription")}</p>
+                  <p className="font-semibold">
+                    {t("buyHistory.stockBlockedTitle")}
+                  </p>
+                  <p className="mt-1 text-sm opacity-80">
+                    {t("buyHistory.stockBlockedDescription")}
+                  </p>
                 </div>
               </div>
               <dl className="grid grid-cols-2 gap-3 rounded-lg border border-amber-200/60 bg-background/70 p-3 text-sm dark:border-amber-900">
-                <div className="col-span-2"><dt className="text-xs text-muted-foreground">{t("buyProductForm.product")}</dt><dd className="font-medium">{stockConflict.product}</dd></div>
-                <div className="col-span-2"><dt className="text-xs text-muted-foreground">{t("buyProductForm.storage")}</dt><dd className="font-medium">{stockConflict.warehouse}</dd></div>
-                <div><dt className="text-xs text-muted-foreground">{t("buyHistory.stockRequired")}</dt><dd className="text-lg font-semibold tabular-nums">{stockConflict.required.toLocaleString(i18n.language)}</dd></div>
-                <div><dt className="text-xs text-muted-foreground">{t("buyHistory.stockAvailable")}</dt><dd className="text-lg font-semibold tabular-nums text-red-600 dark:text-red-400">{stockConflict.available.toLocaleString(i18n.language)}</dd></div>
+                <div className="col-span-2">
+                  <dt className="text-xs text-muted-foreground">
+                    {t("buyProductForm.product")}
+                  </dt>
+                  <dd className="font-medium">{stockConflict.product}</dd>
+                </div>
+                <div className="col-span-2">
+                  <dt className="text-xs text-muted-foreground">
+                    {t("buyProductForm.storage")}
+                  </dt>
+                  <dd className="font-medium">{stockConflict.warehouse}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">
+                    {t("buyHistory.stockRequired")}
+                  </dt>
+                  <dd className="text-lg font-semibold tabular-nums">
+                    {stockConflict.required.toLocaleString(i18n.language)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">
+                    {t("buyHistory.stockAvailable")}
+                  </dt>
+                  <dd className="text-lg font-semibold tabular-nums text-red-600 dark:text-red-400">
+                    {stockConflict.available.toLocaleString(i18n.language)}
+                  </dd>
+                </div>
               </dl>
               <p className="text-sm">{t("buyHistory.stockBlockedHelp")}</p>
-              <p className="text-xs font-medium">{t("buyHistory.noChangesSaved")}</p>
+              <p className="text-xs font-medium">
+                {t("buyHistory.noChangesSaved")}
+              </p>
             </div>
           )}
           {error && (
@@ -606,23 +740,29 @@ export default function BuyHistoryPage({
             <Button
               variant="outline"
               disabled={busy}
-              onClick={() => { setReturnPassword(""); setAction(null); }}
+              onClick={() => {
+                setReturnPassword("");
+                setAction(null);
+              }}
             >
               {t(stockConflict ? "buyHistory.closeAlert" : "buyHistory.cancel")}
             </Button>
-            {!stockConflict && <Button permission={action?.kind === "return" ? "return" : "delete"}
-              variant="destructive"
-              disabled={busy || !returnPassword}
-              onClick={() => void confirm()}
-            >
-              {t(
-                busy
-                  ? "buyHistory.processing"
-                  : action?.kind === "return"
-                    ? "buyHistory.return"
-                    : "buyHistory.delete",
-              )}
-            </Button>}
+            {!stockConflict && (
+              <Button
+                permission={action?.kind === "return" ? "return" : "delete"}
+                variant="destructive"
+                disabled={busy || !returnPassword}
+                onClick={() => void confirm()}
+              >
+                {t(
+                  busy
+                    ? "buyHistory.processing"
+                    : action?.kind === "return"
+                      ? "buyHistory.return"
+                      : "buyHistory.delete",
+                )}
+              </Button>
+            )}
           </div>
         </DialogContent>
       </Dialog>

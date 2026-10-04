@@ -98,7 +98,15 @@ export default function FollowUpPatientsPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              {["code", "patient", "phone", "followUpDate", "surgeryType", "status", "actions"].map((key) => (
+              {[
+                "code",
+                "patient",
+                "phone",
+                "followUpDate",
+                "surgeryType",
+                "status",
+                "actions",
+              ].map((key) => (
                 <TableHead key={key}>
                   {t(`postDischargeFollowUp.${key}`)}
                 </TableHead>
@@ -136,8 +144,11 @@ export default function FollowUpPatientsPage() {
                   </TableCell>
                   <TableCell>
                     {String(
-                      ((patient.surgeryAppointments as CrmRecord[] | undefined)?.[0]
-                        ?.surgery as CrmRecord | undefined)?.name ?? "—",
+                      (
+                        (
+                          patient.surgeryAppointments as CrmRecord[] | undefined
+                        )?.[0]?.surgery as CrmRecord | undefined
+                      )?.name ?? "—",
                     )}
                   </TableCell>
                   <TableCell>

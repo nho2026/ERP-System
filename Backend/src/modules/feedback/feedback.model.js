@@ -1,4 +1,7 @@
-import { createWithCode, withoutCode } from "../../shared/database/automatic-code.js";
+import {
+  createWithCode,
+  withoutCode,
+} from "../../shared/database/automatic-code.js";
 import { prisma } from "../../shared/database/client.js";
 const include = {
   product: { select: { id: true, sku: true, name: true } },
@@ -43,7 +46,8 @@ export const feedbackModel = {
     }),
   allServices: () =>
     prisma.healthcareService.findMany({ orderBy: { name: "asc" } }),
-  createService: (data) => createWithCode(prisma.healthcareService, { data }, "SRV"),
+  createService: (data) =>
+    createWithCode(prisma.healthcareService, { data }, "SRV"),
   updateService: (id, data) =>
     prisma.healthcareService.update({ where: { id }, data: withoutCode(data) }),
   removeService: (id) => prisma.healthcareService.delete({ where: { id } }),

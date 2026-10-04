@@ -12,7 +12,11 @@ import {
 const router = Router();
 const access = (permission, legacy) => requireAnyPermission(permission, legacy);
 router.use(requireAuth);
-router.get("/customers", access("accounting.customers.view", "finance.view"), billingController.listCustomers);
+router.get(
+  "/customers",
+  access("accounting.customers.view", "finance.view"),
+  billingController.listCustomers,
+);
 router.post(
   "/customers",
   access("accounting.customers.create", "journal.create"),
@@ -25,8 +29,16 @@ router.patch(
   validate(customerSchema.partial()),
   billingController.updateCustomer,
 );
-router.delete("/customers/:id", access("accounting.customers.delete", "journal.create"), billingController.deleteCustomer);
-router.get("/invoices", access("accounting.invoices.view", "finance.view"), billingController.listInvoices);
+router.delete(
+  "/customers/:id",
+  access("accounting.customers.delete", "journal.create"),
+  billingController.deleteCustomer,
+);
+router.get(
+  "/invoices",
+  access("accounting.invoices.view", "finance.view"),
+  billingController.listInvoices,
+);
 router.post(
   "/invoices",
   access("accounting.invoices.create", "journal.create"),
@@ -39,8 +51,16 @@ router.patch(
   validate(invoiceStatusSchema),
   billingController.updateInvoiceStatus,
 );
-router.delete("/invoices/:id", access("accounting.invoices.delete", "journal.create"), billingController.deleteInvoice);
-router.get("/payments", access("accounting.payments.view", "finance.view"), billingController.listPayments);
+router.delete(
+  "/invoices/:id",
+  access("accounting.invoices.delete", "journal.create"),
+  billingController.deleteInvoice,
+);
+router.get(
+  "/payments",
+  access("accounting.payments.view", "finance.view"),
+  billingController.listPayments,
+);
 router.post(
   "/payments",
   access("accounting.payments.create", "journal.create"),

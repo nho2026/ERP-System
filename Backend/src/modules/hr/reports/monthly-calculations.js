@@ -3,7 +3,10 @@ export function monthlyCalculations(settings) {
   const settingsSnapshot = () => settings;
   const PENALTY_MULTIPLIER = Number(settings.hr.penaltyMultiplier);
   const TARGET_MINUTES = Number(settings.hr.targetMinutes);
-
+  const monthValue = (date = new Date()) =>
+    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+  const inMonth = (value, month) =>
+    typeof value === "string" && value.slice(0, 7) === month;
   const lostMinutes = (record, permissions = []) => {
     const date = String(record.attendanceDate).slice(0, 10);
     const day = new Date(`${date}T12:00:00`).getDay();
@@ -88,7 +91,7 @@ export function monthlyCalculations(settings) {
   };
   const monthlyScheduledMinutes = (employee, month) => {
     const [year, monthNumber] = month.split("-").map(Number);
-    const weekends = settingsSnapshot()?.hr.weekends ?? [5, 6];
+    const weekends = settings.hr.weekends ?? [5, 6];
     let total = 0;
     const daysInMonth = new Date(Date.UTC(year, monthNumber, 0)).getUTCDate();
     for (let day = 1; day <= daysInMonth; day++) {
@@ -150,12 +153,9 @@ export function monthlyCalculations(settings) {
     };
   };
   const localDateKey = (value) => {
-    return new Intl.DateTimeFormat("en-CA", {
-      timeZone: "Asia/Baghdad",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    }).format(new Date(value));
+    // Match the report's Baghdad (UTC+03:00) month boundaries, independent of the host.
+    const date = new Date(new Date(value).getTime() + 3 * 3600000);
+    return date.toISOString().slice(0, 10);
   };
   const deviceAttendanceRecords = (events, people, employees, month) => {
     const employeeByPerson = new Map(
@@ -221,13 +221,10 @@ export function monthlyCalculations(settings) {
       const expectedMinutes = daySchedule ? scheduledMinutes(daySchedule) : 0;
       const expectedAt = (value) => {
         const [hour, minute] = String(value).split(":").map(Number);
-        return new Date(
-          recordYear,
-          recordMonth - 1,
-          recordDay,
-          hour,
-          minute,
-        ).getTime();
+        return (
+          Date.UTC(recordYear, recordMonth - 1, recordDay, hour, minute) -
+          3 * 3600000
+        );
       };
       const expectedCheckIn = expectedAt(daySchedule?.checkInTime ?? "09:00");
       let expectedCheckOut = expectedAt(daySchedule?.checkOutTime ?? "17:00");

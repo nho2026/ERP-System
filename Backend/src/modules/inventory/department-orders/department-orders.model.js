@@ -19,7 +19,8 @@ export const priceDepartmentItems = (items, products) => {
   return { items: priced, price: total.toFixed(2) };
 };
 export const departmentOrdersModel = {
-  requestAction: (id, departmentId, action) => actOnDepartmentRequest(prisma, id, departmentId, action),
+  requestAction: (id, departmentId, action) =>
+    actOnDepartmentRequest(prisma, id, departmentId, action),
   departments: () =>
     prisma.department.findMany({
       select: { id: true, name: true },
@@ -197,7 +198,12 @@ export const departmentOrdersModel = {
         const issues = await tx.inventoryMovement.findMany({
           where: { reference: order.id, movementType: "department_issue" },
         });
-        if (!issues.length || issues.some((item) => !Number.isFinite(item.quantity) || item.quantity >= 0))
+        if (
+          !issues.length ||
+          issues.some(
+            (item) => !Number.isFinite(item.quantity) || item.quantity >= 0,
+          )
+        )
           throw fail("This order has no valid issued stock records to return.");
         for (const issue of issues) {
           const quantity = -issue.quantity;
@@ -209,7 +215,9 @@ export const departmentOrdersModel = {
           });
           await tx.inventoryMovement.create({
             data: {
-              productId, warehouseId, quantity,
+              productId,
+              warehouseId,
+              quantity,
               movementType: "department_return",
               reference: order.id,
               notes: `Returned from ${order.departmentName} (${order.departmentId})`,

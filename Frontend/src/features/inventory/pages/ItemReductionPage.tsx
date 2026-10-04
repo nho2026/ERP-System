@@ -61,7 +61,10 @@ export default function ItemReductionPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const visible: string[] = ["product", "code", "size", "storage", "note"];
-  const canAdjust = hasPermission(storedUser(), "inventory.item-reductions.create");
+  const canAdjust = hasPermission(
+    storedUser(),
+    "inventory.item-reductions.create",
+  );
   const history = useApiResource(
     useCallback(
       () =>
@@ -124,7 +127,8 @@ export default function ItemReductionPage() {
   return (
     <div className="space-y-4" dir={i18n.dir()}>
       <h1 className="text-3xl font-normal sm:text-4xl">{tr("title")}</h1>
-      <Button permission="create"
+      <Button
+        permission="create"
         className="bg-teal-600 text-white hover:bg-teal-700"
         disabled={!canAdjust}
         onClick={() => {
@@ -350,7 +354,8 @@ export default function ItemReductionPage() {
                 <Button type="button" variant="destructive" onClick={reset}>
                   {t("buyProductForm.clear")}
                 </Button>
-                <Button permission="create"
+                <Button
+                  permission="create"
                   type="submit"
                   className="bg-teal-600 text-white hover:bg-teal-700"
                   disabled={busy || !!resources.error || !form.warehouseId}

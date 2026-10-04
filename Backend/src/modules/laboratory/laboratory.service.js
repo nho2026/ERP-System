@@ -196,7 +196,10 @@ export async function advanceLaboratoryOrder(db, id, status, actor) {
       called: "delivered",
     };
     if (order.status === status) return order;
-    if (transitions[order.status] !== status && !(order.status === "waiting" && status === "processing"))
+    if (
+      transitions[order.status] !== status &&
+      !(order.status === "waiting" && status === "processing")
+    )
       fail(
         "Invalid laboratory stage. Refresh the queue and complete the current step first.",
         409,
@@ -231,7 +234,8 @@ export async function advanceLaboratoryOrder(db, id, status, actor) {
           deliveredAt: new Date(),
           deliveredByName: actor,
         }),
-        ...((status === "collecting" || (order.status === "waiting" && status === "processing")) && {
+        ...((status === "collecting" ||
+          (order.status === "waiting" && status === "processing")) && {
           collectedAt: new Date(),
           collectedByName: actor,
         }),
@@ -246,65 +250,209 @@ export async function advanceLaboratoryOrder(db, id, status, actor) {
 }
 
 export const laboratoryService = {
-  requestPatient: (id, actor) => prisma.$transaction(async (tx) => {
-    await tx.$queryRaw`SELECT id FROM laboratory_Orders WHERE id = ${id} FOR UPDATE`;
-    const order = await tx.laboratoryOrder.findUniqueOrThrow({ where: { id }, include });
-    if (!["waiting", "collecting"].includes(order.status) || order.invoice.status !== "paid") fail("Only paid patients waiting for laboratory work can be requested.", 409);
-    const users = await tx.user.findMany({ where: { status: "active" }, include: { roles: { include: { role: { include: { permissions: { include: { permission: true } } } } } } } });
-    const recipients = users.filter((user) => user.roles.some(({ role }) => role.name === "Super Administrator") || effectivePermissions(new Set(user.roles.flatMap(({ role }) => role.permissions.map(({ permission }) => permission.key)))).has("laboratory.payments.create"));
-    if (!recipients.length) fail("No active accounting staff are available to notify.", 409);
-    await tx.notification.createMany({ data: recipients.map((user) => ({ userId: user.id, reminderKey: `lab-patient:${id}:${user.id}`, type: "laboratory_patient_requested", title: "Laboratory is ready for the patient", body: `${actor} requests ticket ${String(order.queueNumber).padStart(3, "0")} (${order.queueDay}): ${order.patient.firstName} ${order.patient.lastName}. Please direct the patient to the laboratory room.`, route: `/laboratory/accounting?orderId=${id}` })), skipDuplicates: true });
-    return order;
-  }),
+  requestPatient: (id, actor) =>
+    prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM laboratory_Orders WHERE id = ${id} FOR UPDATE`;
+      const order = await tx.laboratoryOrder.findUniqueOrThrow({
+        where: { id },
+        include,
+      });
+      if (
+        !["waiting", "collecting"].includes(order.status) ||
+        order.invoice.status !== "paid"
+      )
+        fail(
+          "Only paid patients waiting for laboratory work can be requested.",
+          409,
+        );
+      const users = await tx.user.findMany({
+        where: { status: "active" },
+        include: {
+          roles: {
+            include: {
+              role: {
+                include: { permissions: { include: { permission: true } } },
+              },
+            },
+          },
+        },
+      });
+      const recipients = users.filter(
+        (user) =>
+          user.roles.some(({ role }) => role.name === "Super Administrator") ||
+          effectivePermissions(
+            new Set(
+              user.roles.flatMap(({ role }) =>
+                role.permissions.map(({ permission }) => permission.key),
+              ),
+            ),
+          ).has("laboratory.payments.create"),
+      );
+      if (!recipients.length)
+        fail("No active accounting staff are available to notify.", 409);
+      await tx.notification.createMany({
+        data: recipients.map((user) => ({
+          userId: user.id,
+          reminderKey: `lab-patient:${id}:${user.id}`,
+          type: "laboratory_patient_requested",
+          title: "Laboratory is ready for the patient",
+          body: `${actor} requests ticket ${String(order.queueNumber).padStart(3, "0")} (${order.queueDay}): ${order.patient.firstName} ${order.patient.lastName}. Please direct the patient to the laboratory room.`,
+          route: `/laboratory/accounting?orderId=${id}`,
+        })),
+        skipDuplicates: true,
+      });
+      return order;
+    }),
   queuePosition: async (id) => {
-    const order = await prisma.laboratoryOrder.findUniqueOrThrow({ where: { id }, include });
+    const order = await prisma.laboratoryOrder.findUniqueOrThrow({
+      where: { id },
+      include,
+    });
     const accounting = order.status === "awaiting_payment";
     const active = accounting
-      ? order.invoice.balanceAmount > 0 && !["draft", "cancelled"].includes(order.invoice.status)
-      : ["waiting", "collecting", "processing"].includes(order.status) && order.invoice.status === "paid";
-    const ahead = active ? await prisma.laboratoryOrder.count({
-      where: {
-        status: accounting ? "awaiting_payment" : { in: ["waiting", "collecting", "processing"] },
-        invoice: accounting ? { status: { notIn: ["draft", "cancelled"] }, balanceAmount: { gt: 0 } } : { status: "paid" },
-        OR: [
-          { queueDay: { lt: order.queueDay } },
-          { queueDay: order.queueDay, queueNumber: { lt: order.queueNumber } },
-        ],
-      },
-    }) : 0;
+      ? order.invoice.balanceAmount > 0 &&
+        !["draft", "cancelled"].includes(order.invoice.status)
+      : ["waiting", "collecting", "processing"].includes(order.status) &&
+        order.invoice.status === "paid";
+    const ahead = active
+      ? await prisma.laboratoryOrder.count({
+          where: {
+            status: accounting
+              ? "awaiting_payment"
+              : { in: ["waiting", "collecting", "processing"] },
+            invoice: accounting
+              ? {
+                  status: { notIn: ["draft", "cancelled"] },
+                  balanceAmount: { gt: 0 },
+                }
+              : { status: "paid" },
+            OR: [
+              { queueDay: { lt: order.queueDay } },
+              {
+                queueDay: order.queueDay,
+                queueNumber: { lt: order.queueNumber },
+              },
+            ],
+          },
+        })
+      : 0;
     return { ahead, active, queue: accounting ? "accounting" : "laboratory" };
   },
   accountingQueue: async () => {
-    const where = { status: "awaiting_payment", invoice: { status: { notIn: ["draft", "cancelled"] }, balanceAmount: { gt: 0 } } };
+    const where = {
+      status: "awaiting_payment",
+      invoice: {
+        status: { notIn: ["draft", "cancelled"] },
+        balanceAmount: { gt: 0 },
+      },
+    };
     const [tickets, total] = await Promise.all([
-      prisma.laboratoryOrder.findMany({ where, take: 100, orderBy: [{ queueDay: "asc" }, { queueNumber: "asc" }], include }),
+      prisma.laboratoryOrder.findMany({
+        where,
+        take: 100,
+        orderBy: [{ queueDay: "asc" }, { queueNumber: "asc" }],
+        include,
+      }),
       prisma.laboratoryOrder.count({ where }),
     ]);
     return { tickets, total };
   },
-  callAccountingTicket: (id, actor) => prisma.$transaction(async (tx) => {
-    await tx.$queryRaw`SELECT id FROM laboratory_Orders WHERE id = ${id} FOR UPDATE`;
-    const order = await tx.laboratoryOrder.findUniqueOrThrow({ where: { id }, include });
-    if (order.status !== "awaiting_payment" || order.invoice.balanceAmount <= 0 || ["draft", "cancelled"].includes(order.invoice.status)) fail("This ticket is no longer awaiting accounting payment.", 409);
-    return tx.laboratoryOrder.update({ where: { id }, data: { accountingCalledAt: new Date(), accountingCalledByName: actor }, include });
-  }),
+  callAccountingTicket: (id, actor) =>
+    prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM laboratory_Orders WHERE id = ${id} FOR UPDATE`;
+      const order = await tx.laboratoryOrder.findUniqueOrThrow({
+        where: { id },
+        include,
+      });
+      if (
+        order.status !== "awaiting_payment" ||
+        order.invoice.balanceAmount <= 0 ||
+        ["draft", "cancelled"].includes(order.invoice.status)
+      )
+        fail("This ticket is no longer awaiting accounting payment.", 409);
+      return tx.laboratoryOrder.update({
+        where: { id },
+        data: { accountingCalledAt: new Date(), accountingCalledByName: actor },
+        include,
+      });
+    }),
   dashboard: async (canPayments) => {
     const system = await getSettings("system");
     const today = queueDay(new Date(), system.timezone);
-    const [stages, todayRequests, examinations, activeTests, patients, recent, currencies, methods] = await Promise.all([
+    const [
+      stages,
+      todayRequests,
+      examinations,
+      activeTests,
+      patients,
+      recent,
+      currencies,
+      methods,
+    ] = await Promise.all([
       prisma.laboratoryOrder.groupBy({ by: ["status"], _count: true }),
       prisma.laboratoryOrder.count({ where: { queueDay: today } }),
-      prisma.laboratoryOrderItem.groupBy({ by: ["testName", "specimen"], where: { order: { invoice: { status: { not: "cancelled" } } } }, _count: true, orderBy: { _count: { testName: "desc" } }, take: 10 }),
+      prisma.laboratoryOrderItem.groupBy({
+        by: ["testName", "specimen"],
+        where: { order: { invoice: { status: { not: "cancelled" } } } },
+        _count: true,
+        orderBy: { _count: { testName: "desc" } },
+        take: 10,
+      }),
       prisma.laboratoryTest.count({ where: { status: "active" } }),
       prisma.$queryRaw`SELECT COUNT(DISTINCT patientId) AS total FROM laboratory_Orders`,
-      prisma.laboratoryOrder.findMany({ take: 6, orderBy: { createdAt: "desc" }, include: { patient: { select: { firstName: true, lastName: true, patientCode: true } } } }),
-      canPayments ? prisma.billingInvoice.groupBy({ by: ["currency"], where: { laboratoryOrder: { isNot: null }, status: { not: "cancelled" } }, _sum: { totalAmount: true, paidAmount: true, balanceAmount: true } }) : [],
-      canPayments ? prisma.$queryRaw`SELECT i.currency, p.method, SUM(p.amount) AS amount, COUNT(*) AS total FROM billing_BillingPayment p JOIN billing_BillingInvoice i ON i.id = p.invoiceId JOIN laboratory_Orders o ON o.invoiceId = i.id WHERE i.status <> 'cancelled' GROUP BY i.currency, p.method ORDER BY i.currency, p.method` : [],
+      prisma.laboratoryOrder.findMany({
+        take: 6,
+        orderBy: { createdAt: "desc" },
+        include: {
+          patient: {
+            select: { firstName: true, lastName: true, patientCode: true },
+          },
+        },
+      }),
+      canPayments
+        ? prisma.billingInvoice.groupBy({
+            by: ["currency"],
+            where: {
+              laboratoryOrder: { isNot: null },
+              status: { not: "cancelled" },
+            },
+            _sum: { totalAmount: true, paidAmount: true, balanceAmount: true },
+          })
+        : [],
+      canPayments
+        ? prisma.$queryRaw`SELECT i.currency, p.method, SUM(p.amount) AS amount, COUNT(*) AS total FROM billing_BillingPayment p JOIN billing_BillingInvoice i ON i.id = p.invoiceId JOIN laboratory_Orders o ON o.invoiceId = i.id WHERE i.status <> 'cancelled' GROUP BY i.currency, p.method ORDER BY i.currency, p.method`
+        : [],
     ]);
-    return { today, stages: Object.fromEntries(stages.map((row) => [row.status, row._count])), todayRequests, activeTests, patients: Number(patients[0]?.total ?? 0), examinations: examinations.map((row) => ({ name: row.testName, specimen: row.specimen, count: row._count })), recent, currencies: currencies.map((row) => ({ currency: row.currency, invoiced: row._sum.totalAmount ?? 0, paid: row._sum.paidAmount ?? 0, balance: row._sum.balanceAmount ?? 0 })), methods: methods.map((row) => ({ ...row, amount: Number(row.amount), total: Number(row.total) })) };
+    return {
+      today,
+      stages: Object.fromEntries(stages.map((row) => [row.status, row._count])),
+      todayRequests,
+      activeTests,
+      patients: Number(patients[0]?.total ?? 0),
+      examinations: examinations.map((row) => ({
+        name: row.testName,
+        specimen: row.specimen,
+        count: row._count,
+      })),
+      recent,
+      currencies: currencies.map((row) => ({
+        currency: row.currency,
+        invoiced: row._sum.totalAmount ?? 0,
+        paid: row._sum.paidAmount ?? 0,
+        balance: row._sum.balanceAmount ?? 0,
+      })),
+      methods: methods.map((row) => ({
+        ...row,
+        amount: Number(row.amount),
+        total: Number(row.total),
+      })),
+    };
   },
   overview: async () => {
-    const rows = await prisma.laboratoryOrder.groupBy({ by: ["status"], _count: true });
+    const rows = await prisma.laboratoryOrder.groupBy({
+      by: ["status"],
+      _count: true,
+    });
     return Object.fromEntries(rows.map((row) => [row.status, row._count]));
   },
   config: async () => {

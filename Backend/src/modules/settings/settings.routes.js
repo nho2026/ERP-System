@@ -13,7 +13,10 @@ router.get(
   }),
 );
 router.use(requireAuth);
-router.get("/runtime", run(async (_req, res) => res.json(await allSettings())));
+router.get(
+  "/runtime",
+  run(async (_req, res) => res.json(await allSettings())),
+);
 router.get(
   "/",
   run(async (_req, res) => res.json(await allSettings())),

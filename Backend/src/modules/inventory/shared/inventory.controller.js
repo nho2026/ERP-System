@@ -1,4 +1,7 @@
-import { scopeWarehouseQuery, assignedWarehouse } from "../../../shared/security/warehouse-scope.js";
+import {
+  scopeWarehouseQuery,
+  assignedWarehouse,
+} from "../../../shared/security/warehouse-scope.js";
 export const inventoryAction =
   (handler, status = 200) =>
   async (req, res, next) => {

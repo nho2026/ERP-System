@@ -1,7 +1,17 @@
 import { apiErrorMessage } from "@/shared/api/client";
 import { hasPagePermission } from "@/features/auth/access";
 import PatientAppointmentDialog from "../components/PatientAppointmentDialog";
-const patientStages = ["new", "contacted", "qualified", "appointment_requested", "surgery_appointment", "converted", "direct_surgery_converted", "post_discharge_follow_up", "post_discharge_follow_up_completed"];
+const patientStages = [
+  "new",
+  "contacted",
+  "qualified",
+  "appointment_requested",
+  "surgery_appointment",
+  "converted",
+  "direct_surgery_converted",
+  "post_discharge_follow_up",
+  "post_discharge_follow_up_completed",
+];
 import { useSettings } from "@/features/settings/settings";
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -554,9 +564,14 @@ const patientAge = (dateOfBirth: unknown) => {
 };
 export default function CrmPage({ resource }: { resource: CrmResource }) {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [patientBooking, setPatientBooking] = useState<{ patient: CrmRecord; surgery: boolean } | null>(null);
+  const [patientBooking, setPatientBooking] = useState<{
+    patient: CrmRecord;
+    surgery: boolean;
+  } | null>(null);
   const [appointmentPatientId, setAppointmentPatientId] = useState("");
-  const [selectedSurgery, setSelectedSurgery] = useState<CrmRecord | null>(null);
+  const [selectedSurgery, setSelectedSurgery] = useState<CrmRecord | null>(
+    null,
+  );
   const { t } = useTranslation();
   const systemSettings = useSettings();
   const config = {
@@ -658,9 +673,13 @@ export default function CrmPage({ resource }: { resource: CrmResource }) {
     setOpen(true);
     setSearchParams({}, { replace: true });
   }, [resource, searchParams, setSearchParams]);
-  const patientProgressLabel = (status: unknown) => t(`patientProgress.${status === "active" ? "new" : String(status)}`, { defaultValue: String(status) });
+  const patientProgressLabel = (status: unknown) =>
+    t(`patientProgress.${status === "active" ? "new" : String(status)}`, {
+      defaultValue: String(status),
+    });
   const openPatientAppointment = (patient: CrmRecord, status: string) => {
-    if (status === "appointment_requested" || status === "surgery_appointment") setPatientBooking({ patient, surgery: status === "surgery_appointment" });
+    if (status === "appointment_requested" || status === "surgery_appointment")
+      setPatientBooking({ patient, surgery: status === "surgery_appointment" });
   };
   const rows = useMemo(
     () =>
@@ -689,14 +708,21 @@ export default function CrmPage({ resource }: { resource: CrmResource }) {
       if (field.type === "number" && raw) payload[field.name] = Number(raw);
     }
     const requestedStatus = payload.status;
-    if (resource === "patients" && ["appointment_requested", "surgery_appointment"].includes(String(requestedStatus))) payload.status = editingRecord?.status ?? "new";
+    if (
+      resource === "patients" &&
+      ["appointment_requested", "surgery_appointment"].includes(
+        String(requestedStatus),
+      )
+    )
+      payload.status = editingRecord?.status ?? "new";
     try {
       const saved = editingRecord
         ? await crmApi[resource].update(editingRecord.id, payload)
         : await crmApi[resource].create(payload);
       if (resource === "leads" && leadFiles.length)
         await leadAttachmentApi.upload(saved.id, leadFiles);
-      if (resource === "patients") openPatientAppointment(saved, String(requestedStatus));
+      if (resource === "patients")
+        openPatientAppointment(saved, String(requestedStatus));
       setOpen(false);
       setAppointmentPatientId("");
       setEditingRecord(null);
@@ -754,28 +780,78 @@ export default function CrmPage({ resource }: { resource: CrmResource }) {
       </span>
     );
   };
-  const [patientStatusBusy, setPatientStatusBusy] = useState<string | null>(null);
-  const patientStatusControl = (patient: CrmRecord) => <Select permission="update"
-    value={String(patient.status === "active" ? "new" : patient.status)} disabled={patientStatusBusy !== null}
-    onValueChange={async status => {
-      if (patientStatusBusy !== null || status === patient.status) return;
-      if (["appointment_requested", "surgery_appointment"].includes(status)) { openPatientAppointment(patient, status); return; }
-      setPatientStatusBusy(patient.id);
-      try {
-        await crmApi.patients.update(patient.id, { status });
-        await Promise.all([data.refresh(), lookups.refresh()]);
-      } catch { toast.error(t("patientActions.updateError")); }
-      finally { setPatientStatusBusy(null); }
-    }}>
-    <SelectTrigger className="h-9 w-full min-w-0 [&>span]:truncate" aria-label={`${t("crm.fields.status")} ${patient.firstName} ${patient.lastName}`}><SelectValue /></SelectTrigger>
-    <SelectContent>{[...patientStages, ...(patient.status === "inactive" ? ["inactive"] : [])].map(status => <SelectItem key={status} value={status}>{patientProgressLabel(status)}</SelectItem>)}</SelectContent>
-  </Select>;
-  const patientEditAction = (patient: CrmRecord) => <Button asChild variant="outline" size="icon" className="size-9 shrink-0 border-primary bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground" data-action="edit" title={t("patientActions.editProfile")} aria-label={t("patientActions.editProfile")}>
-    <Link to={`/crm/patients/${patient.id}?edit=1`}><Pencil className="size-4" /></Link>
-  </Button>;
-  const patientAppointmentAction = (patient: CrmRecord) => <Button permission="healthcare.appointments.create" type="button" variant="outline" size="icon" className="size-9 shrink-0 border-primary bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground" title={t("patientActions.appointment")} aria-label={t("patientActions.appointment")} onClick={() => openPatientAppointment(patient, "appointment_requested")}>
-    <CalendarPlus className="size-4" />
-  </Button>;
+  const [patientStatusBusy, setPatientStatusBusy] = useState<string | null>(
+    null,
+  );
+  const patientStatusControl = (patient: CrmRecord) => (
+    <Select
+      permission="update"
+      value={String(patient.status === "active" ? "new" : patient.status)}
+      disabled={patientStatusBusy !== null}
+      onValueChange={async (status) => {
+        if (patientStatusBusy !== null || status === patient.status) return;
+        if (["appointment_requested", "surgery_appointment"].includes(status)) {
+          openPatientAppointment(patient, status);
+          return;
+        }
+        setPatientStatusBusy(patient.id);
+        try {
+          await crmApi.patients.update(patient.id, { status });
+          await Promise.all([data.refresh(), lookups.refresh()]);
+        } catch {
+          toast.error(t("patientActions.updateError"));
+        } finally {
+          setPatientStatusBusy(null);
+        }
+      }}
+    >
+      <SelectTrigger
+        className="h-9 w-full min-w-0 [&>span]:truncate"
+        aria-label={`${t("crm.fields.status")} ${patient.firstName} ${patient.lastName}`}
+      >
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {[
+          ...patientStages,
+          ...(patient.status === "inactive" ? ["inactive"] : []),
+        ].map((status) => (
+          <SelectItem key={status} value={status}>
+            {patientProgressLabel(status)}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+  const patientEditAction = (patient: CrmRecord) => (
+    <Button
+      asChild
+      variant="outline"
+      size="icon"
+      className="size-9 shrink-0 border-primary bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground"
+      data-action="edit"
+      title={t("patientActions.editProfile")}
+      aria-label={t("patientActions.editProfile")}
+    >
+      <Link to={`/crm/patients/${patient.id}?edit=1`}>
+        <Pencil className="size-4" />
+      </Link>
+    </Button>
+  );
+  const patientAppointmentAction = (patient: CrmRecord) => (
+    <Button
+      permission="healthcare.appointments.create"
+      type="button"
+      variant="outline"
+      size="icon"
+      className="size-9 shrink-0 border-primary bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground"
+      title={t("patientActions.appointment")}
+      aria-label={t("patientActions.appointment")}
+      onClick={() => openPatientAppointment(patient, "appointment_requested")}
+    >
+      <CalendarPlus className="size-4" />
+    </Button>
+  );
   const updateLeadStatus = async (row: CrmRecord, status: string) => {
     try {
       await crmApi.leads.update(row.id, { status });
@@ -1040,17 +1116,31 @@ export default function CrmPage({ resource }: { resource: CrmResource }) {
             })}
           </p>
         </div>
-        {canManage && patientBooking && <PatientAppointmentDialog patient={patientBooking.patient} surgery={patientBooking.surgery} onClose={() => setPatientBooking(null)} onSaved={() => { void data.refresh(); void lookups.refresh(); }} />}
+        {canManage && patientBooking && (
+          <PatientAppointmentDialog
+            patient={patientBooking.patient}
+            surgery={patientBooking.surgery}
+            onClose={() => setPatientBooking(null)}
+            onSaved={() => {
+              void data.refresh();
+              void lookups.refresh();
+            }}
+          />
+        )}
         {canManage && (
           <Dialog
             open={open}
             onOpenChange={(nextOpen) => {
               setOpen(nextOpen);
-              if (!nextOpen) { setEditingRecord(null); setAppointmentPatientId(""); }
+              if (!nextOpen) {
+                setEditingRecord(null);
+                setAppointmentPatientId("");
+              }
             }}
           >
             <DialogTrigger asChild>
-              <Button permission="create"
+              <Button
+                permission="create"
                 onClick={() => {
                   setEditingRecord(null);
                   setSurgeryDraftAt("");
@@ -1076,249 +1166,269 @@ export default function CrmPage({ resource }: { resource: CrmResource }) {
                 className="flex min-h-0 flex-1 flex-col overflow-hidden"
                 onSubmit={submit}
               >
-                <div className={`min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-6 pt-4 scrollbar-gutter-stable grid gap-4 ${resource === "leads" ? "md:grid-cols-3" : "sm:grid-cols-2"}`}>
-                {config.fields
-                  .filter(
-                    (field) =>
-                      resource !== "leads" ||
-                      !field.name.startsWith("referral") ||
-                      leadChannel === "traditional",
-                  )
-                  .map((field) => (
-                    <Fragment key={field.name}>
-                      {resource === "leads" && field.name === "name" && (
-                        <div className="border-s-2 border-emerald-500 ps-3 font-bold text-emerald-800 md:col-span-3 dark:text-emerald-300">
-                          {t("crm.leadForm.requiredFields")}
-                        </div>
-                      )}
-                      {resource === "leads" && field.name === "age" && (
-                        <div className="mt-2 border-s-2 border-emerald-500 ps-3 font-bold text-emerald-800 md:col-span-3 dark:text-emerald-300">
-                          {t("crm.leadForm.personalInformation")}
-                        </div>
-                      )}
-                      {resource === "leads" &&
-                        field.name === "competitorsNote" && (
+                <div
+                  className={`min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-6 pt-4 scrollbar-gutter-stable grid gap-4 ${resource === "leads" ? "md:grid-cols-3" : "sm:grid-cols-2"}`}
+                >
+                  {config.fields
+                    .filter(
+                      (field) =>
+                        resource !== "leads" ||
+                        !field.name.startsWith("referral") ||
+                        leadChannel === "traditional",
+                    )
+                    .map((field) => (
+                      <Fragment key={field.name}>
+                        {resource === "leads" && field.name === "name" && (
+                          <div className="border-s-2 border-emerald-500 ps-3 font-bold text-emerald-800 md:col-span-3 dark:text-emerald-300">
+                            {t("crm.leadForm.requiredFields")}
+                          </div>
+                        )}
+                        {resource === "leads" && field.name === "age" && (
                           <div className="mt-2 border-s-2 border-emerald-500 ps-3 font-bold text-emerald-800 md:col-span-3 dark:text-emerald-300">
-                            {t("crm.leadForm.notes")}
+                            {t("crm.leadForm.personalInformation")}
                           </div>
                         )}
-                      {resource === "leads" &&
-                        field.name === "leadSourceChannel" && (
-                          <div className="mt-2 rounded-t-xl border border-emerald-200 bg-emerald-50/70 p-4 md:col-span-3 dark:border-emerald-900 dark:bg-emerald-950/20">
-                            <p className="border-s-2 border-emerald-500 ps-3 font-bold text-emerald-800 dark:text-emerald-300">
-                              {t("crm.leadForm.acquisitionDetails")}
-                            </p>
-                            <p className="mt-1 ps-3 text-xs text-muted-foreground">
-                              {t("crm.leadForm.acquisitionHint")}
-                            </p>
-                          </div>
-                        )}
-                      <label
-                        className={`grid gap-1.5 text-sm font-medium ${field.type === "textarea" ? (resource === "leads" ? "md:col-span-3" : "sm:col-span-2") : ""} ${resource === "leads" && ["leadSourceChannel", "source", "contactMethod", "patientType", "referralPersona", "referralName", "referralPhone", "referralAddress", "referralNote"].includes(field.name) ? "rounded-lg border-emerald-100 bg-emerald-50/30 p-3 dark:border-emerald-950 dark:bg-emerald-950/10" : ""}`}
-                      >
-                        {t(`crm.fields.${field.name}`, {
-                          defaultValue: field.label,
-                        })}
-                        {field.type === "select" ? (
-                          <Select
-                            name={field.name}
-                            required={field.required}
-                            value={
-                              field.name === "leadSourceChannel"
-                                ? leadChannel
-                                : undefined
-                            }
-                            onValueChange={
-                              field.name === "leadSourceChannel"
-                                ? setLeadChannel
-                                : undefined
-                            }
-                            defaultValue={String(
-                              editingRecord?.[field.name] ?? "",
-                            )}
-                          >
-                            <SelectTrigger>
-                              <SelectValue
-                                placeholder={t("crm.placeholders.selectField", {
-                                  field: t(`crm.fields.${field.name}`, {
-                                    defaultValue: field.label,
-                                  }),
-                                })}
-                              />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {field.options
-                                ?.filter(
-                                  (option) =>
-                                    field.name !== "source" ||
-                                    leadChannel !== "traditional" ||
-                                    option.endsWith("_referral"),
-                                )
-                                .filter(
-                                  (option) =>
-                                    field.name !== "source" ||
-                                    leadChannel !== "digital" ||
-                                    !option.endsWith("_referral"),
-                                )
-                                .map((x) => (
-                                  <SelectItem key={x} value={x}>
-                                    {resource === "patients" && field.name === "status" ? patientProgressLabel(x) : t(`crm.values.${x}`, {
-                                      defaultValue: x.replaceAll("_", " "),
-                                    })}
+                        {resource === "leads" &&
+                          field.name === "competitorsNote" && (
+                            <div className="mt-2 border-s-2 border-emerald-500 ps-3 font-bold text-emerald-800 md:col-span-3 dark:text-emerald-300">
+                              {t("crm.leadForm.notes")}
+                            </div>
+                          )}
+                        {resource === "leads" &&
+                          field.name === "leadSourceChannel" && (
+                            <div className="mt-2 rounded-t-xl border border-emerald-200 bg-emerald-50/70 p-4 md:col-span-3 dark:border-emerald-900 dark:bg-emerald-950/20">
+                              <p className="border-s-2 border-emerald-500 ps-3 font-bold text-emerald-800 dark:text-emerald-300">
+                                {t("crm.leadForm.acquisitionDetails")}
+                              </p>
+                              <p className="mt-1 ps-3 text-xs text-muted-foreground">
+                                {t("crm.leadForm.acquisitionHint")}
+                              </p>
+                            </div>
+                          )}
+                        <label
+                          className={`grid gap-1.5 text-sm font-medium ${field.type === "textarea" ? (resource === "leads" ? "md:col-span-3" : "sm:col-span-2") : ""} ${resource === "leads" && ["leadSourceChannel", "source", "contactMethod", "patientType", "referralPersona", "referralName", "referralPhone", "referralAddress", "referralNote"].includes(field.name) ? "rounded-lg border-emerald-100 bg-emerald-50/30 p-3 dark:border-emerald-950 dark:bg-emerald-950/10" : ""}`}
+                        >
+                          {t(`crm.fields.${field.name}`, {
+                            defaultValue: field.label,
+                          })}
+                          {field.type === "select" ? (
+                            <Select
+                              name={field.name}
+                              required={field.required}
+                              value={
+                                field.name === "leadSourceChannel"
+                                  ? leadChannel
+                                  : undefined
+                              }
+                              onValueChange={
+                                field.name === "leadSourceChannel"
+                                  ? setLeadChannel
+                                  : undefined
+                              }
+                              defaultValue={String(
+                                editingRecord?.[field.name] ?? "",
+                              )}
+                            >
+                              <SelectTrigger>
+                                <SelectValue
+                                  placeholder={t(
+                                    "crm.placeholders.selectField",
+                                    {
+                                      field: t(`crm.fields.${field.name}`, {
+                                        defaultValue: field.label,
+                                      }),
+                                    },
+                                  )}
+                                />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {field.options
+                                  ?.filter(
+                                    (option) =>
+                                      field.name !== "source" ||
+                                      leadChannel !== "traditional" ||
+                                      option.endsWith("_referral"),
+                                  )
+                                  .filter(
+                                    (option) =>
+                                      field.name !== "source" ||
+                                      leadChannel !== "digital" ||
+                                      !option.endsWith("_referral"),
+                                  )
+                                  .map((x) => (
+                                    <SelectItem key={x} value={x}>
+                                      {resource === "patients" &&
+                                      field.name === "status"
+                                        ? patientProgressLabel(x)
+                                        : t(`crm.values.${x}`, {
+                                            defaultValue: x.replaceAll(
+                                              "_",
+                                              " ",
+                                            ),
+                                          })}
+                                    </SelectItem>
+                                  ))}
+                              </SelectContent>
+                            </Select>
+                          ) : field.type === "date" ||
+                            field.type === "datetime" ? (
+                            <FormDatePicker
+                              name={field.name}
+                              initialValue={String(
+                                editingRecord?.[field.name] ??
+                                  (field.name === "scheduledAt"
+                                    ? surgeryDraftAt
+                                    : ""),
+                              )}
+                              includeTime={field.type === "datetime"}
+                              required={field.required}
+                            />
+                          ) : field.type === "patient" ? (
+                            <SearchableSelect
+                              name={field.name}
+                              required={field.required}
+                              defaultValue={String(
+                                editingRecord?.[field.name] ??
+                                  appointmentPatientId,
+                              )}
+                              placeholder={t("crm.actions.selectPatient")}
+                              searchPlaceholder={t(
+                                "crm.actions.searchPatients",
+                              )}
+                              pageSize={20}
+                              options={choices(field).map((patient) => ({
+                                value: patient.id,
+                                label: labelOf(patient, field.type),
+                                searchText: String(patient.patientCode ?? ""),
+                              }))}
+                            />
+                          ) : field.type &&
+                            [
+                              "patient",
+                              "doctor",
+                              "surgery",
+                              "surgeryAppointment",
+                            ].includes(field.type) ? (
+                            <Select
+                              name={field.name}
+                              required={field.required}
+                              defaultValue={String(
+                                editingRecord?.[field.name] ?? "",
+                              )}
+                            >
+                              <SelectTrigger>
+                                <SelectValue
+                                  placeholder={t(
+                                    "crm.placeholders.selectField",
+                                    {
+                                      field: t(`crm.fields.${field.name}`, {
+                                        defaultValue: field.label,
+                                      }),
+                                    },
+                                  )}
+                                />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {choices(field).map((x) => (
+                                  <SelectItem key={x.id} value={x.id}>
+                                    {labelOf(x, field.type)}
                                   </SelectItem>
                                 ))}
-                            </SelectContent>
-                          </Select>
-                        ) : field.type === "date" ||
-                          field.type === "datetime" ? (
-                          <FormDatePicker
-                            name={field.name}
-                            initialValue={String(
-                              editingRecord?.[field.name] ??
-                                (field.name === "scheduledAt"
-                                  ? surgeryDraftAt
-                                  : ""),
-                            )}
-                            includeTime={field.type === "datetime"}
-                            required={field.required}
-                          />
-                        ) : field.type === "patient" ? (
-                          <SearchableSelect
-                            name={field.name}
-                            required={field.required}
-                            defaultValue={String(
-                              editingRecord?.[field.name] ?? appointmentPatientId,
-                            )}
-                            placeholder={t("crm.actions.selectPatient")}
-                            searchPlaceholder={t("crm.actions.searchPatients")}
-                            pageSize={20}
-                            options={choices(field).map((patient) => ({
-                              value: patient.id,
-                              label: labelOf(patient, field.type),
-                              searchText: String(patient.patientCode ?? ""),
-                            }))}
-                          />
-                        ) : field.type &&
-                          [
-                            "patient",
-                            "doctor",
-                            "surgery",
-                            "surgeryAppointment",
-                          ].includes(field.type) ? (
-                          <Select
-                            name={field.name}
-                            required={field.required}
-                            defaultValue={String(
-                              editingRecord?.[field.name] ?? "",
-                            )}
-                          >
-                            <SelectTrigger>
-                              <SelectValue
-                                placeholder={t("crm.placeholders.selectField", {
-                                  field: t(`crm.fields.${field.name}`, {
-                                    defaultValue: field.label,
-                                  }),
-                                })}
-                              />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {choices(field).map((x) => (
-                                <SelectItem key={x.id} value={x.id}>
-                                  {labelOf(x, field.type)}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        ) : field.type === "textarea" ? (
-                          <textarea
-                            name={field.name}
-                            defaultValue={String(
-                              editingRecord?.[field.name] ?? "",
-                            )}
-                            className="min-h-24 rounded-md border bg-background p-3"
-                          />
-                        ) : (
-                          <Input
-                            name={field.name}
-                            type={field.type === "number" ? "number" : "text"}
-                            step={field.type === "number" ? "any" : undefined}
-                            defaultValue={String(
-                              editingRecord?.[field.name] ?? "",
-                            )}
-                            required={field.required}
-                          />
-                        )}
-                      </label>
-                    </Fragment>
-                  ))}
-                {resource === "leads" && (
-                  <div className="grid gap-3 rounded-xl border-2 border-dashed p-6 text-center transition-colors hover:border-emerald-400 hover:bg-emerald-50/40 md:col-span-3 dark:hover:bg-emerald-950/20">
-                    <FileUp className="mx-auto size-8 text-emerald-600" />
-                    <span className="font-semibold">
-                      {t("crm.leadForm.attachments")}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {t("crm.leadForm.attachmentsHint")}
-                    </span>
-                    <Input
-                      className="mx-auto max-w-md"
-                      type="file"
-                      multiple
-                      accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
-                      onChange={(event) => {
-                        addLeadFiles(Array.from(event.target.files ?? []));
-                        event.target.value = "";
-                      }}
-                    />
-                    {leadFiles.length > 0 && (
-                      <span className="text-xs font-medium text-emerald-700">
-                        {t("crm.leadForm.filesSelected", {
-                          count: leadFiles.length,
-                        })}
+                              </SelectContent>
+                            </Select>
+                          ) : field.type === "textarea" ? (
+                            <textarea
+                              name={field.name}
+                              defaultValue={String(
+                                editingRecord?.[field.name] ?? "",
+                              )}
+                              className="min-h-24 rounded-md border bg-background p-3"
+                            />
+                          ) : (
+                            <Input
+                              name={field.name}
+                              type={field.type === "number" ? "number" : "text"}
+                              step={field.type === "number" ? "any" : undefined}
+                              defaultValue={String(
+                                editingRecord?.[field.name] ?? "",
+                              )}
+                              required={field.required}
+                            />
+                          )}
+                        </label>
+                      </Fragment>
+                    ))}
+                  {resource === "leads" && (
+                    <div className="grid gap-3 rounded-xl border-2 border-dashed p-6 text-center transition-colors hover:border-emerald-400 hover:bg-emerald-50/40 md:col-span-3 dark:hover:bg-emerald-950/20">
+                      <FileUp className="mx-auto size-8 text-emerald-600" />
+                      <span className="font-semibold">
+                        {t("crm.leadForm.attachments")}
                       </span>
-                    )}
-                    {leadFiles.length > 0 && (
-                      <div className="mx-auto grid w-full max-w-2xl gap-2 text-start">
-                        {leadFiles.map((file, index) => (
-                          <div
-                            key={`${file.name}-${file.size}-${file.lastModified}`}
-                            className="flex items-center gap-3 rounded-lg border bg-background px-3 py-2"
-                          >
-                            <FileUp className="size-4 shrink-0 text-emerald-600" />
-                            <span className="min-w-0 flex-1 truncate text-xs font-medium">
-                              {file.name}
-                            </span>
-                            <span className="text-[10px] text-muted-foreground">
-                              {(file.size / 1024 / 1024).toFixed(1)} MB
-                            </span>
-                            <Button permission="view" data-action="delete"
-                              type="button"
-                              size="icon"
-                              variant="ghost"
-                              onClick={() =>
-                                setLeadFiles((files) =>
-                                  files.filter(
-                                    (_, fileIndex) => fileIndex !== index,
-                                  ),
-                                )
-                              }
+                      <span className="text-xs text-muted-foreground">
+                        {t("crm.leadForm.attachmentsHint")}
+                      </span>
+                      <Input
+                        className="mx-auto max-w-md"
+                        type="file"
+                        multiple
+                        accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+                        onChange={(event) => {
+                          addLeadFiles(Array.from(event.target.files ?? []));
+                          event.target.value = "";
+                        }}
+                      />
+                      {leadFiles.length > 0 && (
+                        <span className="text-xs font-medium text-emerald-700">
+                          {t("crm.leadForm.filesSelected", {
+                            count: leadFiles.length,
+                          })}
+                        </span>
+                      )}
+                      {leadFiles.length > 0 && (
+                        <div className="mx-auto grid w-full max-w-2xl gap-2 text-start">
+                          {leadFiles.map((file, index) => (
+                            <div
+                              key={`${file.name}-${file.size}-${file.lastModified}`}
+                              className="flex items-center gap-3 rounded-lg border bg-background px-3 py-2"
                             >
-                              <Trash2 className="size-4 text-destructive" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
+                              <FileUp className="size-4 shrink-0 text-emerald-600" />
+                              <span className="min-w-0 flex-1 truncate text-xs font-medium">
+                                {file.name}
+                              </span>
+                              <span className="text-[10px] text-muted-foreground">
+                                {(file.size / 1024 / 1024).toFixed(1)} MB
+                              </span>
+                              <Button
+                                permission="view"
+                                data-action="delete"
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                onClick={() =>
+                                  setLeadFiles((files) =>
+                                    files.filter(
+                                      (_, fileIndex) => fileIndex !== index,
+                                    ),
+                                  )
+                                }
+                              >
+                                <Trash2 className="size-4 text-destructive" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div className="shrink-0 border-t bg-background px-6 py-4">
-                <Button permission={editingRecord ? "update" : "create"}
-                  className="w-full"
-                  type="submit"
-                >
-                  {editingRecord ? "Save changes" : "Save"}
-                </Button>
+                  <Button
+                    permission={editingRecord ? "update" : "create"}
+                    className="w-full"
+                    type="submit"
+                  >
+                    {editingRecord ? "Save changes" : "Save"}
+                  </Button>
                 </div>
               </form>
             </DialogContent>
@@ -1337,7 +1447,8 @@ export default function CrmPage({ resource }: { resource: CrmResource }) {
         </div>
         {(resource === "leads" || resource === "patients") && (
           <>
-            <Button permission="export"
+            <Button
+              permission="export"
               variant="outline"
               onClick={() =>
                 void runReportExport(() => exportCollectionExcel(resource))
@@ -1345,7 +1456,8 @@ export default function CrmPage({ resource }: { resource: CrmResource }) {
             >
               <FileSpreadsheet /> Excel
             </Button>
-            <Button permission="export"
+            <Button
+              permission="export"
               variant="outline"
               onClick={() =>
                 void runReportExport(() => exportCollectionPdf(resource))
@@ -1580,7 +1692,8 @@ export default function CrmPage({ resource }: { resource: CrmResource }) {
                 </div>
               </PopoverContent>
             </Popover>
-            <Button permission="export"
+            <Button
+              permission="export"
               variant="outline"
               onClick={() =>
                 void runReportExport(
@@ -1591,7 +1704,8 @@ export default function CrmPage({ resource }: { resource: CrmResource }) {
             >
               <FileSpreadsheet /> {t("crm.actions.excel")}
             </Button>
-            <Button permission="export"
+            <Button
+              permission="export"
               variant="outline"
               onClick={() =>
                 void runReportExport(
@@ -1667,7 +1781,9 @@ export default function CrmPage({ resource }: { resource: CrmResource }) {
                   allLabel={t("crm.values.all")}
                   label="Status"
                   value={draftPatientFilters.status}
-                  options={[...patientStages, "active", "inactive"].map(status => [status, patientProgressLabel(status)])}
+                  options={[...patientStages, "active", "inactive"].map(
+                    (status) => [status, patientProgressLabel(status)],
+                  )}
                   onChange={(status) =>
                     setDraftPatientFilters((current) => ({
                       ...current,
@@ -1858,10 +1974,7 @@ export default function CrmPage({ resource }: { resource: CrmResource }) {
                 key={patient.id}
                 className="group overflow-hidden transition-all hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg"
               >
-                <Link
-                  to={`/crm/patients/${patient.id}`}
-                  className="block"
-                >
+                <Link to={`/crm/patients/${patient.id}`} className="block">
                   <div className="bg-linear-to-br from-primary/10 via-teal-500/5 to-transparent p-4 pb-3">
                     <div className="flex items-start gap-3">
                       <span className="grid size-12 shrink-0 place-items-center rounded-xl border border-primary/15 bg-background text-sm font-bold text-primary shadow-sm transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
@@ -1960,7 +2073,13 @@ export default function CrmPage({ resource }: { resource: CrmResource }) {
                     </div>
                   </CardContent>
                 </Link>
-                {canManage && <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 border-t p-3">{patientStatusControl(patient)}{patientEditAction(patient)}{patientAppointmentAction(patient)}</div>}
+                {canManage && (
+                  <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 border-t p-3">
+                    {patientStatusControl(patient)}
+                    {patientEditAction(patient)}
+                    {patientAppointmentAction(patient)}
+                  </div>
+                )}
               </Card>
             ))}
           </div>
@@ -1999,7 +2118,9 @@ export default function CrmPage({ resource }: { resource: CrmResource }) {
                     })}
                   </TableHead>
                 ))}
-                {(canManage || resource === "referrals" || resource === "surgeries") && <TableHead />}
+                {(canManage ||
+                  resource === "referrals" ||
+                  resource === "surgeries") && <TableHead />}
               </TableRow>
             </TableHeader>
             <TableBody
@@ -2078,21 +2199,27 @@ export default function CrmPage({ resource }: { resource: CrmResource }) {
                         >
                           {show(row, key)}
                         </Link>
-                      ) : key === "status" && resource === "patients" && canManage ? (
+                      ) : key === "status" &&
+                        resource === "patients" &&
+                        canManage ? (
                         patientStatusControl(row)
                       ) : key === "status" ? (
                         <Badge
                           variant="outline"
                           className={`capitalize ${statusClass(row.status)}`}
                         >
-                          {resource === "patients" ? patientProgressLabel(row.status) : show(row, key)}
+                          {resource === "patients"
+                            ? patientProgressLabel(row.status)
+                            : show(row, key)}
                         </Badge>
                       ) : (
                         show(row, key)
                       )}
                     </TableCell>
                   ))}
-                  {(canManage || resource === "referrals" || resource === "surgeries") && (
+                  {(canManage ||
+                    resource === "referrals" ||
+                    resource === "surgeries") && (
                     <TableCell>
                       <div className="flex justify-end gap-2">
                         {resource === "referrals" && (
@@ -2106,7 +2233,8 @@ export default function CrmPage({ resource }: { resource: CrmResource }) {
                               <Eye className="size-4 text-teal-600" />
                             </Button>
                             {canManage && (
-                              <Button data-action="edit"
+                              <Button
+                                data-action="edit"
                                 size="icon"
                                 variant="ghost"
                                 title={t("crm.actions.editReferral")}
@@ -2132,22 +2260,29 @@ export default function CrmPage({ resource }: { resource: CrmResource }) {
                             <Eye className="size-4 text-teal-600" />
                           </Button>
                         )}
-                        {(resource === "surgeries" || resource === "payments") && canManage && (
-                          <Button
-                            data-action="edit"
-                            size="icon"
-                            variant="ghost"
-                            title={t("crm.actions.editRecord")}
-                            aria-label={t("crm.actions.editRecord")}
-                            onClick={() => {
-                              setEditingRecord(row);
-                              setOpen(true);
-                            }}
-                          >
-                            <Pencil className="size-4 text-primary" />
-                          </Button>
+                        {(resource === "surgeries" ||
+                          resource === "payments") &&
+                          canManage && (
+                            <Button
+                              data-action="edit"
+                              size="icon"
+                              variant="ghost"
+                              title={t("crm.actions.editRecord")}
+                              aria-label={t("crm.actions.editRecord")}
+                              onClick={() => {
+                                setEditingRecord(row);
+                                setOpen(true);
+                              }}
+                            >
+                              <Pencil className="size-4 text-primary" />
+                            </Button>
+                          )}
+                        {resource === "patients" && canManage && (
+                          <>
+                            {patientEditAction(row)}
+                            {patientAppointmentAction(row)}
+                          </>
                         )}
-                        {resource === "patients" && canManage && <>{patientEditAction(row)}{patientAppointmentAction(row)}</>}
                         {resource === "leads" && (
                           <>
                             <Button
@@ -2160,7 +2295,8 @@ export default function CrmPage({ resource }: { resource: CrmResource }) {
                                 <Eye className="size-4 text-teal-600" />
                               </Link>
                             </Button>
-                            <Button permission="healthcare.appointments.create"
+                            <Button
+                              permission="healthcare.appointments.create"
                               asChild
                               size="icon"
                               variant="ghost"
@@ -2170,7 +2306,8 @@ export default function CrmPage({ resource }: { resource: CrmResource }) {
                                 <CalendarPlus className="size-4 text-primary" />
                               </Link>
                             </Button>
-                            <Button data-action="edit"
+                            <Button
+                              data-action="edit"
                               size="icon"
                               variant="ghost"
                               title="Edit lead"
@@ -2188,7 +2325,11 @@ export default function CrmPage({ resource }: { resource: CrmResource }) {
                         )}
                         {canManage && (
                           <DeleteConfirmationDialog
-                            description={t(resource === "surgeries" ? "crmDialogs.surgeryDeleteDescription" : "crmDialogs.deleteDescription")}
+                            description={t(
+                              resource === "surgeries"
+                                ? "crmDialogs.surgeryDeleteDescription"
+                                : "crmDialogs.deleteDescription",
+                            )}
                             onConfirm={async () => {
                               try {
                                 await crmApi[resource].remove(row.id);
@@ -2207,7 +2348,11 @@ export default function CrmPage({ resource }: { resource: CrmResource }) {
                               }
                             }}
                           >
-                            <Button data-action="delete" size="icon" variant="ghost">
+                            <Button
+                              data-action="delete"
+                              size="icon"
+                              variant="ghost"
+                            >
                               <Trash2 className="size-4 text-destructive" />
                             </Button>
                           </DeleteConfirmationDialog>
@@ -2227,14 +2372,25 @@ export default function CrmPage({ resource }: { resource: CrmResource }) {
       >
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{String(selectedSurgery?.name ?? t("crmDialogs.surgeryDetails"))}</DialogTitle>
+            <DialogTitle>
+              {String(selectedSurgery?.name ?? t("crmDialogs.surgeryDetails"))}
+            </DialogTitle>
           </DialogHeader>
           {selectedSurgery && (
             <dl className="grid gap-4 sm:grid-cols-2">
-              {[{ name: "code", label: "Code" }, ...configs.surgeries.fields].map((field) => (
+              {[
+                { name: "code", label: "Code" },
+                ...configs.surgeries.fields,
+              ].map((field) => (
                 <div key={field.name}>
-                  <dt className="text-sm text-muted-foreground">{t(`crm.fields.${field.name}`, { defaultValue: field.label })}</dt>
-                  <dd className="whitespace-pre-wrap warp-break-words">{show(selectedSurgery, field.name)}</dd>
+                  <dt className="text-sm text-muted-foreground">
+                    {t(`crm.fields.${field.name}`, {
+                      defaultValue: field.label,
+                    })}
+                  </dt>
+                  <dd className="whitespace-pre-wrap warp-break-words">
+                    {show(selectedSurgery, field.name)}
+                  </dd>
                 </div>
               ))}
             </dl>

@@ -7,9 +7,20 @@ import { monthlyReport } from "../reports/monthly-report.js";
 const router = Router();
 const view = requirePermission("employees.view"),
   manage = requirePermission("employees.manage");
-router.get("/monthly-report", view, requirePermission("hr.employees.view"), requirePermission("attendance.events.view"), requirePermission("hr.attendance-permissions.view"), async (req, res, next) => {
-  try { res.json(await monthlyReport(req.query)); } catch(error) { next(error); }
-});
+router.get(
+  "/monthly-report",
+  view,
+  requirePermission("hr.employees.view"),
+  requirePermission("attendance.events.view"),
+  requirePermission("hr.attendance-permissions.view"),
+  async (req, res, next) => {
+    try {
+      res.json(await monthlyReport(req.query));
+    } catch (error) {
+      next(error);
+    }
+  },
+);
 router.get("/", view, attendanceController.list);
 router.post(
   "/",

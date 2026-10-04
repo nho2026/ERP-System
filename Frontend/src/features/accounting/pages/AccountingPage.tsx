@@ -62,10 +62,32 @@ export default function AccountingPage({
   const accounts = useApiResource(
     useCallback(() => accountingApi.accounts.list(), []),
   );
-  const journals = useServerTable<Journal>("/accounting/journals", {}, resource === "journals");
-  const accountRows = useServerTable<Account>("/accounting/accounts", {}, resource === "accounts");
+  const journals = useServerTable<Journal>(
+    "/accounting/journals",
+    {},
+    resource === "journals",
+  );
+  const accountRows = useServerTable<Account>(
+    "/accounting/accounts",
+    {},
+    resource === "accounts",
+  );
   const [reportPage, setReportPage] = useState(1);
-  const reports = useApiResource(useCallback(() => apiClient.get<AccountingReport & { pagination: import("@/shared/api/pagination").Pagination }>("/accounting/reports", { params: { page: reportPage, pageSize: 20 } }).then(r => r.data), [reportPage]));
+  const reports = useApiResource(
+    useCallback(
+      () =>
+        apiClient
+          .get<
+            AccountingReport & {
+              pagination: import("@/shared/api/pagination").Pagination;
+            }
+          >("/accounting/reports", {
+            params: { page: reportPage, pageSize: 20 },
+          })
+          .then((r) => r.data),
+      [reportPage],
+    ),
+  );
   const [dialog, setDialog] = useState<"account" | "journal" | null>(null);
   const [editing, setEditing] = useState<Account | null>(null);
   const [lines, setLines] = useState<JournalLine[]>([
@@ -123,10 +145,8 @@ export default function AccountingPage({
     ] as const;
     const accountName = (code: string, fallback: string) =>
       t(`accounting.seedAccounts.${code}`, { defaultValue: fallback });
-    const totalDebit =
-      report?.totals?.debit ?? 0;
-    const totalCredit =
-      report?.totals?.credit ?? 0;
+    const totalDebit = report?.totals?.debit ?? 0;
+    const totalCredit = report?.totals?.credit ?? 0;
     const generatedDate = new Date().toISOString().slice(0, 10);
     return (
       <div className="space-y-5">
@@ -137,7 +157,12 @@ export default function AccountingPage({
               {t("accounting.reportDescription")}
             </p>
           </div>
-          <Button permission="accounting.reports.print" variant="outline" disabled={fullPrint.printing || reports.isLoading} onClick={() => void fullPrint.print()}>
+          <Button
+            permission="accounting.reports.print"
+            variant="outline"
+            disabled={fullPrint.printing || reports.isLoading}
+            onClick={() => void fullPrint.print()}
+          >
             <Printer />
             {t("accounting.printReport")}
           </Button>
@@ -173,7 +198,16 @@ export default function AccountingPage({
                   <TableHead>{t("accounting.credit")}</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody autoPaginate={false} pagination={{ page: report?.pagination?.page ?? reportPage, totalPages: report?.pagination?.totalPages ?? 1, total: report?.pagination?.total ?? 0, onPageChange: setReportPage, disabled: reports.isLoading }}>
+              <TableBody
+                autoPaginate={false}
+                pagination={{
+                  page: report?.pagination?.page ?? reportPage,
+                  totalPages: report?.pagination?.totalPages ?? 1,
+                  total: report?.pagination?.total ?? 0,
+                  onPageChange: setReportPage,
+                  disabled: reports.isLoading,
+                }}
+              >
                 <TableResourceState
                   isLoading={reports.isLoading}
                   error={reports.error}
@@ -304,7 +338,9 @@ export default function AccountingPage({
             </div>
             <footer className="mt-4.5 flex justify-between border-t border-slate-300 pt-1.75 text-[8px] text-slate-500">
               <span>{t("accounting.confidentialReport")}</span>
-              <span>{settingsSnapshot()?.organization.name || ""} · {generatedDate}</span>
+              <span>
+                {settingsSnapshot()?.organization.name || ""} · {generatedDate}
+              </span>
             </footer>
           </section>
         )}
@@ -320,7 +356,8 @@ export default function AccountingPage({
             {t(`accounting.${resource}Description`)}
           </p>
         </div>
-        <Button permission="create"
+        <Button
+          permission="create"
           onClick={() => {
             setError("");
             setEditing(null);
@@ -356,7 +393,11 @@ export default function AccountingPage({
                 ))}
               </TableRow>
             </TableHeader>
-            <TableBody {...(resource === "accounts" ? accountRows.tableProps : journals.tableProps)}>
+            <TableBody
+              {...(resource === "accounts"
+                ? accountRows.tableProps
+                : journals.tableProps)}
+            >
               {resource === "accounts" ? (
                 <>
                   <TableResourceState
@@ -378,7 +419,8 @@ export default function AccountingPage({
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap items-center gap-2">
-                          <Button data-action="edit"
+                          <Button
+                            data-action="edit"
                             variant="ghost"
                             size="icon"
                             onClick={() => {
@@ -392,15 +434,19 @@ export default function AccountingPage({
                             description={t("accounting.deleteConfirm")}
                             onConfirm={async () => {
                               await accountingApi.accounts.remove(row.id);
-                              await Promise.all([accounts.refresh(), accountRows.refresh()]);
+                              await Promise.all([
+                                accounts.refresh(),
+                                accountRows.refresh(),
+                              ]);
                             }}
                           >
-                            <Button data-action="delete"
+                            <Button
+                              data-action="delete"
                               variant="ghost"
                               size="icon"
                               className="text-destructive"
                             >
-                              <Trash2  className="size-4 text-white" />
+                              <Trash2 className="size-4 text-white" />
                             </Button>
                           </DeleteConfirmationDialog>
                         </div>
@@ -438,7 +484,8 @@ export default function AccountingPage({
                           <div className="flex flex-wrap items-center gap-2">
                             {row.status === "draft" && (
                               <>
-                                <Button permission="post"
+                                <Button
+                                  permission="post"
                                   variant="ghost"
                                   size="icon"
                                   onClick={async () => {
@@ -451,7 +498,8 @@ export default function AccountingPage({
                                 >
                                   <CheckCircle2 />
                                 </Button>
-                                <Button data-action="delete"
+                                <Button
+                                  data-action="delete"
                                   variant="ghost"
                                   size="icon"
                                   className="text-destructive"
@@ -460,7 +508,7 @@ export default function AccountingPage({
                                     await journals.refresh();
                                   }}
                                 >
-                                  <Trash2  className="size-4 text-white" />
+                                  <Trash2 className="size-4 text-white" />
                                 </Button>
                               </>
                             )}
@@ -513,11 +561,7 @@ export default function AccountingPage({
                 )}
               </SelectContent>
             </Select>
-            <Input
-              name="currency"
-              value="USD" readOnly
-              required
-            />
+            <Input name="currency" value="USD" readOnly required />
             <Select
               name="parentId"
               defaultValue={editing?.parent?.id ?? "__none__"}
@@ -550,7 +594,11 @@ export default function AccountingPage({
             {error && (
               <p className="text-sm text-destructive sm:col-span-2">{error}</p>
             )}
-            <Button permission={editing ? "update" : "create"} disabled={busy} className="sm:col-span-2">
+            <Button
+              permission={editing ? "update" : "create"}
+              disabled={busy}
+              className="sm:col-span-2"
+            >
               {t("accounting.save")}
             </Button>
           </form>
@@ -633,7 +681,9 @@ export default function AccountingPage({
                       )
                     }
                   />
-                  <Button permission="view" data-action="delete"
+                  <Button
+                    permission="view"
+                    data-action="delete"
                     type="button"
                     variant="ghost"
                     size="icon"
@@ -642,7 +692,7 @@ export default function AccountingPage({
                       setLines((v) => v.filter((_, i) => i !== index))
                     }
                   >
-                    <Trash2  className="size-4 text-white" />
+                    <Trash2 className="size-4 text-white" />
                   </Button>
                 </div>
               ))}

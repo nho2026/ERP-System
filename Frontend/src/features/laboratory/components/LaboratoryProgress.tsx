@@ -41,7 +41,7 @@ export function LaboratoryProgress({ status }: { status: string }) {
           >
             {index < progressStages.length - 1 && (
               <span
-                className="absolute start-1/2 top-4 h-0.5 w-full bg-border"
+                className="absolute inset-s-1/2 top-4 h-0.5 w-full bg-border"
                 style={
                   index < current
                     ? { backgroundColor: stageStyles[stage].color }

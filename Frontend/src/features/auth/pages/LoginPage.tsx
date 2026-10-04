@@ -54,7 +54,9 @@ function LoginPage() {
   useEffect(() => {
     const controller = new AbortController();
     void apiClient
-      .get<{ logo: string; name: string }>("/settings/logo", { signal: controller.signal })
+      .get<{ logo: string; name: string }>("/settings/logo", {
+        signal: controller.signal,
+      })
       .then(({ data }) => {
         if (!controller.signal.aborted) {
           setLogo(data.logo || defaultLogo);
@@ -354,7 +356,11 @@ function LoginPage() {
               </Tabs>
             </CardContent>
             <CardFooter className="mt-8 justify-between px-1 pb-0 text-[10px] text-muted-foreground">
-              <span>{organizationName ? `© ${new Date().getFullYear()} ${organizationName}` : ""}</span>
+              <span>
+                {organizationName
+                  ? `© ${new Date().getFullYear()} ${organizationName}`
+                  : ""}
+              </span>
               <span>{t("footer.privacy")}</span>
             </CardFooter>
           </Card>
@@ -379,7 +385,11 @@ function LoginPage() {
           <div className="relative z-10 my-auto flex items-center justify-center">
             <div className="absolute size-80 rounded-full border border-dashed border-white/20" />
             <div className="grid size-44 place-items-center overflow-hidden rounded-[38px] border border-white/60 bg-white shadow-2xl">
-              <img className="size-40 max-w-none object-contain" src={logo} alt="" />
+              <img
+                className="size-40 max-w-none object-contain"
+                src={logo}
+                alt=""
+              />
             </div>
             <div className="absolute inset-s-0 top-4 flex items-center gap-2 rounded-xl border border-border bg-card/95 p-3 text-card-foreground shadow-xl">
               <HeartPulse className="size-5 text-primary" />

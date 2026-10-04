@@ -442,7 +442,8 @@ export default function FinancePage({ resource }: { resource: PageResource }) {
             )}
           </p>
         </div>
-        <Button permission="create"
+        <Button
+          permission="create"
           onClick={() => {
             setError("");
             setEditing(null);
@@ -486,7 +487,8 @@ export default function FinancePage({ resource }: { resource: PageResource }) {
                     ))}
                     <TableCell className="text-end">
                       <div className="flex flex-wrap items-center gap-2 justify-end">
-                        <Button data-action="edit"
+                        <Button
+                          data-action="edit"
                           variant="ghost"
                           size="icon"
                           title={t("finance.edit")}
@@ -504,13 +506,14 @@ export default function FinancePage({ resource }: { resource: PageResource }) {
                             await records.refresh();
                           }}
                         >
-                          <Button data-action="delete"
+                          <Button
+                            data-action="delete"
                             variant="ghost"
                             size="icon"
                             title={t("finance.delete")}
                             className="text-destructive"
                           >
-                            <Trash2  className="size-4 text-white" />
+                            <Trash2 className="size-4 text-white" />
                           </Button>
                         </DeleteConfirmationDialog>
                       </div>
@@ -620,7 +623,11 @@ export default function FinancePage({ resource }: { resource: PageResource }) {
             {error && (
               <p className="text-sm text-destructive sm:col-span-2">{error}</p>
             )}
-            <Button permission={editing ? "update" : "create"} disabled={busy} className="sm:col-span-2">
+            <Button
+              permission={editing ? "update" : "create"}
+              disabled={busy}
+              className="sm:col-span-2"
+            >
               {busy ? t("finance.saving") : t("finance.save")}
             </Button>
           </form>

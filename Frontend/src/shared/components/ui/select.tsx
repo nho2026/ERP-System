@@ -21,9 +21,22 @@ function optionText(value: React.ReactNode): string {
 
 import { cn } from "@/lib/utils";
 
-function Select({ permission, disabled, onValueChange, ...props }: React.ComponentProps<typeof SelectPrimitive.Root> & { permission?: string }) {
+function Select({
+  permission,
+  disabled,
+  onValueChange,
+  ...props
+}: React.ComponentProps<typeof SelectPrimitive.Root> & {
+  permission?: string;
+}) {
   const allowed = useActionPermission(permission);
-  return <SelectPrimitive.Root {...props} disabled={disabled || !allowed} onValueChange={allowed ? onValueChange : undefined} />;
+  return (
+    <SelectPrimitive.Root
+      {...props}
+      disabled={disabled || !allowed}
+      onValueChange={allowed ? onValueChange : undefined}
+    />
+  );
 }
 
 const SelectGroup = SelectPrimitive.Group;
@@ -213,7 +226,9 @@ const SelectItem = React.forwardRef<
           <Check className="h-4 w-4" />
         </SelectPrimitive.ItemIndicator>
       </span>
-      <SelectPrimitive.ItemText className="min-w-0 whitespace-normal break-words">{children}</SelectPrimitive.ItemText>
+      <SelectPrimitive.ItemText className="min-w-0 whitespace-normal break-words">
+        {children}
+      </SelectPrimitive.ItemText>
     </SelectPrimitive.Item>
   );
 });

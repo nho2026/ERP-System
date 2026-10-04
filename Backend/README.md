@@ -26,3 +26,10 @@ A successful POST webhook returns HTTP 200 immediately after saving the message;
 ## Lead inbox table rename
 
 The WhatsApp conversation model maps to `crm_lead_convarasations` and the message model maps to `crm_leadinbox` (exact database names). For existing databases, stop the backend and back up the target database, then run `node scripts/rename-lead-inbox.js` from `Backend`, followed by `npm run db:generate`, and restart the backend. The rename preserves rows and foreign keys; the script can be rerun safely. Run it before `db:push` so Prisma does not replace the old table. Fresh databases use the new name automatically.
+## Database migrations
+
+Run `npm run db:migrate -- --name describe_change` when changing the Prisma schema in development. Use `npm run db:deploy` to apply committed migrations and `npm run db:status` to check migration history. Fresh installations use migrations through `npm run setup`. Avoid `db:push` on databases managed by migrations because it bypasses migration history.
+
+`0_baseline` records the existing database structure before the nullable role `code` field was added. The original local database has already been marked as having this baseline applied. For another existing database without migration history, back it up and compare its structure with the baseline before running `npx prisma migrate resolve --applied 0_baseline --schema src/shared/database/prisma/schema.prisma`. Only mark it applied when its structure matches; then run `npm run db:deploy`. On an empty database, run `npm run db:deploy` directly. Never use `migrate reset` to resolve drift when data must be retained.
+
+The baseline was captured from MySQL on Windows, where table names are lowercase. Check MySQL table-name case settings before moving to a case-sensitive server because existing Prisma table mappings use mixed case.

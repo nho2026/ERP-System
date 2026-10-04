@@ -1,8 +1,10 @@
 import { captureWhatsappBody } from "./modules/crm/whatsapp/whatsapp.ai.js";
 import { laboratoryChangeMiddleware } from "./modules/laboratory/laboratory.realtime.js";
 import laboratoryRoutes from "./modules/laboratory/laboratory.routes.js";
+import icuRoutes from "./modules/icu/icu.routes.js";
 import settingsRoutes from "./modules/settings/settings.routes.js";
 import express from "express";
+import buildingExpenseRoutes from "./modules/building-expenses/building.routes.js";
 import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
@@ -44,7 +46,7 @@ const allowedOrigins = new Set([
   env.frontendUrl,
   ...env.publicWebsiteUrls,
   "http://127.0.0.1:3000",
-  "http://localhost:3000"
+  "http://localhost:3000",
 ]);
 app.use(
   cors({
@@ -81,6 +83,7 @@ app.use("/api/permissions", permissionRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/laboratory", laboratoryChangeMiddleware, laboratoryRoutes);
+app.use("/api/icu", icuRoutes);
 app.use("/api/healthcare", healthcareRoutes);
 app.use("/api/public", publicRoutes);
 app.use("/api/accounting", accountingRoutes);
@@ -88,6 +91,7 @@ app.use("/api/billing", laboratoryChangeMiddleware, billingRoutes);
 app.use("/api/advances", advancesRoutes);
 app.use("/api/finance", financeRoutes);
 app.use("/api/inventory", inventoryRoutes);
+app.use("/api/building-expenses", buildingExpenseRoutes);
 app.use("/api/pos", posRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/feedback", feedbackRoutes);

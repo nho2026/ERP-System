@@ -82,13 +82,31 @@ export default function PatientProfilePage({
   const backPath =
     location.state?.from === "/crm/today-patients"
       ? "/crm/today-patients"
-      : location.state?.from === "/crm/follow-up" ? "/crm/follow-up" : "/crm/patients";
+      : location.state?.from === "/crm/follow-up"
+        ? "/crm/follow-up"
+        : "/crm/patients";
   const canManage = hasPermission(storedUser(), "crm.patients.update");
-  const canViewLaboratory = hasPermission(storedUser(), "laboratory.orders.view");
-  const laboratoryResults = useApiResource(useCallback(async () => {
-    if (!canViewLaboratory) return null;
-    return (await apiClient.get<{ items: LabOrder[] }>("/laboratory/orders", { params: { patientId: id, resultsReady: "true", page: 1, pageSize: 1 } })).data.items[0] ?? null;
-  }, [id, canViewLaboratory]));
+  const canViewLaboratory = hasPermission(
+    storedUser(),
+    "laboratory.orders.view",
+  );
+  const laboratoryResults = useApiResource(
+    useCallback(async () => {
+      if (!canViewLaboratory) return null;
+      return (
+        (
+          await apiClient.get<{ items: LabOrder[] }>("/laboratory/orders", {
+            params: {
+              patientId: id,
+              resultsReady: "true",
+              page: 1,
+              pageSize: 1,
+            },
+          })
+        ).data.items[0] ?? null
+      );
+    }, [id, canViewLaboratory]),
+  );
   const profile = useApiResource(
     useCallback(() => crmApi.patients.get(id), [id]),
   );
@@ -101,6 +119,7 @@ export default function PatientProfilePage({
   const [showDetails, setShowDetails] = useState(false);
   const [editing, setEditing] = useState(false);
   const [sendingFollowUp, setSendingFollowUp] = useState(false);
+  const [sendingToIcu, setSendingToIcu] = useState(false);
   const [followUpDialogOpen, setFollowUpDialogOpen] = useState(false);
   const [followUpDate, setFollowUpDate] = useState("");
   const followUpLock = useRef(false);
@@ -116,14 +135,22 @@ export default function PatientProfilePage({
   const [formValues, setFormValues] = useState<Record<string, unknown>>({});
   const patient = profile.data;
   useEffect(() => {
-    if (!patient || !canManage || new URLSearchParams(location.search).get("edit") !== "1") return;
+    if (
+      !patient ||
+      !canManage ||
+      new URLSearchParams(location.search).get("edit") !== "1"
+    )
+      return;
     setIsMarried(Boolean(patient.isMarried));
     setHasDiabetes(Boolean(patient.hasDiabetes));
     setHasHypertension(Boolean(patient.hasHypertension));
     setEditing(true);
     const query = new URLSearchParams(location.search);
     query.delete("edit");
-    navigate({ pathname: location.pathname, search: query.toString() }, { replace: true, state: location.state });
+    navigate(
+      { pathname: location.pathname, search: query.toString() },
+      { replace: true, state: location.state },
+    );
   }, [patient, canManage, location, navigate]);
   const lead = patient?.lead as CrmRecord | null | undefined;
   const appointments = (patient?.appointments ?? []) as CrmRecord[];
@@ -212,9 +239,7 @@ export default function PatientProfilePage({
       await profile.refresh();
       toast.success("Patient profile updated.");
     } catch (error) {
-      toast.error(
-        apiErrorMessage(error),
-      );
+      toast.error(apiErrorMessage(error));
     } finally {
       profileSaveLock.current = false;
       setSavingProfile(false);
@@ -314,7 +339,13 @@ export default function PatientProfilePage({
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-2xl font-bold">{fullName(patient)}</h1>
                 <Badge className="border-emerald-300/30 bg-emerald-400/20 text-emerald-100">
-                  {String(patient.status).startsWith("post_discharge_follow_up") ? t(patient.status === "post_discharge_follow_up" ? "postDischargeFollowUp.active" : "postDischargeFollowUp.completed") : text(patient.status, "active")}
+                  {String(patient.status).startsWith("post_discharge_follow_up")
+                    ? t(
+                        patient.status === "post_discharge_follow_up"
+                          ? "postDischargeFollowUp.active"
+                          : "postDischargeFollowUp.completed",
+                      )
+                    : text(patient.status, "active")}
                 </Badge>
               </div>
               <p className="mt-1 text-sm text-teal-100">
@@ -334,16 +365,76 @@ export default function PatientProfilePage({
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button permission="laboratory.orders.view" variant="secondary" onClick={() => navigate(`/laboratory/reception?patientId=${id}`)}><FlaskConical />{t("laboratory.title")}</Button>
+            <Button
+              permission="laboratory.orders.view"
+              variant="secondary"
+              onClick={() => navigate(`/laboratory/reception?patientId=${id}`)}
+            >
+              <FlaskConical />
+              {t("laboratory.title")}
+            </Button>
 
             {canManage && patient.status !== "post_discharge_follow_up" && (
-              <Button permission="crm.patients.update" variant="secondary" disabled={sendingFollowUp} onClick={() => {
-                setFollowUpDate(patient.followUpDate ? String(patient.followUpDate).slice(0, 10) : "");
-                setFollowUpDialogOpen(true);
-              }}>{t("postDischargeFollowUp.send")}</Button>
+              <Button
+                permission="crm.patients.update"
+                variant="secondary"
+                disabled={sendingFollowUp}
+                onClick={() => {
+                  setFollowUpDate(
+                    patient.followUpDate
+                      ? String(patient.followUpDate).slice(0, 10)
+                      : "",
+                  );
+                  setFollowUpDialogOpen(true);
+                }}
+              >
+                {t("postDischargeFollowUp.send")}
+              </Button>
             )}
-            {patient.status === "post_discharge_follow_up" && <Button variant="secondary" permission="crm.patients.view" onClick={() => navigate("/crm/follow-up")}>{t("postDischargeFollowUp.title")}</Button>}
-            <Button permission="crm.forms.view" variant="secondary" onClick={() => setFormOpen(true)}>
+            {canManage &&
+              hasPermission(storedUser(), "inventory.icu.create") &&
+              patient.status !== "icu" && (
+                <Button
+                  permission="crm.patients.update"
+                  variant="secondary"
+                  disabled={sendingToIcu}
+                  onClick={async () => {
+                    if (sendingToIcu) return;
+                    setSendingToIcu(true);
+                    try {
+                      await apiClient.post("/inventory/icu-cases", {
+                        patientId: id,
+                        entry: new Date().toISOString(),
+                        exit: null,
+                        items: [],
+                      });
+                      await crmApi.patients.update(id, { status: "icu" });
+                      await profile.refresh();
+                      toast.success("Patient sent to ICU.");
+                    } catch (error) {
+                      toast.error(apiErrorMessage(error));
+                    } finally {
+                      setSendingToIcu(false);
+                    }
+                  }}
+                >
+                  <HeartPulse /> Send to ICU
+                </Button>
+              )}
+            {patient.status === "post_discharge_follow_up" && (
+              <Button
+                variant="secondary"
+                permission="crm.patients.view"
+                onClick={() => navigate("/crm/follow-up")}
+              >
+                {t("postDischargeFollowUp.title")}
+              </Button>
+            )}
+            <Button
+              permission="crm.forms.view"
+              variant="secondary"
+              onClick={() => setFormOpen(true)}
+            >
               <ClipboardPlus /> Forms
             </Button>
             <Button
@@ -352,11 +443,16 @@ export default function PatientProfilePage({
             >
               <Stethoscope /> Surgical examination
             </Button>
-            <Button permission="export" variant="secondary" onClick={exportPatientReport}>
+            <Button
+              permission="export"
+              variant="secondary"
+              onClick={exportPatientReport}
+            >
               <Download /> PDF report with charts
             </Button>
             {canManage && (
-              <Button data-action="edit"
+              <Button
+                data-action="edit"
                 variant="secondary"
                 onClick={() => {
                   setIsMarried(Boolean(patient.isMarried));
@@ -437,348 +533,395 @@ export default function PatientProfilePage({
         ))}
       </section>
 
-      <Button permission="crm.prescriptions.view" onClick={() => navigate(`/crm/patients/${id}/medications`)}><Pill className="size-4" />{t("prescription.viewMedications")}</Button>
-      {compact && <Button variant="outline" onClick={() => setShowDetails(value => !value)}>{t(showDetails ? "todayPatients.hideDetails" : "todayPatients.showDetails")}</Button>}
-      {(!compact || showDetails) && <>
-
-
-      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-        {[
-          [Activity, "Current vital signs", "No vital signs recorded."],
-          [
-            Bell,
-            "Alerts",
-            patient.allergies
-              ? `Allergies: ${patient.allergies}`
-              : "No active alerts.",
-          ],
-          [
-            History,
-            "Updates",
-            latestVisit
-              ? `Latest visit: ${new Date(String(latestVisit.scheduledAt)).toLocaleDateString()}`
-              : "No updates recorded.",
-          ],
-          [FlaskConical, t("laboratory.results"), laboratoryResults.error ?? (laboratoryResults.isLoading && canViewLaboratory ? t("common.loading") : laboratoryResults.data ? laboratoryResults.data.items.map((item) => `${item.testName}: ${item.result ?? ""} ${item.unit ?? ""}`).join("; ") : "—")],
-          [
-            FileText,
-            "Recent documents",
-            submissions.data?.length
-              ? `${submissions.data.length} clinical form(s) submitted.`
-              : "No recent documents.",
-          ],
-        ].map(([Icon, title, description]) => (
-          <Card key={String(title)} className="min-h-40">
-            <CardContent className="p-0">
-              <div className="flex items-center gap-2 border-b p-4">
-                <Icon className="size-4 text-primary" />
-                <h2 className="text-sm font-bold">{String(title)}</h2>
-              </div>
-              <p className="p-4 text-xs leading-5 text-muted-foreground">
-                {String(description)}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
-      </section>
-
-      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        <Card className="min-h-52">
-          <CardContent className="p-0">
-            <div className="flex items-center gap-2 border-b p-4">
-              <History className="size-4 text-primary" />
-              <h2 className="text-sm font-bold">Patient timeline</h2>
-            </div>
-            <div className="grid gap-2 p-4">
-              {visits.slice(0, 3).map((visit) => (
-                <div
-                  key={String(visit.id)}
-                  className="rounded-lg border p-2 text-xs"
-                >
-                  <strong>
-                    {text(
-                      (visit.surgery as CrmRecord | undefined)?.name ??
-                        visit.reason,
-                      visit.kind,
-                    )}
-                  </strong>
-                  <p className="mt-1 text-muted-foreground">
-                    {new Date(String(visit.scheduledAt)).toLocaleString()}
+      <Button
+        permission="crm.prescriptions.view"
+        onClick={() => navigate(`/crm/patients/${id}/medications`)}
+      >
+        <Pill className="size-4" />
+        {t("prescription.viewMedications")}
+      </Button>
+      {compact && (
+        <Button
+          variant="outline"
+          onClick={() => setShowDetails((value) => !value)}
+        >
+          {t(
+            showDetails
+              ? "todayPatients.hideDetails"
+              : "todayPatients.showDetails",
+          )}
+        </Button>
+      )}
+      {(!compact || showDetails) && (
+        <>
+          <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+            {[
+              [Activity, "Current vital signs", "No vital signs recorded."],
+              [
+                Bell,
+                "Alerts",
+                patient.allergies
+                  ? `Allergies: ${patient.allergies}`
+                  : "No active alerts.",
+              ],
+              [
+                History,
+                "Updates",
+                latestVisit
+                  ? `Latest visit: ${new Date(String(latestVisit.scheduledAt)).toLocaleDateString()}`
+                  : "No updates recorded.",
+              ],
+              [
+                FlaskConical,
+                t("laboratory.results"),
+                laboratoryResults.error ??
+                  (laboratoryResults.isLoading && canViewLaboratory
+                    ? t("common.loading")
+                    : laboratoryResults.data
+                      ? laboratoryResults.data.items
+                          .map(
+                            (item) =>
+                              `${item.testName}: ${item.result ?? ""} ${item.unit ?? ""}`,
+                          )
+                          .join("; ")
+                      : "—"),
+              ],
+              [
+                FileText,
+                "Recent documents",
+                submissions.data?.length
+                  ? `${submissions.data.length} clinical form(s) submitted.`
+                  : "No recent documents.",
+              ],
+            ].map(([Icon, title, description]) => (
+              <Card key={String(title)} className="min-h-40">
+                <CardContent className="p-0">
+                  <div className="flex items-center gap-2 border-b p-4">
+                    <Icon className="size-4 text-primary" />
+                    <h2 className="text-sm font-bold">{String(title)}</h2>
+                  </div>
+                  <p className="p-4 text-xs leading-5 text-muted-foreground">
+                    {String(description)}
                   </p>
-                </div>
-              ))}
-              {!visits.length && (
-                <p className="text-xs text-muted-foreground">
-                  No timeline records yet.
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="min-h-52">
-          <CardContent className="p-0">
-            <div className="flex items-center gap-2 border-b p-4">
-              <CalendarClock className="size-4 text-primary" />
-              <h2 className="text-sm font-bold">Upcoming / pending</h2>
-            </div>
-            <div className="grid gap-2 p-4">
-              {upcomingAppointments.slice(0, 3).map((appointment) => (
-                <div
-                  key={String(appointment.id)}
-                  className="rounded-lg border bg-orange-50 p-2 text-xs dark:bg-orange-950/20"
-                >
-                  <strong>{text(appointment.reason, "Appointment")}</strong>
-                  <p className="mt-1 text-muted-foreground">
-                    {new Date(String(appointment.scheduledAt)).toLocaleString()}
-                  </p>
-                </div>
-              ))}
-              {!upcomingAppointments.length && (
-                <p className="text-xs text-muted-foreground">
-                  No upcoming appointments.
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="min-h-52">
-          <CardContent className="p-0">
-            <div className="flex items-center gap-2 border-b p-4">
-              <Pill className="size-4 text-emerald-600" />
-              <h2 className="text-sm font-bold">{t("prescription.medications")}</h2>
-            </div>
-            <div className="p-4"><Button permission="crm.prescriptions.view" variant="outline" onClick={() => navigate(`/crm/patients/${id}/medications`)}>{t("prescription.viewMedications")}</Button></div>
-          </CardContent>
-        </Card>
-        <Card className="min-h-52">
-          <CardContent className="p-0">
-            <div className="flex items-center gap-2 border-b p-4">
-              <Activity className="size-4 text-teal-600" />
-              <h2 className="text-sm font-bold">Outputs</h2>
-            </div>
-            <p className="p-4 text-xs text-muted-foreground">
-              No output records for this patient.
-            </p>
-          </CardContent>
-        </Card>
-      </section>
+                </CardContent>
+              </Card>
+            ))}
+          </section>
 
-      <Card>
-        <CardContent className="p-6">
-          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <span className="grid size-10 place-items-center rounded-xl bg-primary/10 text-primary">
-                <FileText />
-              </span>
-              <div>
-                <h2 className="font-bold">Clinical forms & examinations</h2>
-                <p className="text-xs text-muted-foreground">
-                  Submitted assessments remain part of this patient profile.
-                </p>
-              </div>
-            </div>
-            {canManage && (
-              <Button permission="crm.forms.create"
-                onClick={() => setFormOpen(true)}
-                disabled={!templates.data?.length}
-              >
-                <ClipboardPlus />
-                Submit form
-              </Button>
-            )}
-          </div>
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {submissions.data?.length ? (
-              submissions.data.map((submission) => {
-                const template = submission.formTemplate as FormTemplate;
-                const values = submission.data as Record<string, unknown>;
-                return (
-                  <details
-                    key={submission.id}
-                    className="group rounded-xl border bg-muted/15 p-4"
-                  >
-                    <summary className="cursor-pointer list-none">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="font-semibold">{template.name}</p>
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            {new Date(
-                              String(submission.createdAt),
-                            ).toLocaleString()}
-                          </p>
-                        </div>
-                        <Badge variant="outline" className="capitalize">
-                          {template.category}
-                        </Badge>
-                      </div>
-                    </summary>
-                    <dl className="mt-4 grid gap-2 border-t pt-3 text-sm">
-                      {template.fields.map((field) => (
-                        <div
-                          key={field.id}
-                          className="grid grid-cols-[1fr_1.2fr] gap-3"
-                        >
-                          <dt className="text-muted-foreground">
-                            {field.label}
-                          </dt>
-                          <dd className="font-medium">
-                            {field.type === "checkbox"
-                              ? values[field.id]
-                                ? "Yes"
-                                : "No"
-                              : text(values[field.id], "—")}
-                          </dd>
-                        </div>
-                      ))}
-                    </dl>
-                  </details>
-                );
-              })
-            ) : (
-              <p className="col-span-full rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
-                No clinical forms submitted for this patient.
-              </p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      <section className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
-        <Card>
-          <CardContent className="p-6">
-            <div className="mb-5 flex items-center gap-2">
-              <Stethoscope className="size-5 text-primary" />
-              <h2 className="font-bold">Recent visits</h2>
-            </div>
-            <div className="space-y-3">
-              {visits.length ? (
-                visits.map((visit) => (
-                  <div
-                    key={String(visit.id)}
-                    className="flex items-center justify-between gap-4 rounded-xl border p-4"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="grid size-10 place-items-center rounded-lg bg-primary/10 text-primary">
-                        {visit.kind === "Surgery" ? (
-                          <HeartPulse />
-                        ) : (
-                          <UserRound />
+          <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <Card className="min-h-52">
+              <CardContent className="p-0">
+                <div className="flex items-center gap-2 border-b p-4">
+                  <History className="size-4 text-primary" />
+                  <h2 className="text-sm font-bold">Patient timeline</h2>
+                </div>
+                <div className="grid gap-2 p-4">
+                  {visits.slice(0, 3).map((visit) => (
+                    <div
+                      key={String(visit.id)}
+                      className="rounded-lg border p-2 text-xs"
+                    >
+                      <strong>
+                        {text(
+                          (visit.surgery as CrmRecord | undefined)?.name ??
+                            visit.reason,
+                          visit.kind,
                         )}
-                      </span>
-                      <div>
-                        <p className="font-semibold">
-                          {text(
-                            (visit.surgery as CrmRecord | undefined)?.name ??
-                              visit.reason,
-                            String(visit.kind),
-                          )}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {doctorName(visit)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-end">
-                      <Badge variant="outline" className="capitalize">
-                        {text(visit.status)}
-                      </Badge>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {new Date(
-                          String(visit.scheduledAt),
-                        ).toLocaleDateString()}
+                      </strong>
+                      <p className="mt-1 text-muted-foreground">
+                        {new Date(String(visit.scheduledAt)).toLocaleString()}
                       </p>
                     </div>
-                  </div>
-                ))
-              ) : (
-                <p className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
-                  No visits recorded yet.
+                  ))}
+                  {!visits.length && (
+                    <p className="text-xs text-muted-foreground">
+                      No timeline records yet.
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="min-h-52">
+              <CardContent className="p-0">
+                <div className="flex items-center gap-2 border-b p-4">
+                  <CalendarClock className="size-4 text-primary" />
+                  <h2 className="text-sm font-bold">Upcoming / pending</h2>
+                </div>
+                <div className="grid gap-2 p-4">
+                  {upcomingAppointments.slice(0, 3).map((appointment) => (
+                    <div
+                      key={String(appointment.id)}
+                      className="rounded-lg border bg-orange-50 p-2 text-xs dark:bg-orange-950/20"
+                    >
+                      <strong>{text(appointment.reason, "Appointment")}</strong>
+                      <p className="mt-1 text-muted-foreground">
+                        {new Date(
+                          String(appointment.scheduledAt),
+                        ).toLocaleString()}
+                      </p>
+                    </div>
+                  ))}
+                  {!upcomingAppointments.length && (
+                    <p className="text-xs text-muted-foreground">
+                      No upcoming appointments.
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="min-h-52">
+              <CardContent className="p-0">
+                <div className="flex items-center gap-2 border-b p-4">
+                  <Pill className="size-4 text-emerald-600" />
+                  <h2 className="text-sm font-bold">
+                    {t("prescription.medications")}
+                  </h2>
+                </div>
+                <div className="p-4">
+                  <Button
+                    permission="crm.prescriptions.view"
+                    variant="outline"
+                    onClick={() => navigate(`/crm/patients/${id}/medications`)}
+                  >
+                    {t("prescription.viewMedications")}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="min-h-52">
+              <CardContent className="p-0">
+                <div className="flex items-center gap-2 border-b p-4">
+                  <Activity className="size-4 text-teal-600" />
+                  <h2 className="text-sm font-bold">Outputs</h2>
+                </div>
+                <p className="p-4 text-xs text-muted-foreground">
+                  No output records for this patient.
                 </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-        <div className="space-y-5">
-          <Card>
-            <CardContent className="p-6">
-              <div className="mb-4 flex items-center gap-2">
-                <Droplets className="size-5 text-red-500" />
-                <h2 className="font-bold">Medical information</h2>
-              </div>
-              <dl className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <dt className="text-muted-foreground">Blood type</dt>
-                  <dd className="font-semibold">{text(patient.bloodType)}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">Weight / height</dt>
-                  <dd className="font-semibold">
-                    {patient.weightKg ? `${patient.weightKg} kg` : "—"} /{" "}
-                    {patient.heightCm ? `${patient.heightCm} cm` : "—"}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">Diabetes</dt>
-                  <dd className="font-semibold">
-                    {patient.hasDiabetes ? "Yes" : "No"}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">High blood pressure</dt>
-                  <dd className="font-semibold">
-                    {patient.hasHypertension ? "Yes" : "No"}
-                  </dd>
-                </div>
-                <div className="col-span-2">
-                  <dt className="text-muted-foreground">Family</dt>
-                  <dd className="font-semibold">
-                    {patient.isMarried
-                      ? `Married · ${text(patient.childrenCount, "0")} children`
-                      : "Not married"}
-                  </dd>
-                </div>
-                <div className="col-span-2">
-                  <dt className="text-muted-foreground">Allergies</dt>
-                  <dd className="whitespace-pre-wrap font-medium">
-                    {text(patient.allergies, "No known allergies")}
-                  </dd>
-                </div>
-                <div className="col-span-2">
-                  <dt className="text-muted-foreground">Medical notes</dt>
-                  <dd className="whitespace-pre-wrap font-medium">
-                    {text(patient.medicalNotes, "No medical notes")}
-                  </dd>
-                </div>
-              </dl>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <h2 className="mb-4 font-bold">Original lead information</h2>
-              <dl className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <dt className="text-muted-foreground">Lead code</dt>
-                  <dd className="font-semibold">{text(lead?.code)}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">Source</dt>
-                  <dd className="font-semibold">{text(lead?.source)}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">Interest</dt>
-                  <dd className="font-semibold">{text(lead?.interest)}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">Lead age</dt>
-                  <dd className="font-semibold">{text(lead?.age)}</dd>
-                </div>
-              </dl>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
+              </CardContent>
+            </Card>
+          </section>
 
-      </>}
+          <Card>
+            <CardContent className="p-6">
+              <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="grid size-10 place-items-center rounded-xl bg-primary/10 text-primary">
+                    <FileText />
+                  </span>
+                  <div>
+                    <h2 className="font-bold">Clinical forms & examinations</h2>
+                    <p className="text-xs text-muted-foreground">
+                      Submitted assessments remain part of this patient profile.
+                    </p>
+                  </div>
+                </div>
+                {canManage && (
+                  <Button
+                    permission="crm.forms.create"
+                    onClick={() => setFormOpen(true)}
+                    disabled={!templates.data?.length}
+                  >
+                    <ClipboardPlus />
+                    Submit form
+                  </Button>
+                )}
+              </div>
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                {submissions.data?.length ? (
+                  submissions.data.map((submission) => {
+                    const template = submission.formTemplate as FormTemplate;
+                    const values = submission.data as Record<string, unknown>;
+                    return (
+                      <details
+                        key={submission.id}
+                        className="group rounded-xl border bg-muted/15 p-4"
+                      >
+                        <summary className="cursor-pointer list-none">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="font-semibold">{template.name}</p>
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                {new Date(
+                                  String(submission.createdAt),
+                                ).toLocaleString()}
+                              </p>
+                            </div>
+                            <Badge variant="outline" className="capitalize">
+                              {template.category}
+                            </Badge>
+                          </div>
+                        </summary>
+                        <dl className="mt-4 grid gap-2 border-t pt-3 text-sm">
+                          {template.fields.map((field) => (
+                            <div
+                              key={field.id}
+                              className="grid grid-cols-[1fr_1.2fr] gap-3"
+                            >
+                              <dt className="text-muted-foreground">
+                                {field.label}
+                              </dt>
+                              <dd className="font-medium">
+                                {field.type === "checkbox"
+                                  ? values[field.id]
+                                    ? "Yes"
+                                    : "No"
+                                  : text(values[field.id], "—")}
+                              </dd>
+                            </div>
+                          ))}
+                        </dl>
+                      </details>
+                    );
+                  })
+                ) : (
+                  <p className="col-span-full rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+                    No clinical forms submitted for this patient.
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <section className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
+            <Card>
+              <CardContent className="p-6">
+                <div className="mb-5 flex items-center gap-2">
+                  <Stethoscope className="size-5 text-primary" />
+                  <h2 className="font-bold">Recent visits</h2>
+                </div>
+                <div className="space-y-3">
+                  {visits.length ? (
+                    visits.map((visit) => (
+                      <div
+                        key={String(visit.id)}
+                        className="flex items-center justify-between gap-4 rounded-xl border p-4"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="grid size-10 place-items-center rounded-lg bg-primary/10 text-primary">
+                            {visit.kind === "Surgery" ? (
+                              <HeartPulse />
+                            ) : (
+                              <UserRound />
+                            )}
+                          </span>
+                          <div>
+                            <p className="font-semibold">
+                              {text(
+                                (visit.surgery as CrmRecord | undefined)
+                                  ?.name ?? visit.reason,
+                                String(visit.kind),
+                              )}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {doctorName(visit)}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-end">
+                          <Badge variant="outline" className="capitalize">
+                            {text(visit.status)}
+                          </Badge>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {new Date(
+                              String(visit.scheduledAt),
+                            ).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+                      No visits recorded yet.
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+            <div className="space-y-5">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="mb-4 flex items-center gap-2">
+                    <Droplets className="size-5 text-red-500" />
+                    <h2 className="font-bold">Medical information</h2>
+                  </div>
+                  <dl className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <dt className="text-muted-foreground">Blood type</dt>
+                      <dd className="font-semibold">
+                        {text(patient.bloodType)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">Weight / height</dt>
+                      <dd className="font-semibold">
+                        {patient.weightKg ? `${patient.weightKg} kg` : "—"} /{" "}
+                        {patient.heightCm ? `${patient.heightCm} cm` : "—"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">Diabetes</dt>
+                      <dd className="font-semibold">
+                        {patient.hasDiabetes ? "Yes" : "No"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">
+                        High blood pressure
+                      </dt>
+                      <dd className="font-semibold">
+                        {patient.hasHypertension ? "Yes" : "No"}
+                      </dd>
+                    </div>
+                    <div className="col-span-2">
+                      <dt className="text-muted-foreground">Family</dt>
+                      <dd className="font-semibold">
+                        {patient.isMarried
+                          ? `Married · ${text(patient.childrenCount, "0")} children`
+                          : "Not married"}
+                      </dd>
+                    </div>
+                    <div className="col-span-2">
+                      <dt className="text-muted-foreground">Allergies</dt>
+                      <dd className="whitespace-pre-wrap font-medium">
+                        {text(patient.allergies, "No known allergies")}
+                      </dd>
+                    </div>
+                    <div className="col-span-2">
+                      <dt className="text-muted-foreground">Medical notes</dt>
+                      <dd className="whitespace-pre-wrap font-medium">
+                        {text(patient.medicalNotes, "No medical notes")}
+                      </dd>
+                    </div>
+                  </dl>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-6">
+                  <h2 className="mb-4 font-bold">Original lead information</h2>
+                  <dl className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <dt className="text-muted-foreground">Lead code</dt>
+                      <dd className="font-semibold">{text(lead?.code)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">Source</dt>
+                      <dd className="font-semibold">{text(lead?.source)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">Interest</dt>
+                      <dd className="font-semibold">{text(lead?.interest)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">Lead age</dt>
+                      <dd className="font-semibold">{text(lead?.age)}</dd>
+                    </div>
+                  </dl>
+                </CardContent>
+              </Card>
+            </div>
+          </section>
+        </>
+      )}
       <Dialog open={followUpDialogOpen} onOpenChange={setFollowUpDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -797,26 +940,47 @@ export default function PatientProfilePage({
             />
           </div>
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setFollowUpDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setFollowUpDialogOpen(false)}
+            >
               {t("common.cancel")}
             </Button>
-            <Button permission="crm.patients.update" disabled={!followUpDate || sendingFollowUp} onClick={async () => {
-              if (followUpLock.current) return;
-              followUpLock.current = true;
-              setSendingFollowUp(true);
-              try {
-                await crmApi.patients.update(id, { status: "post_discharge_follow_up", followUpDate });
-                await profile.refresh();
-                setFollowUpDialogOpen(false);
-                toast.success(t("postDischargeFollowUp.sent"));
-              } catch (cause) { toast.error(apiErrorMessage(cause)); }
-              finally { followUpLock.current = false; setSendingFollowUp(false); }
-            }}>{t("postDischargeFollowUp.confirm")}</Button>
+            <Button
+              permission="crm.patients.update"
+              disabled={!followUpDate || sendingFollowUp}
+              onClick={async () => {
+                if (followUpLock.current) return;
+                followUpLock.current = true;
+                setSendingFollowUp(true);
+                try {
+                  await crmApi.patients.update(id, {
+                    status: "post_discharge_follow_up",
+                    followUpDate,
+                  });
+                  await profile.refresh();
+                  setFollowUpDialogOpen(false);
+                  toast.success(t("postDischargeFollowUp.sent"));
+                } catch (cause) {
+                  toast.error(apiErrorMessage(cause));
+                } finally {
+                  followUpLock.current = false;
+                  setSendingFollowUp(false);
+                }
+              }}
+            >
+              {t("postDischargeFollowUp.confirm")}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={editing && canManage} onOpenChange={value => { if (!profileSaveLock.current) setEditing(value); }}>
+      <Dialog
+        open={editing && canManage}
+        onOpenChange={(value) => {
+          if (!profileSaveLock.current) setEditing(value);
+        }}
+      >
         <DialogContent className="flex max-h-[min(90vh,760px)] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
           <DialogHeader className="shrink-0 border-b px-6 py-5">
             <DialogTitle>{t("patientActions.editProfile")}</DialogTitle>
@@ -842,8 +1006,16 @@ export default function PatientProfilePage({
                   />
                 </label>
               ))}
-              <Label className="grid gap-1.5 text-sm font-medium">{t("crm.fields.dateOfBirth")}
-                <FormDatePicker name="dateOfBirth" initialValue={patient.dateOfBirth ? String(patient.dateOfBirth).slice(0, 10) : ""} />
+              <Label className="grid gap-1.5 text-sm font-medium">
+                {t("crm.fields.dateOfBirth")}
+                <FormDatePicker
+                  name="dateOfBirth"
+                  initialValue={
+                    patient.dateOfBirth
+                      ? String(patient.dateOfBirth).slice(0, 10)
+                      : ""
+                  }
+                />
               </Label>
               <label className="grid gap-1.5 text-sm font-medium">
                 Gender
@@ -967,8 +1139,24 @@ export default function PatientProfilePage({
               ))}
             </div>
             <div className="flex shrink-0 justify-end border-t bg-background px-6 py-4">
-              <Button type="button" variant="outline" className="me-2" disabled={savingProfile} onClick={() => setEditing(false)}>{t("patientBooking.cancel")}</Button>
-              <Button permission="crm.patients.update" type="submit" disabled={savingProfile}>{savingProfile ? t("patientBooking.saving") : t("patientActions.saveProfile")}</Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="me-2"
+                disabled={savingProfile}
+                onClick={() => setEditing(false)}
+              >
+                {t("patientBooking.cancel")}
+              </Button>
+              <Button
+                permission="crm.patients.update"
+                type="submit"
+                disabled={savingProfile}
+              >
+                {savingProfile
+                  ? t("patientBooking.saving")
+                  : t("patientActions.saveProfile")}
+              </Button>
             </div>
           </form>
         </DialogContent>
@@ -1089,7 +1277,11 @@ export default function PatientProfilePage({
               </div>
             </ScrollArea>
             <div className="flex justify-end border-t p-4">
-              <Button permission="crm.forms.create" type="submit" disabled={!selectedTemplate}>
+              <Button
+                permission="crm.forms.create"
+                type="submit"
+                disabled={!selectedTemplate}
+              >
                 Submit form
               </Button>
             </div>

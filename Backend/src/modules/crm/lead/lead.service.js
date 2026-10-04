@@ -15,8 +15,16 @@ export const leadService = {
           [field]: { contains: filters.search },
         })),
       }),
-      ...Object.fromEntries(["city", "country"].filter(field => filters[field]).map(field => [field, { contains: filters[field] }])),
-      ...Object.fromEntries(["contactMethod", "leadSourceChannel", "patientType", "referralPersona"].filter(field => filters[field]).map(field => [field, filters[field]])),
+      ...Object.fromEntries(
+        ["city", "country"]
+          .filter((field) => filters[field])
+          .map((field) => [field, { contains: filters[field] }]),
+      ),
+      ...Object.fromEntries(
+        ["contactMethod", "leadSourceChannel", "patientType", "referralPersona"]
+          .filter((field) => filters[field])
+          .map((field) => [field, filters[field]]),
+      ),
       ...(filters.source && { source: filters.source }),
       ...(filters.gender && { gender: filters.gender }),
       ...(filters.status && { status: filters.status }),
@@ -29,7 +37,8 @@ export const leadService = {
     };
     if (filters.fromDate || filters.toDate) {
       const range = {};
-      if (filters.fromDate) range.gte = new Date(`${filters.fromDate}T00:00:00.000Z`);
+      if (filters.fromDate)
+        range.gte = new Date(`${filters.fromDate}T00:00:00.000Z`);
       if (filters.toDate) {
         const nextDay = new Date(`${filters.toDate}T00:00:00.000Z`);
         nextDay.setUTCDate(nextDay.getUTCDate() + 1);
@@ -41,7 +50,12 @@ export const leadService = {
     const result = pageResult(items, total, page, pageSize);
     if (query.summary === "true") {
       const { status: _status, ...summaryWhere } = where;
-      result.counts = Object.fromEntries((await leadModel.counts(summaryWhere)).map(row => [row.status, row._count._all]));
+      result.counts = Object.fromEntries(
+        (await leadModel.counts(summaryWhere)).map((row) => [
+          row.status,
+          row._count._all,
+        ]),
+      );
     }
     return result;
   },

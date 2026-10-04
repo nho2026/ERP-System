@@ -2,11 +2,16 @@ import { isDeepStrictEqual } from "node:util";
 import { ordersModel } from "./orders.model.js";
 import { ordersSchema, arrivalSchema } from "./orders.schema.js";
 export async function saveOrder(model, body, id) {
-  const input = (id ? ordersSchema.omit({ requestId: true }) : ordersSchema).parse(body);
+  const input = (
+    id ? ordersSchema.omit({ requestId: true }) : ordersSchema
+  ).parse(body);
   const existing = id ? await model.find(id) : null;
-  if (id && !existing) throw Object.assign(new Error("Order not found."), { status: 404 });
+  if (id && !existing)
+    throw Object.assign(new Error("Order not found."), { status: 404 });
   if (id && !isDeepStrictEqual(body.originalItems, existing.items))
-    throw Object.assign(new Error("Order changed. Reload and try again."), { status: 409 });
+    throw Object.assign(new Error("Order changed. Reload and try again."), {
+      status: 409,
+    });
   if (!id) {
     const previous = await model.findRequest(input.requestId);
     if (previous) return previous;
@@ -15,16 +20,30 @@ export async function saveOrder(model, body, id) {
   for (const item of input.items) {
     if (id && item.originalIndex !== undefined) {
       if (!existing.items[item.originalIndex] || seen.has(item.originalIndex))
-        throw Object.assign(new Error("Invalid order item reference."), { status: 400 });
+        throw Object.assign(new Error("Invalid order item reference."), {
+          status: 400,
+        });
       seen.add(item.originalIndex);
     }
   }
-  if (existing) for (const [index, item] of existing.items.entries()) {
-    const next = input.items.find((row) => row.originalIndex === index);
-    if (item.arrived && (!next || next.productId !== item.productId || next.isNew !== item.isNew ||
-        next.quantity !== item.quantity || (item.isNew && next.name !== item.name)))
-      throw Object.assign(new Error("Unmark arrived items before removing them or changing their product or quantity."), { status: 409 });
-  }
+  if (existing)
+    for (const [index, item] of existing.items.entries()) {
+      const next = input.items.find((row) => row.originalIndex === index);
+      if (
+        item.arrived &&
+        (!next ||
+          next.productId !== item.productId ||
+          next.isNew !== item.isNew ||
+          next.quantity !== item.quantity ||
+          (item.isNew && next.name !== item.name))
+      )
+        throw Object.assign(
+          new Error(
+            "Unmark arrived items before removing them or changing their product or quantity.",
+          ),
+          { status: 409 },
+        );
+    }
   const ids = [
     ...new Set(
       input.items.filter((item) => !item.isNew).map((item) => item.productId),
@@ -41,7 +60,10 @@ export async function saveOrder(model, body, id) {
     const previous = existing?.items[originalIndex];
     return {
       ...details,
-      ...(existing && { arrived: previous?.arrived ?? false, arrivedAt: previous?.arrivedAt ?? null }),
+      ...(existing && {
+        arrived: previous?.arrived ?? false,
+        arrivedAt: previous?.arrivedAt ?? null,
+      }),
       productId: product?.id ?? null,
       name: product?.name ?? item.name,
       imageUrl:
@@ -62,9 +84,17 @@ export async function saveOrder(model, body, id) {
       status: 400,
     });
   if (id) {
-    const data = { name: input.name, note: input.note, items, totalPrice: cents / 100 };
+    const data = {
+      name: input.name,
+      note: input.note,
+      items,
+      totalPrice: cents / 100,
+    };
     const updated = await model.update(id, existing, data);
-    if (updated.count !== 1) throw Object.assign(new Error("Order changed. Reload and try again."), { status: 409 });
+    if (updated.count !== 1)
+      throw Object.assign(new Error("Order changed. Reload and try again."), {
+        status: 409,
+      });
     return { ...existing, ...data };
   }
   try {

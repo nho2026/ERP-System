@@ -2,7 +2,11 @@ import { z } from "zod";
 const nullable = z.string().trim().nullable().optional();
 export const departmentSchema = z.object({
   type: z.enum(["hospital", "office"]).optional(),
-  code: z.string().regex(/^DEP-[1-9][0-9]*$/).max(20).optional(),
+  code: z
+    .string()
+    .regex(/^DEP-[1-9][0-9]*$/)
+    .max(20)
+    .optional(),
   name: z.string().trim().min(2),
   description: nullable,
   managerId: z.string().trim().min(1),

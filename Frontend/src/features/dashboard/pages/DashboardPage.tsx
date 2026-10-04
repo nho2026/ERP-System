@@ -95,7 +95,7 @@ function VisitChart() {
               className="absolute inset-x-0 border-t border-dashed border-border/70"
               style={{ bottom: `${(value / 200) * 88}%` }}
             >
-              <span className="absolute -top-2.5 start-0 bg-card pe-2 text-[9px] text-muted-foreground">
+              <span className="absolute -top-2.5 inset-s-0 bg-card pe-2 text-[9px] text-muted-foreground">
                 {value}
               </span>
             </div>
@@ -303,7 +303,7 @@ export default function DashboardPage() {
         {stats.map(({ label, value, change, icon: Icon }, i) => (
           <Card
             key={label}
-            className={`overflow-hidden rounded-2xl border-0 shadow-none ${i === 0 ? "bg-gradient-to-br from-[#003c30] to-[#008260] text-white" : "bg-card"}`}
+            className={`overflow-hidden rounded-2xl border-0 shadow-none ${i === 0 ? "bg-linear-to-br from-[#003c30] to-[#008260] text-white" : "bg-card"}`}
           >
             <CardContent className="p-5">
               <div className="flex items-start justify-between gap-3">
@@ -460,7 +460,7 @@ export default function DashboardPage() {
             <AdmissionChart />
           </CardContent>
         </Card>
-        <Card className="rounded-2xl border-0 bg-gradient-to-br from-[#003c30] to-[#008260] text-white shadow-none">
+        <Card className="rounded-2xl border-0 bg-linear-to-br from-[#003c30] to-[#008260] text-white shadow-none">
           <CardContent className="flex h-full min-h-44 flex-col justify-between p-6">
             <div className="flex items-center justify-between">
               <span className="rounded-xl bg-white/15 p-2.5">

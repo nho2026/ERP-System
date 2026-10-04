@@ -61,7 +61,8 @@ export const billingService = {
   listPayments: billingModel.listPayments,
   async recordPayment(data) {
     const policy = await getSettings("finance");
-    if (!policy.paymentMethods.includes(data.method)) throw httpError("This payment method is disabled in Settings.", 400);
+    if (!policy.paymentMethods.includes(data.method))
+      throw httpError("This payment method is disabled in Settings.", 400);
     return billingModel.recordPayment(data, (invoice) => {
       if (["draft", "cancelled"].includes(invoice.status))
         throw httpError(

@@ -14,7 +14,9 @@ export const env = {
     apiKey: process.env.ANTHROPIC_API_KEY ?? "",
     workspaceId: (process.env.ANTHROPIC_WORKSPACE_ID ?? "").trim(),
     model: process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-6",
-    systemPrompt: process.env.WHATSAPP_AI_SYSTEM_PROMPT ?? "You are the automated customer service assistant for NHO. Reply briefly in the customer’s language. Identify yourself as an automated assistant. Do not invent prices, availability, policies, or completed actions. When information is missing, ask a clarifying question or suggest contacting staff. You cannot access ERP records or perform actions.",
+    systemPrompt:
+      process.env.WHATSAPP_AI_SYSTEM_PROMPT ??
+      "You are the automated customer service assistant for SAGHI. Reply briefly in the customer’s language. Identify yourself as an automated assistant. Do not invent prices, availability, policies, or completed actions. When information is missing, ask a clarifying question or suggest contacting staff. You cannot access ERP records or perform actions.",
   },
   whatsapp: {
     autoReply: process.env.WHATSAPP_AUTO_REPLY === "true",

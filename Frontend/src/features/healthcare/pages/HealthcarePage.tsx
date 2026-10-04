@@ -94,13 +94,18 @@ const configs: Record<
     description:
       "Manage hospital and office departments, managers and assigned employees.",
     fields: [
-
       {
         name: "name",
         label: "Department name",
         required: true,
       },
-      { name: "type", label: "Department type", type: "select", required: true, options: ["hospital", "office"] },
+      {
+        name: "type",
+        label: "Department type",
+        type: "select",
+        required: true,
+        options: ["hospital", "office"],
+      },
       {
         name: "description",
         label: "Description",
@@ -381,7 +386,7 @@ function AppointmentCalendar({
   return (
     <div className="grid min-h-[700px] xl:grid-cols-[minmax(0,1fr)_340px]">
       <div className="min-w-0 border-e">
-        <div className="border-b bg-gradient-to-r from-primary/10 via-teal-500/5 to-transparent p-4">
+        <div className="border-b bg-linear-to-r from-primary/10 via-teal-500/5 to-transparent p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <span className="grid size-11 place-items-center rounded-xl bg-primary text-primary-foreground shadow-md">
@@ -607,7 +612,7 @@ function AppointmentCalendar({
         </div>
       </div>
       <aside className="bg-muted/20 p-4">
-        <div className="mb-4 rounded-2xl bg-gradient-to-br from-slate-950 to-teal-900 p-4 text-white shadow-md">
+        <div className="mb-4 rounded-2xl bg-linear-to-br from-slate-950 to-teal-900 p-4 text-white shadow-md">
           <div className="flex items-start justify-between">
             <span className="grid size-10 place-items-center rounded-xl bg-white/10">
               <CalendarCheck />
@@ -634,7 +639,7 @@ function AppointmentCalendar({
                   className="relative w-full overflow-hidden rounded-xl border bg-card p-3 ps-4 text-start shadow-sm transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
                 >
                   <span
-                    className={`absolute inset-y-0 start-0 w-1 ${appointmentDots[String(appointment.status)] ?? appointmentDots.pending}`}
+                    className={`absolute inset-y-0 inset-s-0 w-1 ${appointmentDots[String(appointment.status)] ?? appointmentDots.pending}`}
                   />
                   <div className="flex items-center justify-between gap-2">
                     <span className="flex items-center gap-1.5 text-sm font-bold">
@@ -714,13 +719,28 @@ export default function HealthcarePage({
   };
   const [search, setSearch] = useState("");
   const config = configs[resource];
-  const table = useServerTable<HealthcareRecord>(resource === "appointments" ? "/crm/appointments" : `/healthcare/${resource}`, { search });
+  const table = useServerTable<HealthcareRecord>(
+    resource === "appointments"
+      ? "/crm/appointments"
+      : `/healthcare/${resource}`,
+    { search },
+  );
   const data = table;
-  const calendar = useApiResource(useCallback(() => resource === "appointments" ? healthcareApi.appointments.list() : Promise.resolve([]), [resource]));
+  const calendar = useApiResource(
+    useCallback(
+      () =>
+        resource === "appointments"
+          ? healthcareApi.appointments.list()
+          : Promise.resolve([]),
+      [resource],
+    ),
+  );
   const employees = useApiResource(
     useCallback(() => hrApi.employees.list(), []),
   );
-  const positions = useApiResource(useCallback(() => hrApi.positions.list(), []));
+  const positions = useApiResource(
+    useCallback(() => hrApi.positions.list(), []),
+  );
   const departments = useApiResource(
     useCallback(() => healthcareApi.departments.list(), []),
   );
@@ -756,33 +776,43 @@ export default function HealthcarePage({
   const rows = data.data ?? [];
   const options = (field: Field) =>
     field.type === "position"
-      ? (positions.data ?? []).filter(position => position.status === "active" || position.id === (editing?.employee as HealthcareRecord | undefined)?.positionId).map(position => [position.id, String(position.name)])
+      ? (positions.data ?? [])
+          .filter(
+            (position) =>
+              position.status === "active" ||
+              position.id ===
+                (editing?.employee as HealthcareRecord | undefined)?.positionId,
+          )
+          .map((position) => [position.id, String(position.name)])
       : field.type === "specialization"
-      ? (specializations.data ?? []).map((item) => [
-          String(item.name),
-          String(item.name),
-        ])
-      : field.type === "employee"
-        ? employees.data?.map((employee) => [
-            employee.id,
-            `${employee.employeeCode} — ${employee.firstName} ${employee.lastName}`,
+        ? (specializations.data ?? []).map((item) => [
+            String(item.name),
+            String(item.name),
           ])
-        : field.type === "department"
-          ? departments.data?.filter(department => department.type === "hospital" || department.id === editing?.departmentId).map((department) => [
-              department.id,
-              String(department.name),
+        : field.type === "employee"
+          ? employees.data?.map((employee) => [
+              employee.id,
+              `${employee.employeeCode} — ${employee.firstName} ${employee.lastName}`,
             ])
-          : field.type === "doctor"
-            ? staff.data
-                ?.filter((member) => member.staffType === "doctor")
-                .map((doctor) => [
-                  doctor.id,
-                  personName(nested(doctor, "employee")),
-                ])
-            : field.options?.map((value) => [
-                value,
-                value.replaceAll("_", " "),
-              ]);
+          : field.type === "department"
+            ? departments.data
+                ?.filter(
+                  (department) =>
+                    department.type === "hospital" ||
+                    department.id === editing?.departmentId,
+                )
+                .map((department) => [department.id, String(department.name)])
+            : field.type === "doctor"
+              ? staff.data
+                  ?.filter((member) => member.staffType === "doctor")
+                  .map((doctor) => [
+                    doctor.id,
+                    personName(nested(doctor, "employee")),
+                  ])
+              : field.options?.map((value) => [
+                  value,
+                  value.replaceAll("_", " "),
+                ]);
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setBusy(true);
@@ -792,7 +822,12 @@ export default function HealthcarePage({
     for (const field of config.fields) {
       const rawValue = String(form.get(field.name) ?? "");
       const raw = rawValue === "__none__" ? "" : rawValue;
-      if (resource === "staff" && field.name === "positionId" && (positions.isLoading || positions.error || (!editing && !raw))) continue;
+      if (
+        resource === "staff" &&
+        field.name === "positionId" &&
+        (positions.isLoading || positions.error || (!editing && !raw))
+      )
+        continue;
       if (!raw && !field.required) {
         payload[field.name] = null;
         continue;
@@ -870,7 +905,8 @@ export default function HealthcarePage({
                   </Button>
                 </div>
               )}
-              <Button permission="create"
+              <Button
+                permission="create"
                 onClick={() => {
                   setError("");
                   setAppointmentDraftAt("");
@@ -884,7 +920,11 @@ export default function HealthcarePage({
           </div>
           {resource === "appointments" && appointmentView === "calendar" ? (
             <AppointmentCalendar
-              appointments={(calendar.data ?? []).filter(row => JSON.stringify(row).toLowerCase().includes(search.toLowerCase()))}
+              appointments={(calendar.data ?? []).filter((row) =>
+                JSON.stringify(row)
+                  .toLowerCase()
+                  .includes(search.toLowerCase()),
+              )}
               onCreate={(day) => {
                 setError("");
                 setAppointmentDraftAt(`${format(day, "yyyy-MM-dd")}T09:00`);
@@ -920,7 +960,8 @@ export default function HealthcarePage({
                       <TableRow key={row.id}>
                         {config.columns.map(([key]) => (
                           <TableCell key={key}>
-                            {key === "type" || key === "status" ||
+                            {key === "type" ||
+                            key === "status" ||
                             key === "publicBookingEnabled" ? (
                               <Badge variant="secondary">
                                 {tr(String(display(row, key)))}
@@ -932,8 +973,21 @@ export default function HealthcarePage({
                         ))}
                         <TableCell className="whitespace-nowrap">
                           <div className="flex flex-wrap items-center gap-2">
-                            {resource === "appointments" && <Button permission="laboratory.orders.create" variant="outline" onClick={() => navigate(`/laboratory/reception?appointmentId=${row.id}`)}>{t("laboratory.title")}</Button>}
-                            <Button data-action="edit"
+                            {resource === "appointments" && (
+                              <Button
+                                permission="laboratory.orders.create"
+                                variant="outline"
+                                onClick={() =>
+                                  navigate(
+                                    `/laboratory/reception?appointmentId=${row.id}`,
+                                  )
+                                }
+                              >
+                                {t("laboratory.title")}
+                              </Button>
+                            )}
+                            <Button
+                              data-action="edit"
                               variant="ghost"
                               size="icon"
                               onClick={() => {
@@ -954,7 +1008,8 @@ export default function HealthcarePage({
                                 }
                               }}
                             >
-                              <Button data-action="delete"
+                              <Button
+                                data-action="delete"
                                 variant="ghost"
                                 size="icon"
                                 className="text-destructive"
@@ -990,11 +1045,19 @@ export default function HealthcarePage({
               · {tr(config.title)}
             </DialogTitle>
           </DialogHeader>
-          {resource === "staff" && positions.error && <p role="alert" className="text-destructive">{positions.error}</p>}
+          {resource === "staff" && positions.error && (
+            <p role="alert" className="text-destructive">
+              {positions.error}
+            </p>
+          )}
           <form className="grid gap-3 sm:grid-cols-2" onSubmit={submit}>
             {config.fields.map((field) => {
               const choices = options(field);
-              const initial = field.name === "positionId" ? (editing?.employee as HealthcareRecord | undefined)?.positionId : editing?.[field.name];
+              const initial =
+                field.name === "positionId"
+                  ? (editing?.employee as HealthcareRecord | undefined)
+                      ?.positionId
+                  : editing?.[field.name];
               const initialValue =
                 field.type === "datetime-local" && initial
                   ? new Date(String(initial)).toISOString().slice(0, 16)
@@ -1018,8 +1081,14 @@ export default function HealthcarePage({
                   {choices ? (
                     <Select
                       name={field.name}
-                      disabled={field.type === "position" && (positions.isLoading || !!positions.error)}
-                      defaultValue={initialValue || (field.required ? undefined : "__none__")}
+                      disabled={
+                        field.type === "position" &&
+                        (positions.isLoading || !!positions.error)
+                      }
+                      defaultValue={
+                        initialValue ||
+                        (field.required ? undefined : "__none__")
+                      }
                       required={field.required}
                     >
                       <SelectTrigger>
@@ -1072,7 +1141,11 @@ export default function HealthcarePage({
             {error && (
               <p className="text-sm text-destructive sm:col-span-2">{error}</p>
             )}
-            <Button permission={editing ? "update" : "create"} className="sm:col-span-2" disabled={busy}>
+            <Button
+              permission={editing ? "update" : "create"}
+              className="sm:col-span-2"
+              disabled={busy}
+            >
               {busy ? t("healthcareAdmin.saving") : t("healthcareAdmin.save")}
             </Button>
           </form>

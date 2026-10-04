@@ -13,8 +13,14 @@ export const authService = {
       input.method === "credentials"
         ? await authModel.findByLogin(input.username, db)
         : await authModel.findByPinLookup(createPinLookup(input.pin), db);
-    if (input.method === "pin" && !user?.roles?.some(({ role }) => role.name === "Super Administrator"))
-      throw httpError("PIN login is only available to superadmins. Use your username and password.", 401);
+    if (
+      input.method === "pin" &&
+      !user?.roles?.some(({ role }) => role.name === "Super Administrator")
+    )
+      throw httpError(
+        "PIN login is only available to superadmins. Use your username and password.",
+        401,
+      );
     const valid =
       input.method === "credentials"
         ? user && (await verifySecret(input.password, user.passwordHash))
@@ -30,7 +36,10 @@ export const authService = {
       throw httpError("This account is inactive.", 403);
     const remember = input.method === "credentials" && input.remember;
     const security = await getSettings("security", db);
-    const maxAge = (remember ? security.rememberDays * 86400 : security.sessionHours * 3600) * 1000;
+    const maxAge =
+      (remember
+        ? security.rememberDays * 86400
+        : security.sessionHours * 3600) * 1000;
     return {
       maxAge,
       user: presentUser(user),

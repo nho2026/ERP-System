@@ -1,12 +1,21 @@
 import { useServerTable } from "@/shared/hooks/useServerTable";
 import { useCallback, useState } from "react";
-import { Eye, EyeOff, LockKeyholeOpen, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  LockKeyholeOpen,
+  Pencil,
+  Plus,
+  Search,
+  Trash2,
+} from "lucide-react";
 import { usersApi, rolesApi } from "../api/access.api";
 import type { User } from "../types/access.types";
 import { useApiResource } from "@/shared/hooks/useApiResource";
 import { apiErrorMessage } from "@/shared/api/client";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
+import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Label } from "@/shared/components/ui/label";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import {
@@ -48,6 +57,9 @@ export default function UsersPage() {
   const canViewRoles = hasPermission(currentUser, "roles.view");
   const canEditUsers = canCreate || canUpdate;
   const [search, setSearch] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
   const users = useServerTable<User>("/users", { search }),
     roles = useApiResource(
       useCallback(
@@ -88,6 +100,45 @@ export default function UsersPage() {
   );
   const [showPassword, setShowPassword] = useState(false);
   const filtered = users.data ?? [];
+  const selectable = filtered.filter((user) => user.id !== currentUser?.id);
+  const selectedOnPage = selectable.filter((user) =>
+    selectedIds.has(user.id),
+  ).length;
+  const toggleSelection = (ids: string[], checked: boolean) => {
+    setSelectedIds((previous) => {
+      const next = new Set(previous);
+      ids.forEach((id) => (checked ? next.add(id) : next.delete(id)));
+      return next;
+    });
+  };
+  const deleteSelected = async () => {
+    if (deleting || !canDelete || !selectedIds.size) return;
+    setDeleting(true);
+    setDeleteError("");
+    const failed = new Set<string>();
+    const errors: string[] = [];
+    try {
+      for (const id of selectedIds) {
+        try {
+          await usersApi.remove(id);
+        } catch (cause) {
+          failed.add(id);
+          errors.push(apiErrorMessage(cause));
+        }
+      }
+      setSelectedIds(failed);
+      if (errors.length)
+        setDeleteError(
+          t("usersAdmin.bulkDeleteFailed", {
+            count: errors.length,
+            error: [...new Set(errors)].join(" "),
+          }),
+        );
+      await users.refresh();
+    } finally {
+      setDeleting(false);
+    }
+  };
   const openEditor = (user: User | null) => {
     if (canViewRoles) void roles.refresh();
     if (canEditUsers) void departments.refresh();
@@ -160,19 +211,88 @@ export default function UsersPage() {
       </div>
       <Card>
         <CardContent className="p-0">
-          {notice && <p role="status" className="mx-4 mt-4 text-sm text-muted-foreground">{notice}</p>}
+          {notice && (
+            <p
+              role="status"
+              className="mx-4 mt-4 text-sm text-muted-foreground"
+            >
+              {notice}
+            </p>
+          )}
           <div className="relative m-4 max-w-sm">
-            <Search className="absolute start-3 top-1/2 -translate-y-1/2" />
+            <Search className="absolute inset-s-3 top-1/2 -translate-y-1/2" />
             <Input
               className="ps-9"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              disabled={deleting}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setSelectedIds(new Set());
+              }}
               placeholder={t("usersAdmin.search")}
             />
           </div>
+          {canDelete && selectedIds.size > 0 && (
+            <div className="m-4 flex flex-wrap items-center gap-2">
+              <DeleteConfirmationDialog
+                description={t("usersAdmin.bulkDeleteConfirm", {
+                  count: selectedIds.size,
+                })}
+                onConfirm={deleteSelected}
+              >
+                <Button
+                  data-action="delete"
+                  variant="destructive"
+                  disabled={deleting}
+                >
+                  <Trash2 />
+                  {t("usersAdmin.deleteSelected", { count: selectedIds.size })}
+                </Button>
+              </DeleteConfirmationDialog>
+              <Button
+                variant="outline"
+                disabled={deleting}
+                onClick={() => setSelectedIds(new Set())}
+              >
+                {t("usersAdmin.clearSelection")}
+              </Button>
+            </div>
+          )}
+          {deleteError && (
+            <p role="alert" className="m-4 text-sm text-destructive">
+              {deleteError}
+            </p>
+          )}
           <Table>
             <TableHeader>
               <TableRow>
+                {canDelete && (
+                  <TableHead className="w-12">
+                    <Checkbox
+                      aria-label={t("usersAdmin.selectPage")}
+                      disabled={
+                        deleting ||
+                        users.isLoading ||
+                        !!users.error ||
+                        !selectable.length
+                      }
+                      checked={
+                        selectedOnPage > 0 &&
+                        selectedOnPage === selectable.length
+                          ? true
+                          : selectedOnPage > 0
+                            ? "indeterminate"
+                            : false
+                      }
+                      onCheckedChange={(checked) =>
+                        toggleSelection(
+                          selectable.map((user) => user.id),
+                          checked === true,
+                        )
+                      }
+                    />
+                  </TableHead>
+                )}
                 <TableHead>{t("table.headers.user")}</TableHead>
                 <TableHead>{t("table.headers.role")}</TableHead>
                 <TableHead>{t("table.headers.department")}</TableHead>
@@ -185,12 +305,26 @@ export default function UsersPage() {
                 isLoading={users.isLoading}
                 error={users.error}
                 isEmpty={!filtered.length}
-                colSpan={5}
+                colSpan={canDelete ? 6 : 5}
               />
               {!users.isLoading &&
                 !users.error &&
                 filtered.map((u) => (
                   <TableRow key={u.id}>
+                    {canDelete && (
+                      <TableCell>
+                        <Checkbox
+                          aria-label={t("usersAdmin.selectUser", {
+                            name: u.name,
+                          })}
+                          disabled={deleting || u.id === currentUser?.id}
+                          checked={selectedIds.has(u.id)}
+                          onCheckedChange={(checked) =>
+                            toggleSelection([u.id], checked === true)
+                          }
+                        />
+                      </TableCell>
+                    )}
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar>
@@ -243,15 +377,18 @@ export default function UsersPage() {
                             })}
                             onConfirm={async () => {
                               try {
+                                setDeleteError("");
                                 await usersApi.remove(u.id);
+                                toggleSelection([u.id], false);
                                 await users.refresh();
                               } catch (c) {
-                                setError(apiErrorMessage(c));
+                                setDeleteError(apiErrorMessage(c));
                               }
                             }}
                           >
                             <Button
                               data-action="delete"
+                              disabled={deleting || u.id === currentUser?.id}
                               variant="ghost"
                               size="icon"
                               className="text-destructive"

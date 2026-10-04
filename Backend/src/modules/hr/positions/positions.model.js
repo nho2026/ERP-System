@@ -2,10 +2,15 @@ import { paginate } from "../../../shared/database/paginate.js";
 import { prisma } from "../../../shared/database/client.js";
 export const positionModel = {
   findAll: (query = {}) =>
-    paginate("position", query, {
-      include: { _count: { select: { employees: true } } },
-      orderBy: { name: "asc" },
-    }, ["name"]),
+    paginate(
+      "position",
+      query,
+      {
+        include: { _count: { select: { employees: true } } },
+        orderBy: { name: "asc" },
+      },
+      ["name"],
+    ),
   create: (data) =>
     prisma.position.create({
       data,

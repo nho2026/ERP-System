@@ -5,12 +5,10 @@ export const feedbackController = {
   publicList: run(async (req, res) => res.json(await s.list(req.query, true))),
   adminList: run(async (req, res) => res.json(await s.list(req.query))),
   create: run(async (req, res) =>
-    res
-      .status(201)
-      .json({
-        message: "Feedback received and is awaiting approval.",
-        feedback: await s.create(req.validatedBody),
-      }),
+    res.status(201).json({
+      message: "Feedback received and is awaiting approval.",
+      feedback: await s.create(req.validatedBody),
+    }),
   ),
   status: run(async (req, res) =>
     res.json(await s.status(req.params.id, req.validatedBody.status)),

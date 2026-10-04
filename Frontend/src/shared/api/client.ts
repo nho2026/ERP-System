@@ -13,19 +13,40 @@ export const apiClient = axios.create({
 });
 
 export const apiErrorMessage = (error: unknown) => {
-  if (!axios.isAxiosError<{
-    message?: string;
-    errors?: Record<string, string[]>;
-  }>(error)) return "Something went wrong. Please try again.";
+  if (
+    !axios.isAxiosError<{
+      message?: string;
+      errors?: Record<string, string[]>;
+    }>(error)
+  )
+    return "Something went wrong. Please try again.";
   const data = error.response?.data;
   if (error.response?.status === 422 && data?.errors) {
-    const details = Object.entries(data.errors)
-      .flatMap(([field, messages]) =>
-        Array.isArray(messages) ? messages.map((message) => `${field}: ${message}`) : [],
-      );
+    const details = Object.entries(data.errors).flatMap(([field, messages]) =>
+      Array.isArray(messages)
+        ? messages.map((message) => `${field}: ${message}`)
+        : [],
+    );
     if (details.length) return details.join("\n");
   }
-  return data?.message ?? "The server is unavailable. Please try again.";
+  const message =
+    data?.message ?? "The server is unavailable. Please try again.";
+  if (error.config?.url?.includes("/building-expenses")) {
+    const options = {
+      ns: "building",
+      keySeparator: false as const,
+      nsSeparator: false as const,
+    };
+    if (i18n.exists(message, options)) return i18n.t(message, options);
+    if (error.response?.status === 403) return i18n.t("access.denied");
+    return i18n.t(
+      error.response?.status === 400 || error.response?.status === 422
+        ? "Check required fields and entered values."
+        : "Unable to complete this action. Please try again.",
+      options,
+    );
+  }
+  return message;
 };
 
 // Client checks provide immediate feedback; the API independently enforces the same policy.
@@ -36,10 +57,19 @@ apiClient.interceptors.request.use((config) => {
     const user = storedUser();
     const view = `${permission.slice(0, permission.lastIndexOf("."))}.view`;
     if (!hasPermission(user, view) || !hasPermission(user, permission)) {
-      throw new axios.AxiosError(i18n.t("access.denied"), "ERR_FORBIDDEN", config, undefined, {
-        status: 403, statusText: "Forbidden", headers: {}, config,
-        data: { message: i18n.t("access.denied") },
-      });
+      throw new axios.AxiosError(
+        i18n.t("access.denied"),
+        "ERR_FORBIDDEN",
+        config,
+        undefined,
+        {
+          status: 403,
+          statusText: "Forbidden",
+          headers: {},
+          config,
+          data: { message: i18n.t("access.denied") },
+        },
+      );
     }
   }
   return config;
@@ -61,7 +91,11 @@ apiClient.interceptors.response.use(
     return response;
   },
   (error) => {
-    if (!axios.isCancel(error) && !error.response && ["ERR_NETWORK", "ECONNABORTED", "ETIMEDOUT"].includes(error.code)) {
+    if (
+      !axios.isCancel(error) &&
+      !error.response &&
+      ["ERR_NETWORK", "ECONNABORTED", "ETIMEDOUT"].includes(error.code)
+    ) {
       window.dispatchEvent(new Event("nho:connection-error"));
     }
     const method = error.config?.method?.toLowerCase();

@@ -79,7 +79,7 @@ export default function LaboratoryDashboardPage() {
   );
   return (
     <div className="w-full space-y-6 pb-6">
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-teal-950 via-teal-900 to-teal-700 p-6 text-white shadow-lg sm:p-8">
+      <section className="relative overflow-hidden rounded-3xl bg-linear-to-br from-teal-950 via-teal-900 to-teal-700 p-6 text-white shadow-lg sm:p-8">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute -end-14 -top-24 size-80 rounded-full border-[45px] border-white/5"
@@ -111,15 +111,16 @@ export default function LaboratoryDashboardPage() {
           </Button>
         </div>
         <div className="relative mt-6 flex flex-wrap gap-3">
-          {hasPermission(user, "laboratory.pages.reception.view") && hasPermission(user, "laboratory.orders.create") && (
-            <Button
-              className="bg-white text-teal-950 hover:bg-teal-50"
-              onClick={() => navigate("/laboratory/reception")}
-            >
-              {t("laboratory.newRequest")}
-              <ArrowRight className="size-4 rtl:rotate-180" />
-            </Button>
-          )}
+          {hasPermission(user, "laboratory.pages.reception.view") &&
+            hasPermission(user, "laboratory.orders.create") && (
+              <Button
+                className="bg-white text-teal-950 hover:bg-teal-50"
+                onClick={() => navigate("/laboratory/reception")}
+              >
+                {t("laboratory.newRequest")}
+                <ArrowRight className="size-4 rtl:rotate-180" />
+              </Button>
+            )}
           <Button
             variant="outline"
             className="border-white/25 bg-transparent text-white hover:bg-white/10 hover:text-white"
@@ -341,7 +342,6 @@ export default function LaboratoryDashboardPage() {
           </Card>
         )}
       </div>
-
     </div>
   );
 }

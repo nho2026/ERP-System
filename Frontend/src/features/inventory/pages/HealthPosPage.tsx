@@ -82,16 +82,29 @@ export default function HealthPosPage() {
   const [catalogView, setCatalogView] = useState<"grid" | "table">("grid");
   const scanner = useRef({ value: "", at: 0 });
   const [categories, setCategories] = useState<RecordItem[]>([]);
-  const catalog = useServerTable<RecordItem>("/inventory/products", { search, categoryId: category === "all" ? undefined : category, warehouseId: warehouseId || undefined, status: "active" });
+  const catalog = useServerTable<RecordItem>("/inventory/products", {
+    search,
+    categoryId: category === "all" ? undefined : category,
+    warehouseId: warehouseId || undefined,
+    status: "active",
+  });
   const load = catalog.refresh;
   useEffect(() => {
     let active = true;
-    void Promise.all([inventoryApi.all("warehouses"), inventoryApi.all("categories")]).then(([w,c]) => {
-      if(!active) return;
-      setWarehouses(w.filter(x => x.status === "active"));
-      setCategories(c); setWarehouse(v => v || w[0]?.id || "");
-    }).catch(error => toast.error(apiErrorMessage(error)));
-    return () => { active = false; };
+    void Promise.all([
+      inventoryApi.all("warehouses"),
+      inventoryApi.all("categories"),
+    ])
+      .then(([w, c]) => {
+        if (!active) return;
+        setWarehouses(w.filter((x) => x.status === "active"));
+        setCategories(c);
+        setWarehouse((v) => v || w[0]?.id || "");
+      })
+      .catch((error) => toast.error(apiErrorMessage(error)));
+    return () => {
+      active = false;
+    };
   }, []);
   const stock = (p: RecordItem) =>
     p.stocks?.find((s: RecordItem) => s.warehouseId === warehouseId)
@@ -114,18 +127,29 @@ export default function HealthPosPage() {
     p.images?.find((image: RecordItem) => image.isMain)?.imageUrl ??
     p.images?.[0]?.imageUrl;
   const add = (p: RecordItem) => {
-    setProducts(current => [...current.filter(item => item.id !== p.id), p]);
+    setProducts((current) => [
+      ...current.filter((item) => item.id !== p.id),
+      p,
+    ]);
     if (!stock(p)) return toast.error(t("pos.outOfStock"));
     setCart((c) => ({ ...c, [p.id]: Math.min((c[p.id] ?? 0) + 1, stock(p)) }));
   };
   const scan = async (code: string) => {
-    if(!code) return;
+    if (!code) return;
     try {
-      const result = await inventoryApi.list("products", 1, { exactCode: code, status: "active", warehouseId });
-      const p = result.items.find(x => x.barcode === code || x.sku === code);
-      if(p) { add(p); toast.success(t("pos.scanned", {name:p.name})); }
-      else toast.error(t("pos.barcodeNotFound"));
-    } catch(error) { toast.error(apiErrorMessage(error)); }
+      const result = await inventoryApi.list("products", 1, {
+        exactCode: code,
+        status: "active",
+        warehouseId,
+      });
+      const p = result.items.find((x) => x.barcode === code || x.sku === code);
+      if (p) {
+        add(p);
+        toast.success(t("pos.scanned", { name: p.name }));
+      } else toast.error(t("pos.barcodeNotFound"));
+    } catch (error) {
+      toast.error(apiErrorMessage(error));
+    }
   };
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -192,7 +216,7 @@ export default function HealthPosPage() {
   };
   return (
     <div className="h-svh overflow-hidden bg-background">
-      <header className="electron-titlebar relative flex h-16 items-center gap-3 border-b border-primary/15 bg-card px-4 shadow-[0_4px_20px_-16px_var(--primary)] before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-gradient-to-r before:from-primary before:via-teal-400 before:to-teal-400">
+      <header className="electron-titlebar relative flex h-16 items-center gap-3 border-b border-primary/15 bg-card px-4 shadow-[0_4px_20px_-16px_var(--primary)] before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-linear-to-r before:from-primary before:via-teal-400 before:to-teal-400">
         <Link
           to={cashier ? "/profile" : "/dashboard"}
           className="grid size-9 place-items-center rounded-lg border border-primary/20 bg-primary/5 text-primary transition hover:bg-primary/12"
@@ -209,7 +233,9 @@ export default function HealthPosPage() {
           className="size-10 rounded-xl border border-primary/15 bg-white object-contain shadow-sm"
         />
         <div className="hidden sm:block">
-          <b className="text-primary">{systemSettings?.organization.name || ""}</b>
+          <b className="text-primary">
+            {systemSettings?.organization.name || ""}
+          </b>
           <small className="block text-muted-foreground">
             {t("pos.cashierWorkspace")}
           </small>
@@ -241,7 +267,8 @@ export default function HealthPosPage() {
             ))}
           </SelectContent>
         </Select>
-        <Button permission="pos.sales.return"
+        <Button
+          permission="pos.sales.return"
           className="border-primary/25 bg-primary/5 text-primary hover:bg-primary/12 hover:text-primary"
           variant="outline"
           onClick={() => setReturnOpen(true)}
@@ -342,7 +369,7 @@ export default function HealthPosPage() {
                         className="size-full object-contain p-3 transition duration-300 group-hover:scale-105"
                       />
                     ) : (
-                      <div className="grid size-full place-items-center bg-gradient-to-br from-slate-50 to-slate-100">
+                      <div className="grid size-full place-items-center bg-linear-to-br from-slate-50 to-slate-100">
                         <span className="grid size-16 place-items-center rounded-2xl border border-primary/10 bg-white text-primary/45 shadow-sm">
                           <Package className="size-8 transition group-hover:scale-110 group-hover:text-primary" />
                         </span>
@@ -352,7 +379,7 @@ export default function HealthPosPage() {
                       {stock(p)} {t("inventory.fields.stock")}
                     </span>
                     {discounted(p) && (
-                      <span className="absolute start-2.5 top-2.5 rounded-full bg-rose-500 px-2 py-1 text-[10px] font-bold text-white shadow-sm">
+                      <span className="absolute inset-s-2.5 top-2.5 rounded-full bg-rose-500 px-2 py-1 text-[10px] font-bold text-white shadow-sm">
                         {p.discountType === "percentage"
                           ? `-${p.discountValue}%`
                           : `-${Number(p.discountValue).toLocaleString()}`}
@@ -483,11 +510,15 @@ export default function HealthPosPage() {
               </Table>
             </Card>
           )}
-          {catalog.error && <p role="alert" className="text-destructive">{catalog.error}</p>}
+          {catalog.error && (
+            <p role="alert" className="text-destructive">
+              {catalog.error}
+            </p>
+          )}
           <PaginationControls {...catalog.pagination} />
         </section>
         <aside className="flex min-h-0 flex-col border-s border-primary/20 bg-card shadow-[-8px_0_24px_-24px_var(--primary)]">
-          <div className="border-b border-primary/15 bg-gradient-to-e from-primary/10 to-card p-5">
+          <div className="border-b border-primary/15 bg-linear-to-e from-primary/10 to-card p-5">
             <h2 className="flex items-center gap-2 text-lg font-bold">
               <ShoppingCart className="size-8 rounded-lg bg-primary p-1.5 text-primary-foreground shadow-sm" />
               {t("pos.cart")}
@@ -527,7 +558,9 @@ export default function HealthPosPage() {
                   </small>
                 </div>
                 <div className="flex shrink-0 items-center gap-2 rounded-xl border border-primary/15 bg-primary/5 p-1 shadow-inner">
-                  <Button permission="view" data-action="delete"
+                  <Button
+                    permission="view"
+                    data-action="delete"
                     className={`size-8 rounded-lg ${quantity === 1 ? "text-destructive hover:bg-destructive hover:text-white" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
                     size="icon"
                     variant="ghost"
@@ -562,7 +595,7 @@ export default function HealthPosPage() {
               </Card>
             ))}
           </div>
-          <div className="space-y-3 border-t border-primary/20 bg-gradient-to-b from-primary/4 to-card p-5 shadow-[0_-8px_24px_-20px_var(--primary)]">
+          <div className="space-y-3 border-t border-primary/20 bg-linear-to-b from-primary/4 to-card p-5 shadow-[0_-8px_24px_-20px_var(--primary)]">
             <Summary label={t("pos.subtotal")} value={subtotal} />
             <Summary label={t("pos.tax")} value={tax} />
             <Input
@@ -613,7 +646,8 @@ export default function HealthPosPage() {
                   </SelectItem>
                 </SelectContent>
               </Select>
-              <Button permission="pos.sales.print"
+              <Button
+                permission="pos.sales.print"
                 variant="outline"
                 size="icon"
                 disabled={!lastSale}
@@ -624,7 +658,8 @@ export default function HealthPosPage() {
               >
                 <Printer />
               </Button>
-              <Button permission="pos.checkout.create"
+              <Button
+                permission="pos.checkout.create"
                 className="flex-1 shadow-md shadow-primary/20"
                 disabled={busy || !lines.length || !warehouseId || paid < total}
                 onClick={complete}
@@ -653,7 +688,8 @@ export default function HealthPosPage() {
               placeholder={t("pos.invoiceBarcode")}
             />
           </div>
-          <Button permission="pos.sales.return"
+          <Button
+            permission="pos.sales.return"
             disabled={!returnCode || busy}
             onClick={async () => {
               setBusy(true);

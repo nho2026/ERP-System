@@ -10,7 +10,10 @@ const permissionWrite = (ids) => ({
 });
 export const roleModel = {
   findAll: (query = {}) =>
-    paginate("role", query, { include, orderBy: { name: "asc" } }, ["name","description"]),
+    paginate("role", query, { include, orderBy: { name: "asc" } }, [
+      "name",
+      "description",
+    ]),
   findById: (id) => prisma.role.findUnique({ where: { id } }),
   create: ({ permissionIds = [], ...data }) =>
     prisma.role.create({

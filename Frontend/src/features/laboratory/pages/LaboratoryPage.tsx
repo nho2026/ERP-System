@@ -513,7 +513,8 @@ export default function LaboratoryPage({
                       >
                         <Eye className="size-4" />
                       </Button>
-                      {mode === "accounting" && canPay &&
+                      {mode === "accounting" &&
+                        canPay &&
                         order.invoice.status === "paid" && (
                           <Button
                             permission="laboratory.payments.create"
@@ -528,11 +529,15 @@ export default function LaboratoryPage({
                       {mode === "accounting" &&
                         canPay &&
                         Number(order.invoice.balanceAmount) > 0 &&
-                        !["draft", "cancelled"].includes(order.invoice.status) && (
+                        !["draft", "cancelled"].includes(
+                          order.invoice.status,
+                        ) && (
                           <Button
                             permission="laboratory.payments.create"
                             variant="outline"
-                            disabled={busy || config.isLoading || Boolean(config.error)}
+                            disabled={
+                              busy || config.isLoading || Boolean(config.error)
+                            }
                             className="shrink-0 border-emerald-300 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 hover:text-emerald-800 dark:border-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 dark:hover:bg-emerald-900 dark:hover:text-emerald-200"
                             onClick={() => {
                               openOrder(order);

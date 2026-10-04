@@ -32,7 +32,7 @@ export default defineConfig({
       },
       "/public": {
         target: "http://localhost:4000",
-        changeOrigin: true
+        changeOrigin: true,
       },
     },
   },

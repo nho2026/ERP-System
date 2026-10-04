@@ -5,11 +5,22 @@ export const attendancePermissionService = {
   ...createCrudService(attendancePermissionModel),
   async remove(id, user, password) {
     if (!user?.roles?.some(({ role }) => role.name === "Super Administrator"))
-      throw Object.assign(new Error("Only a Super Administrator can delete attendance permissions."), { status: 403 });
+      throw Object.assign(
+        new Error(
+          "Only a Super Administrator can delete attendance permissions.",
+        ),
+        { status: 403 },
+      );
     if (typeof password !== "string" || !password)
-      throw Object.assign(new Error("Super Administrator password is required."), { status: 422 });
+      throw Object.assign(
+        new Error("Super Administrator password is required."),
+        { status: 422 },
+      );
     if (!(await verifySecret(password, user.passwordHash)))
-      throw Object.assign(new Error("Super Administrator password is incorrect."), { status: 403 });
+      throw Object.assign(
+        new Error("Super Administrator password is incorrect."),
+        { status: 403 },
+      );
     return attendancePermissionModel.remove(id);
   },
 };

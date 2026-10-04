@@ -41,14 +41,18 @@ import {
 } from "@/shared/components/ui/alert-dialog";
 import { printPosInvoice } from "../components/print-pos-invoice";
 import { storedUser } from "@/features/auth/access";
+import { SaleFilters } from "../components/SaleFilters";
 export default function PosPage({ mode }: { mode: "checkout" | "sales" }) {
   const { t } = useTranslation();
   const canCancelSales = storedUser()?.permissions?.includes("*") === true;
   const [page, setPage] = useState(1);
+  const [filters, setFilters] = useState<Record<string, string>>({});
   const [cancelTarget, setCancelTarget] = useState<RecordItem | null>(null);
   const [cancelPassword, setCancelPassword] = useState("");
   const [isCancelling, setIsCancelling] = useState(false);
-  const sales = useApiResource(useCallback(() => posApi.list(page), [page]));
+  const sales = useApiResource(
+    useCallback(() => posApi.list(page, filters), [page, filters]),
+  );
   const [products, setProducts] = useState<RecordItem[]>([]),
     [warehouses, setWarehouses] = useState<RecordItem[]>([]),
     [warehouseId, setWarehouse] = useState(""),
@@ -62,10 +66,12 @@ export default function PosPage({ mode }: { mode: "checkout" | "sales" }) {
       inventoryApi.all("warehouses"),
     ]).then(([p, w]) => {
       setProducts(p.filter((x) => x.status === "active"));
-      setWarehouses(w.filter((x) => x.status === "active"));
+      setWarehouses(
+        mode === "sales" ? w : w.filter((x) => x.status === "active"),
+      );
       setWarehouse((x) => x || w[0]?.id || "");
     });
-  }, []);
+  }, [mode]);
   const lines = Object.entries(cart)
     .map(([id, quantity]) => ({
       product: products.find((p) => p.id === id)!,
@@ -83,7 +89,8 @@ export default function PosPage({ mode }: { mode: "checkout" | "sales" }) {
     ),
     total = Math.max(0, subtotal + tax - discount);
   const stock = (p: RecordItem) =>
-    p.stocks?.find((s: any) => s.warehouseId === warehouseId)?.quantity ?? 0;
+    p.stocks?.find((s: RecordItem) => s.warehouseId === warehouseId)
+      ?.quantity ?? 0;
   const add = (id: string) =>
     setCart((c) => ({
       ...c,
@@ -129,7 +136,31 @@ export default function PosPage({ mode }: { mode: "checkout" | "sales" }) {
         </div>
         <Card className="overflow-hidden rounded-2xl">
           <CardContent className="p-0">
-            <Table>
+            <div className="flex flex-wrap items-center gap-3 border-b p-4">
+              <SaleFilters
+                value={filters}
+                warehouses={warehouses.map((warehouse) => ({
+                  id: warehouse.id,
+                  name: String(warehouse.name),
+                }))}
+                onApply={(next) => {
+                  setFilters(next);
+                  setPage(1);
+                }}
+              />
+              {Object.values(filters).some(Boolean) && (
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setFilters({});
+                    setPage(1);
+                  }}
+                >
+                  {t("inventory.clearFilters")}
+                </Button>
+              )}
+            </div>
+            <Table className="min-w-300 [&_th]:px-6 [&_th]:py-4 [&_th]:whitespace-nowrap [&_td]:px-6 [&_td]:py-4 [&_td]:whitespace-nowrap">
               <TableHeader>
                 <TableRow>
                   {[
@@ -153,36 +184,46 @@ export default function PosPage({ mode }: { mode: "checkout" | "sales" }) {
                   isEmpty={!sales.data?.items.length}
                   colSpan={8}
                 />
-                {sales.data?.items.map((s) => (
-                  <TableRow key={s.id}>
-                    <TableCell>{s.saleNumber}</TableCell>
-                    <TableCell>{new Date(s.soldAt).toLocaleString()}</TableCell>
-                    <TableCell>{s.warehouse?.name}</TableCell>
-                    <TableCell>{s.cashierName}</TableCell>
-                    <TableCell>{t(`pos.values.${s.paymentMethod}`)}</TableCell>
-                    <TableCell>{s.totalAmount.toLocaleString()} USD</TableCell>
-                    <TableCell>{t(`pos.values.${s.status}`)}</TableCell>
-                    <TableCell>
-                      <Button permission="print"
-                        size="icon"
-                        variant="ghost"
-                        title={t("pos.print")}
-                        onClick={() => printPosInvoice(s, t)}
-                      >
-                        <Printer />
-                      </Button>
-                      {canCancelSales && s.status !== "cancelled" && (
-                        <Button permission="cancel"
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => setCancelTarget(s)}
+                {!sales.isLoading &&
+                  !sales.error &&
+                  sales.data?.items.map((s) => (
+                    <TableRow key={s.id}>
+                      <TableCell>{s.saleNumber}</TableCell>
+                      <TableCell>
+                        {new Date(s.soldAt).toLocaleString()}
+                      </TableCell>
+                      <TableCell>{s.warehouse?.name}</TableCell>
+                      <TableCell>{s.cashierName}</TableCell>
+                      <TableCell>
+                        {t(`pos.values.${s.paymentMethod}`)}
+                      </TableCell>
+                      <TableCell>
+                        {s.totalAmount.toLocaleString()} USD
+                      </TableCell>
+                      <TableCell>{t(`pos.values.${s.status}`)}</TableCell>
+                      <TableCell>
+                        <Button
+                          permission="print"
+                          size="icon"
+                          variant="ghost"
+                          title={t("pos.print")}
+                          onClick={() => printPosInvoice(s, t)}
                         >
-                          {t("pos.cancel")}
+                          <Printer />
                         </Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                        {canCancelSales && s.status !== "cancelled" && (
+                          <Button
+                            permission="cancel"
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => setCancelTarget(s)}
+                          >
+                            {t("pos.cancel")}
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
               </TableBody>
             </Table>
             <div className="flex justify-between border-t p-3">
@@ -192,14 +233,17 @@ export default function PosPage({ mode }: { mode: "checkout" | "sales" }) {
               <div className="flex gap-2">
                 <Button
                   variant="outline"
-                  disabled={page <= 1}
+                  disabled={sales.isLoading || page <= 1}
                   onClick={() => setPage((p) => p - 1)}
                 >
                   {t("pagination.previous")}
                 </Button>
                 <Button
                   variant="outline"
-                  disabled={page >= (sales.data?.pagination.totalPages ?? 1)}
+                  disabled={
+                    sales.isLoading ||
+                    page >= (sales.data?.pagination.totalPages ?? 1)
+                  }
                   onClick={() => setPage((p) => p + 1)}
                 >
                   {t("pagination.next")}
@@ -235,7 +279,8 @@ export default function PosPage({ mode }: { mode: "checkout" | "sales" }) {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-              <AlertDialogAction permission="pos.sales.cancel"
+              <AlertDialogAction
+                permission="pos.sales.cancel"
                 disabled={!cancelPassword || isCancelling}
                 onClick={async (event) => {
                   event.preventDefault();
@@ -394,7 +439,8 @@ export default function PosPage({ mode }: { mode: "checkout" | "sales" }) {
               label={t("pos.change")}
               value={Math.max(0, paid - total)}
             />
-            <Button permission="pos.checkout.create"
+            <Button
+              permission="pos.checkout.create"
               className="w-full"
               disabled={busy || !lines.length || !warehouseId || paid < total}
               onClick={complete}

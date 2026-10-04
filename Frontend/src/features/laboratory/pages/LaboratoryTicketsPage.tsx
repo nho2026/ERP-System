@@ -275,7 +275,7 @@ export default function LaboratoryTicketsPage({
             return (
               <Card
                 key={ticket.id}
-                className={`relative flex min-h-64 flex-col justify-between overflow-hidden rounded-3xl p-6 ${isCalled ? "border-0 bg-gradient-to-br from-teal-950 via-teal-800 to-teal-600 text-white shadow-lg shadow-teal-950/10" : "border-amber-200 bg-card dark:border-amber-900"}`}
+                className={`relative flex min-h-64 flex-col justify-between overflow-hidden rounded-3xl p-6 ${isCalled ? "border-0 bg-linear-to-br from-teal-950 via-teal-800 to-teal-600 text-white shadow-lg shadow-teal-950/10" : "border-amber-200 bg-card dark:border-amber-900"}`}
               >
                 <Ticket
                   aria-hidden="true"
@@ -330,7 +330,7 @@ export default function LaboratoryTicketsPage({
               {called.slice(0, 3).map((ticket) => (
                 <Card
                   key={ticket.id}
-                  className="relative overflow-hidden rounded-3xl border-0 bg-gradient-to-br from-teal-950 via-teal-800 to-teal-600 p-6 text-white shadow-lg shadow-teal-950/10"
+                  className="relative overflow-hidden rounded-3xl border-0 bg-linear-to-br from-teal-950 via-teal-800 to-teal-600 p-6 text-white shadow-lg shadow-teal-950/10"
                 >
                   <Ticket
                     aria-hidden="true"

@@ -1,5 +1,9 @@
 {
   "catalog": [
+{"key":"building-expenses.view","module":"building-expenses","name":"view building expenses"},
+{"key":"building-expenses.create","module":"building-expenses","name":"create building expenses"},
+{"key":"building-expenses.update","module":"building-expenses","name":"update building expenses"},
+{"key":"building-expenses.approve","module":"building-expenses","name":"approve building expenses"},
     {"key": "laboratory.pages.dashboard.view", "module": "laboratory.pages.dashboard", "name": "View laboratory / dashboard"},
     {"key": "laboratory.pages.reception.view", "module": "laboratory.pages.reception", "name": "View laboratory / reception"},
     {"key": "laboratory.pages.queue.view", "module": "laboratory.pages.queue", "name": "View laboratory / queue"},
@@ -2769,6 +2773,7 @@
       }
   ],
   "availableActions": {
+"building-expenses": ["view","create","update","approve"],
     "laboratory.display": ["view", "call"],
     "laboratory.pages.tests": ["view"],
     "laboratory.pages.accounting": ["view"],
@@ -3272,6 +3277,8 @@
       ]
   },
   "pages": {
+    "/icu": "inventory.icu",
+"/building-expenses": "building-expenses",
     "/dashboard": "dashboard",
     "/profile": "profile",
     "/employee-portal": "employee-portal",
@@ -3398,6 +3405,8 @@
       "/laboratory/tests": "laboratory.pages.tests"
   },
   "resources": [
+    { "pattern": "^/icu(?:/|$)", "resource": "inventory.icu" },
+{"pattern":"^/building-expenses(?:/|$)","resource":"building-expenses"},
     {
         "pattern": "^/laboratory/orders(?:/[^/]+)?$",
         "resource": "laboratory.orders"
@@ -3792,6 +3801,7 @@
     }
   ],
   "overrides": [
+{"method":"PATCH","pattern":"^/building-expenses/requests/[^/]+/status$","permission":"building-expenses.approve"},
     { "method": "GET", "pattern": "^/laboratory/orders/[^/]+/queue-position$", "permission": "laboratory.orders.view" },
     { "method": "POST", "pattern": "^/laboratory/orders/[^/]+/request-patient$", "permission": "laboratory.orders.update" },
     { "method": "GET", "pattern": "^/laboratory/accounting-queue$", "permission": "laboratory.orders.view" },

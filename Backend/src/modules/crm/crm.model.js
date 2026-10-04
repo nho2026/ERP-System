@@ -1,6 +1,9 @@
 import { deletePatient } from "./patient/delete-patient.js";
 import { bookWithProgress } from "./patient/book-with-progress.js";
-import { createWithCode, withoutCode } from "../../shared/database/automatic-code.js";
+import {
+  createWithCode,
+  withoutCode,
+} from "../../shared/database/automatic-code.js";
 import { createPatient } from "./patient/patient-code.js";
 import { prisma } from "../../shared/database/client.js";
 
@@ -65,7 +68,15 @@ export const crmModel = {
       delegate(resource).count(),
     ]),
   create: (resource, data) =>
-    resource === "surgery-appointments" ? bookWithProgress(prisma, data.patientId, "surgery_appointment", tx => tx.surgeryAppointment.create({ data, ...includeFor(resource) })) : resource === "patients" ? createPatient(prisma, data) : resource === "surgeries" ? createWithCode(prisma.surgery, { data }, "SUR") : delegate(resource).create({ data, ...includeFor(resource) }),
+    resource === "surgery-appointments"
+      ? bookWithProgress(prisma, data.patientId, "surgery_appointment", (tx) =>
+          tx.surgeryAppointment.create({ data, ...includeFor(resource) }),
+        )
+      : resource === "patients"
+        ? createPatient(prisma, data)
+        : resource === "surgeries"
+          ? createWithCode(prisma.surgery, { data }, "SUR")
+          : delegate(resource).create({ data, ...includeFor(resource) }),
   update: async (resource, id, data) => {
     const changes = resource === "surgeries" ? withoutCode(data) : { ...data };
     if (resource === "patients") {
@@ -87,7 +98,14 @@ export const crmModel = {
         }
       }
     }
-    return delegate(resource).update({ where: { id }, data: changes, ...includeFor(resource) });
+    return delegate(resource).update({
+      where: { id },
+      data: changes,
+      ...includeFor(resource),
+    });
   },
-  delete: (resource, id) => resource === "patients" ? deletePatient(prisma, id) : delegate(resource).delete({ where: { id } }),
+  delete: (resource, id) =>
+    resource === "patients"
+      ? deletePatient(prisma, id)
+      : delegate(resource).delete({ where: { id } }),
 };

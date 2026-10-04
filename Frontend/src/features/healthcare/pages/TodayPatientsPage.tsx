@@ -82,7 +82,8 @@ export default function TodayPatientsPage() {
   const tvMode = searchParams.get("tv") === "1";
   const toggleTv = () => {
     const next = new URLSearchParams(searchParams);
-    if (tvMode) next.delete("tv"); else next.set("tv", "1");
+    if (tvMode) next.delete("tv");
+    else next.set("tv", "1");
     setSearchParams(next);
   };
   const tr = (key: string) => t(`todayPatients.${key}`);
@@ -107,7 +108,15 @@ export default function TodayPatientsPage() {
   const [search, setSearch] = useState("");
   const [doctor, setDoctor] = useState("all");
   const [status, setStatus] = useState("current");
-  const table = useServerTable<Appointment, { date: string; timezone: string; doctors: [string,string][]; totals: { total: number; current: number; completed: number } }>("/crm/appointments/today", {search, doctor, status});
+  const table = useServerTable<
+    Appointment,
+    {
+      date: string;
+      timezone: string;
+      doctors: [string, string][];
+      totals: { total: number; current: number; completed: number };
+    }
+  >("/crm/appointments/today", { search, doctor, status });
   const resource = { ...table, data: table.pageData };
   const refreshAppointments = resource.refresh;
   useEffect(() => {
@@ -170,7 +179,8 @@ export default function TodayPatientsPage() {
             {serveError}
           </p>
         )}
-        <Button permission="update"
+        <Button
+          permission="update"
           size="lg"
           disabled={serving || resource.isLoading || !!resource.error}
           onClick={() => {
@@ -184,7 +194,14 @@ export default function TodayPatientsPage() {
     ) : null;
   return (
     <div dir={i18n.dir()} className="space-y-5">
-      <Button variant="outline" onClick={toggleTv}>{tvMode ? <ArrowLeft className="size-4 rtl:rotate-180" /> : <Monitor className="size-4" />}{t(tvMode ? "patientTv.back" : "patientTv.open")}</Button>
+      <Button variant="outline" onClick={toggleTv}>
+        {tvMode ? (
+          <ArrowLeft className="size-4 rtl:rotate-180" />
+        ) : (
+          <Monitor className="size-4" />
+        )}
+        {t(tvMode ? "patientTv.back" : "patientTv.open")}
+      </Button>
       <div className="flex flex-wrap items-center justify-between gap-5 rounded-2xl border border-primary/10 bg-card p-5 sm:p-6">
         <div className="flex items-center gap-4">
           <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary sm:size-14">
@@ -268,7 +285,7 @@ export default function TodayPatientsPage() {
             className="relative overflow-hidden rounded-2xl p-5 sm:p-6"
           >
             <span
-              className={`absolute inset-y-6 start-0 w-1 rounded-e-full ${accent}`}
+              className={`absolute inset-y-6 inset-s-0 w-1 rounded-e-full ${accent}`}
               aria-hidden="true"
             />
             <div className="flex items-start justify-between gap-4">
@@ -320,12 +337,14 @@ export default function TodayPatientsPage() {
       )}
       {!tvMode && shownProfileId && canViewProfile && (
         <div className="space-y-4">
-          <PermissionScope.Provider value="crm.patients"><PatientProfilePage
-            compact
-            key={shownProfileId}
-            patientId={shownProfileId}
-            onBack={() => setProfileId("")}
-          /></PermissionScope.Provider>
+          <PermissionScope.Provider value="crm.patients">
+            <PatientProfilePage
+              compact
+              key={shownProfileId}
+              patientId={shownProfileId}
+              onBack={() => setProfileId("")}
+            />
+          </PermissionScope.Provider>
           {servedButton}
         </div>
       )}
@@ -595,10 +614,14 @@ export default function TodayPatientsPage() {
             </p>
           )}
           <AlertDialogFooter>
-            <AlertDialogCancel className="border-red-600 bg-red-600 text-white hover:bg-red-700 hover:text-white" disabled={serving}>
+            <AlertDialogCancel
+              className="border-red-600 bg-red-600 text-white hover:bg-red-700 hover:text-white"
+              disabled={serving}
+            >
               {t("common.cancel")}
             </AlertDialogCancel>
-            <AlertDialogAction permission="healthcare.appointments.update"
+            <AlertDialogAction
+              permission="healthcare.appointments.update"
               className="bg-teal-700 text-white hover:bg-teal-800 hover:text-white"
               disabled={serving}
               onClick={(event) => {

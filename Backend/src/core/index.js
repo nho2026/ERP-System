@@ -4,7 +4,7 @@ export const getTokenFromHeader = (req) => {
     return null;
   }
   return authHeader.split(" ")[1];
-}
+};
 
 export const getTokenFromCookie = (req) => {
   const token = req.cookies?.token;
@@ -12,4 +12,4 @@ export const getTokenFromCookie = (req) => {
     return null;
   }
   return token;
-}
+};

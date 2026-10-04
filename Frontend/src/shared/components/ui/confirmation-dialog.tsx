@@ -40,7 +40,10 @@ export function DeleteConfirmationDialog({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-          <AlertDialogAction permission={permission} onClick={() => void onConfirm()}>
+          <AlertDialogAction
+            permission={permission}
+            onClick={() => void onConfirm()}
+          >
             {t("common.deletePermanently")}
           </AlertDialogAction>
         </AlertDialogFooter>

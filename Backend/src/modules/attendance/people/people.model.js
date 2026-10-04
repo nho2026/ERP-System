@@ -11,22 +11,40 @@ export const peopleModel = {
       })
     )?.id,
   findAll: (deviceId, query = {}) =>
-    paginate("attendancePerson", query, {
-      where: { ...(deviceId && { deviceId }), ...(query.employeeId && { employeeId: query.employeeId === "unlinked" ? null : String(query.employeeId) }) },
-      include: {
-        device: { select: { name: true } },
-        employee: {
-          select: {
-            id: true,
-            employeeCode: true,
-            firstName: true,
-            lastName: true,
-            user: { select: { id: true, name: true, username: true } },
+    paginate(
+      "attendancePerson",
+      query,
+      {
+        where: {
+          ...(deviceId && { deviceId }),
+          ...(query.employeeId && {
+            employeeId:
+              query.employeeId === "unlinked" ? null : String(query.employeeId),
+          }),
+        },
+        include: {
+          device: { select: { name: true } },
+          employee: {
+            select: {
+              id: true,
+              employeeCode: true,
+              firstName: true,
+              lastName: true,
+              user: { select: { id: true, name: true, username: true } },
+            },
           },
         },
+        orderBy: { createdAt: "desc" },
       },
-      orderBy: { createdAt: "desc" },
-    }, ["name", "employeeNo", "employee.employeeCode", "employee.firstName", "employee.lastName", "employee.user.username"]),
+      [
+        "name",
+        "employeeNo",
+        "employee.employeeCode",
+        "employee.firstName",
+        "employee.lastName",
+        "employee.user.username",
+      ],
+    ),
   find: (id) =>
     prisma.attendancePerson.findUniqueOrThrow({
       where: { id },

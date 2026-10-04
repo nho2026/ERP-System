@@ -5,13 +5,22 @@ import { presentUser } from "../../auth/auth.presenter.js";
 import { userModel } from "./users.model.js";
 import { clearUserLoginAttempts } from "../../auth/login-lockout.js";
 async function storageAssignment(department, warehouseId) {
-  if (!await userModel.isHospitalDepartment(department)) {
-    if (warehouseId) throw Object.assign(new Error("Storage can only be assigned to users in an active hospital department."), { status: 400 });
+  if (!(await userModel.isHospitalDepartment(department))) {
+    if (warehouseId)
+      throw Object.assign(
+        new Error(
+          "Storage can only be assigned to users in an active hospital department.",
+        ),
+        { status: 400 },
+      );
     return null;
   }
   if (!warehouseId) return null;
   const warehouse = await userModel.findWarehouse(warehouseId);
-  if (!warehouse || warehouse.status !== "active") throw Object.assign(new Error("Choose an active storage."), { status: 400 });
+  if (!warehouse || warehouse.status !== "active")
+    throw Object.assign(new Error("Choose an active storage."), {
+      status: 400,
+    });
   return warehouseId;
 }
 const forbidden = (message, status = 400) =>
@@ -21,8 +30,12 @@ export const userService = {
     return mapPage(await userModel.findAll(query), presentUser);
   },
   async create({ roleIds, pin, password, warehouseId, ...data }) {
-    const assignedWarehouseId = await storageAssignment(data.department, warehouseId);
-    if (pin && !(await userModel.hasSuperadminRole(roleIds))) throw forbidden("Only superadmins can have a login PIN.");
+    const assignedWarehouseId = await storageAssignment(
+      data.department,
+      warehouseId,
+    );
+    if (pin && !(await userModel.hasSuperadminRole(roleIds)))
+      throw forbidden("Only superadmins can have a login PIN.");
     return presentUser(
       await userModel.create({
         ...data,
@@ -39,20 +52,32 @@ export const userService = {
       const current = await userModel.findById(id);
       const nextDepartment = data.department ?? current.department;
       const eligible = await userModel.isHospitalDepartment(nextDepartment);
-      data.warehouseId = await storageAssignment(nextDepartment,
-        eligible ? (warehouseId === undefined ? current.warehouseId : warehouseId) : warehouseId);
+      data.warehouseId = await storageAssignment(
+        nextDepartment,
+        eligible
+          ? warehouseId === undefined
+            ? current.warehouseId
+            : warehouseId
+          : warehouseId,
+      );
     }
     const superadmin = roleIds
       ? await userModel.hasSuperadminRole(roleIds)
-      : (await userModel.findById(id)).roles.some(({ role }) => role.name === "Super Administrator");
-    if (pin && !superadmin) throw forbidden("Only superadmins can have a login PIN.");
+      : (await userModel.findById(id)).roles.some(
+          ({ role }) => role.name === "Super Administrator",
+        );
+    if (pin && !superadmin)
+      throw forbidden("Only superadmins can have a login PIN.");
     const update = { ...data };
     if (password) update.passwordHash = await hashSecret(password);
     if (pin !== undefined) {
       update.pinHash = pin ? await hashSecret(pin) : null;
       update.pinLookup = pin ? createPinLookup(pin) : null;
     }
-    if (!superadmin) { update.pinHash = null; update.pinLookup = null; }
+    if (!superadmin) {
+      update.pinHash = null;
+      update.pinLookup = null;
+    }
     if (roleIds)
       update.roles = {
         deleteMany: {},

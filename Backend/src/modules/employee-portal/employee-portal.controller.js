@@ -17,14 +17,12 @@ export const employeePortalController = {
   },
   createIdea: async (req, res, next) => {
     try {
-      res
-        .status(201)
-        .json(
-          await employeePortalService.createIdea({
-            user: req.user,
-            body: req.validatedBody,
-          }),
-        );
+      res.status(201).json(
+        await employeePortalService.createIdea({
+          user: req.user,
+          body: req.validatedBody,
+        }),
+      );
     } catch (error) {
       next(error);
     }

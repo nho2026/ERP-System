@@ -11,6 +11,15 @@ export function RequireAccess({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
   if (!user) return <Navigate to="/login" replace />;
   const permission = permissionForPath(pathname);
-  if (!hasPermission(user, permission)) return <div role="alert" className="p-8 text-center">{t("access.denied")}</div>;
-  return <PermissionScope.Provider value={permission.slice(0, -5)}>{children}</PermissionScope.Provider>;
+  if (!hasPermission(user, permission))
+    return (
+      <div role="alert" className="p-8 text-center">
+        {t("access.denied")}
+      </div>
+    );
+  return (
+    <PermissionScope.Provider value={permission.slice(0, -5)}>
+      {children}
+    </PermissionScope.Provider>
+  );
 }

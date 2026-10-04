@@ -23,7 +23,11 @@ export const financeModel = {
         },
       }),
       prisma.financeFunding.findMany({
-        where: { currency: "USD", startDate: { lte: to }, status: { not: "cancelled" } },
+        where: {
+          currency: "USD",
+          startDate: { lte: to },
+          status: { not: "cancelled" },
+        },
       }),
       prisma.accountingAccount.findMany({
         where: { currency: "USD" },

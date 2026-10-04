@@ -161,7 +161,7 @@ function MonthlyPayroll({ payrolls }: { payrolls: HrRecord[] }) {
             </span>
             <div
               title={`${month}: ${value.toLocaleString()}`}
-              className="w-full rounded-t-md bg-gradient-to-t from-emerald-600 to-teal-400 shadow-sm hover:opacity-80"
+              className="w-full rounded-t-md bg-linear-to-t from-emerald-600 to-teal-400 shadow-sm hover:opacity-80"
               style={{ height: `${Math.max(3, (value / max) * 82)}%` }}
             />
             <span className="whitespace-nowrap text-[10px] text-muted-foreground">

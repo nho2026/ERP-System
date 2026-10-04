@@ -109,7 +109,8 @@ export default function DirectoryPage({
           )}
         </h1>
         {manage && (
-          <Button permission="create"
+          <Button
+            permission="create"
             onClick={() => {
               setForm(empty);
               setError("");
@@ -175,7 +176,8 @@ export default function DirectoryPage({
                     <div className="flex gap-2">
                       {manage && (
                         <>
-                          <Button data-action="edit"
+                          <Button
+                            data-action="edit"
                             variant="outline"
                             size="icon"
                             aria-label={t(`${prefix}.edit`)}
@@ -194,7 +196,8 @@ export default function DirectoryPage({
                           >
                             <Pencil />
                           </Button>
-                          <Button data-action="delete"
+                          <Button
+                            data-action="delete"
                             variant="destructive"
                             size="icon"
                             aria-label={t(`${prefix}.delete`)}
@@ -203,7 +206,7 @@ export default function DirectoryPage({
                               setDeleting(row);
                             }}
                           >
-                            <Trash2  className="size-4 text-white" />
+                            <Trash2 className="size-4 text-white" />
                           </Button>
                         </>
                       )}
@@ -310,7 +313,10 @@ export default function DirectoryPage({
                 {error}
               </p>
             )}
-            <Button permission={editing === "new" ? "create" : "update"} disabled={busy || !form.name.trim()}>
+            <Button
+              permission={editing === "new" ? "create" : "update"}
+              disabled={busy || !form.name.trim()}
+            >
               {t("retailers.save")}
             </Button>
           </form>
@@ -340,7 +346,8 @@ export default function DirectoryPage({
             >
               {t("retailers.cancel")}
             </Button>
-            <Button permission="delete"
+            <Button
+              permission="delete"
               variant="destructive"
               disabled={busy}
               onClick={async () => {

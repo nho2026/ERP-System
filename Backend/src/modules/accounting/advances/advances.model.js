@@ -5,10 +5,15 @@ const serviceInclude = { department: true, appointment: true };
 
 export const advancesModel = {
   listSalary: (query = {}) =>
-    paginate("salaryAdvance", query, {
-      include: { employee: true },
-      orderBy: { requestedAt: "desc" },
-    }, ["employee.firstName","employee.lastName","employee.employeeCode"]),
+    paginate(
+      "salaryAdvance",
+      query,
+      {
+        include: { employee: true },
+        orderBy: { requestedAt: "desc" },
+      },
+      ["employee.firstName", "employee.lastName", "employee.employeeCode"],
+    ),
   findSalary: (id) => prisma.salaryAdvance.findUniqueOrThrow({ where: { id } }),
   createSalary: (data) =>
     prisma.salaryAdvance.create({ data, include: { employee: true } }),
@@ -23,10 +28,15 @@ export const advancesModel = {
       where: { id, status: { in: ["requested", "rejected", "cancelled"] } },
     }),
   listService: (query = {}) =>
-    paginate("serviceAdvance", query, {
-      include: serviceInclude,
-      orderBy: { receivedAt: "desc" },
-    }, ["receiptNumber","patientName","patientPhone"]),
+    paginate(
+      "serviceAdvance",
+      query,
+      {
+        include: serviceInclude,
+        orderBy: { receivedAt: "desc" },
+      },
+      ["receiptNumber", "patientName", "patientPhone"],
+    ),
   findService: (id) =>
     prisma.serviceAdvance.findUniqueOrThrow({ where: { id } }),
   createService: (data) =>

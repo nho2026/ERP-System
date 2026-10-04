@@ -56,12 +56,20 @@ export default function TransferProductPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [page, setPage] = useState(1);
-  const [filters, setFilters] = useState({ search: "", fromWarehouseId: "", toWarehouseId: "", from: "", to: "" });
+  const [filters, setFilters] = useState({
+    search: "",
+    fromWarehouseId: "",
+    toWarehouseId: "",
+    from: "",
+    to: "",
+  });
   const filter = (key: keyof typeof filters, value: string) => {
-    setFilters(current => ({ ...current, [key]: value }));
+    setFilters((current) => ({ ...current, [key]: value }));
     setPage(1);
   };
-  const invalidRange = Boolean(filters.from && filters.to && filters.from > filters.to);
+  const invalidRange = Boolean(
+    filters.from && filters.to && filters.from > filters.to,
+  );
   const lock = useRef(false);
   const canManage = hasPermission(storedUser(), "inventory.transfers.create");
   const [selectedProducts, setSelectedProducts] = useState<RecordItem[]>([]);
@@ -78,20 +86,25 @@ export default function TransferProductPage() {
     }, []),
   );
   const history = useApiResource(
-    useCallback(
-      () => {
-        if (invalidRange) return Promise.resolve({ items: [], pagination: { page: 1, pageSize: 10, total: 0, totalPages: 1 } });
-        const end = filters.to ? new Date(`${filters.to}T00:00:00`) : null;
-        if (end) end.setDate(end.getDate() + 1);
-        return inventoryApi.list("transfers", page, {
-          pageSize: "10", search: filters.search,
-          fromWarehouseId: filters.fromWarehouseId, toWarehouseId: filters.toWarehouseId,
-          startAt: filters.from ? new Date(`${filters.from}T00:00:00`).toISOString() : "",
-          endAt: end?.toISOString() ?? "",
+    useCallback(() => {
+      if (invalidRange)
+        return Promise.resolve({
+          items: [],
+          pagination: { page: 1, pageSize: 10, total: 0, totalPages: 1 },
         });
-      },
-      [page, filters, invalidRange],
-    ),
+      const end = filters.to ? new Date(`${filters.to}T00:00:00`) : null;
+      if (end) end.setDate(end.getDate() + 1);
+      return inventoryApi.list("transfers", page, {
+        pageSize: "10",
+        search: filters.search,
+        fromWarehouseId: filters.fromWarehouseId,
+        toWarehouseId: filters.toWarehouseId,
+        startAt: filters.from
+          ? new Date(`${filters.from}T00:00:00`).toISOString()
+          : "",
+        endAt: end?.toISOString() ?? "",
+      });
+    }, [page, filters, invalidRange]),
   );
   const money = (value: number) =>
     new Intl.NumberFormat(i18n.language, {
@@ -174,7 +187,8 @@ export default function TransferProductPage() {
           {t("warehouseModule.transferProduct")}
         </h1>
         <div className="flex items-center gap-2">
-          <Button permission="create"
+          <Button
+            permission="create"
             disabled={!canManage || busy}
             onClick={() => {
               setError("");
@@ -306,10 +320,21 @@ export default function TransferProductPage() {
                     return (
                       <TableRow key={line.id}>
                         <TableCell className="w-[300px] min-w-[300px]">
-                          <ProductSelect selected={product} disabled={busy}
+                          <ProductSelect
+                            selected={product}
+                            disabled={busy}
                             onChange={(product) => {
-                              setSelectedProducts((items) => [...items.filter((item) => item.id !== product.id), product]);
-                              change(line.id, { productId: product.id, fromWarehouseId: "", quantity: "" });
+                              setSelectedProducts((items) => [
+                                ...items.filter(
+                                  (item) => item.id !== product.id,
+                                ),
+                                product,
+                              ]);
+                              change(line.id, {
+                                productId: product.id,
+                                fromWarehouseId: "",
+                                quantity: "",
+                              });
                             }}
                           />
                         </TableCell>
@@ -352,7 +377,9 @@ export default function TransferProductPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-wrap items-center gap-2">
-                            <Button permission="view" data-action="delete"
+                            <Button
+                              permission="view"
+                              data-action="delete"
                               type="button"
                               variant="ghost"
                               size="icon"
@@ -383,7 +410,11 @@ export default function TransferProductPage() {
                 >
                   {t("common.cancel")}
                 </Button>
-                <Button permission="create" type="submit" disabled={!lines.length || busy}>
+                <Button
+                  permission="create"
+                  type="submit"
+                  disabled={!lines.length || busy}
+                >
                   {t(busy ? "buyHistory.processing" : "orderForm.submit")}
                 </Button>
               </DialogFooter>
@@ -405,37 +436,94 @@ export default function TransferProductPage() {
           </Button>
         </div>
         <Dialog open={filterOpen} onOpenChange={setFilterOpen}>
-          <DialogContent dir={i18n.dir()} className="max-h-[85dvh] overflow-y-auto">
+          <DialogContent
+            dir={i18n.dir()}
+            className="max-h-[85dvh] overflow-y-auto"
+          >
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <SlidersHorizontal className="size-4" />
                 {t("inventory.filters")}
               </DialogTitle>
             </DialogHeader>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="transfer-search">{t("transferForm.searchHistory")}</Label>
-              <Input id="transfer-search" value={filters.search} onChange={event => filter("search", event.target.value)} placeholder={t("transferForm.searchHistory")} />
-            </div>
-            {(["fromWarehouseId", "toWarehouseId"] as const).map(key => (
-              <div key={key} className="space-y-2">
-                <Label>{t(key === "fromWarehouseId" ? "transferForm.from" : "transferForm.to")}</Label>
-                {selector(filters[key] || "all", value => filter(key, value === "all" ? "" : value), [{ id: "all", name: t("incomeExpenses.all") }, ...(resources.data?.warehouses ?? [])], t(key === "fromWarehouseId" ? "transferForm.from" : "transferForm.to"))}
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="transfer-search">
+                  {t("transferForm.searchHistory")}
+                </Label>
+                <Input
+                  id="transfer-search"
+                  value={filters.search}
+                  onChange={(event) => filter("search", event.target.value)}
+                  placeholder={t("transferForm.searchHistory")}
+                />
               </div>
-            ))}
-            <div className="space-y-2">
-              <Label>{t("incomeExpenses.from")}</Label>
-              <FormDatePicker value={filters.from} onValueChange={value => filter("from", value)} />
+              {(["fromWarehouseId", "toWarehouseId"] as const).map((key) => (
+                <div key={key} className="space-y-2">
+                  <Label>
+                    {t(
+                      key === "fromWarehouseId"
+                        ? "transferForm.from"
+                        : "transferForm.to",
+                    )}
+                  </Label>
+                  {selector(
+                    filters[key] || "all",
+                    (value) => filter(key, value === "all" ? "" : value),
+                    [
+                      { id: "all", name: t("incomeExpenses.all") },
+                      ...(resources.data?.warehouses ?? []),
+                    ],
+                    t(
+                      key === "fromWarehouseId"
+                        ? "transferForm.from"
+                        : "transferForm.to",
+                    ),
+                  )}
+                </div>
+              ))}
+              <div className="space-y-2">
+                <Label>{t("incomeExpenses.from")}</Label>
+                <FormDatePicker
+                  value={filters.from}
+                  onValueChange={(value) => filter("from", value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>{t("incomeExpenses.to")}</Label>
+                <FormDatePicker
+                  value={filters.to}
+                  onValueChange={(value) => filter("to", value)}
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>{t("incomeExpenses.to")}</Label>
-              <FormDatePicker value={filters.to} onValueChange={value => filter("to", value)} />
-            </div>
-          </div>
-          {invalidRange && <p role="alert" className="mt-2 text-sm text-destructive">{t("transferForm.invalidDateRange")}</p>}
+            {invalidRange && (
+              <p role="alert" className="mt-2 text-sm text-destructive">
+                {t("transferForm.invalidDateRange")}
+              </p>
+            )}
             <DialogFooter>
-              <Button variant="outline" onClick={() => { setFilters({ search: "", fromWarehouseId: "", toWarehouseId: "", from: "", to: "" }); setPage(1); }}>{t("inventory.clearFilters")}</Button>
-              <Button disabled={invalidRange} onClick={() => setFilterOpen(false)}>{t("incomeExpenses.done")}</Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setFilters({
+                    search: "",
+                    fromWarehouseId: "",
+                    toWarehouseId: "",
+                    from: "",
+                    to: "",
+                  });
+                  setPage(1);
+                }}
+              >
+                {t("inventory.clearFilters")}
+              </Button>
+              <Button
+                disabled={invalidRange}
+                onClick={() => setFilterOpen(false)}
+              >
+                {t("incomeExpenses.done")}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

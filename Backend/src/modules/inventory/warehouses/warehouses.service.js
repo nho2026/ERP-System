@@ -3,7 +3,9 @@ import { warehouseSchema } from "./warehouses.schema.js";
 export const warehousesService = {
   list: async ({ query = {}, warehouseScope }) => {
     return await warehousesModel.paginate(query, "inventoryWarehouse", {
-      ...(warehouseScope && { where: { id: warehouseScope, status: "active" } }),
+      ...(warehouseScope && {
+        where: { id: warehouseScope, status: "active" },
+      }),
       orderBy: { name: "asc" },
     });
   },

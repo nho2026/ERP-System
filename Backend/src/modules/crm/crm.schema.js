@@ -22,7 +22,21 @@ export const crmSchemas = {
     allergies: nullable,
     medicalNotes: nullable,
     followUpDate: z.coerce.date().nullable().optional(),
-    status: z.enum(["new", "contacted", "qualified", "appointment_requested", "surgery_appointment", "converted", "direct_surgery_converted", "active", "inactive", "post_discharge_follow_up", "post_discharge_follow_up_completed"]).default("new"),
+    status: z
+      .enum([
+        "new",
+        "contacted",
+        "qualified",
+        "appointment_requested",
+        "surgery_appointment",
+        "converted",
+        "direct_surgery_converted",
+        "active",
+        "inactive",
+        "post_discharge_follow_up",
+        "post_discharge_follow_up_completed",
+      ])
+      .default("new"),
   }),
   surgeries: z.object({
     code: z.string().optional(),
@@ -60,6 +74,16 @@ export const crmSchemas = {
 
 export const isCrmResource = (resource) => Boolean(crmSchemas[resource]);
 
-export const patientUpdateSchema = crmSchemas.patients.partial().extend(Object.fromEntries(
-  ["isMarried", "childrenCount", "hasDiabetes", "hasHypertension", "status"].map(key => [key, crmSchemas.patients.shape[key].unwrap().optional()]),
-));
+export const patientUpdateSchema = crmSchemas.patients
+  .partial()
+  .extend(
+    Object.fromEntries(
+      [
+        "isMarried",
+        "childrenCount",
+        "hasDiabetes",
+        "hasHypertension",
+        "status",
+      ].map((key) => [key, crmSchemas.patients.shape[key].unwrap().optional()]),
+    ),
+  );

@@ -5,7 +5,15 @@ import { hasPermission, storedUser } from "@/features/auth/access";
 import { settingsSnapshot } from "@/features/settings/settings";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Gift, Pencil, Plus, Printer, Search, SlidersHorizontal, Trash2 } from "lucide-react";
+import {
+  Gift,
+  Pencil,
+  Plus,
+  Printer,
+  Search,
+  SlidersHorizontal,
+  Trash2,
+} from "lucide-react";
 import { hrApi, type HrRecord } from "../api/hr.api";
 import { usersApi } from "@/features/access-control/api/access.api";
 import { healthcareApi } from "@/features/healthcare/api/healthcare.api";
@@ -17,6 +25,7 @@ import { DeleteConfirmationDialog } from "@/shared/components/ui/confirmation-di
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent } from "@/shared/components/ui/card";
+import { Checkbox } from "@/shared/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -67,7 +76,12 @@ const configs: Record<
       { name: "userId", label: "System user", type: "systemUser" },
       { name: "firstName", label: "First name", required: true },
       { name: "lastName", label: "Last name", required: true },
-      { name: "departmentId", label: "Department", type: "department", required: true },
+      {
+        name: "departmentId",
+        label: "Department",
+        type: "department",
+        required: true,
+      },
       { name: "positionId", label: "Position", type: "position" },
       { name: "hireDate", label: "Hire date", type: "date", required: true },
       {
@@ -137,7 +151,13 @@ const configs: Record<
         type: "number",
         required: true,
       },
-      { name: "currencyId", label: "Currency", type: "select", options: ["USD"], required: true },
+      {
+        name: "currencyId",
+        label: "Currency",
+        type: "select",
+        options: ["IQD", "USD"],
+        required: true,
+      },
       {
         name: "payType",
         label: "Pay type",
@@ -270,7 +290,13 @@ const configs: Record<
         type: "number",
         required: true,
       },
-      { name: "currency", label: "Currency", type: "select", options: ["USD"], required: true },
+      {
+        name: "currency",
+        label: "Currency",
+        type: "select",
+        options: ["USD"],
+        required: true,
+      },
       {
         name: "requestedAt",
         label: "Requested date",
@@ -324,7 +350,12 @@ const employeeName = (record: HrRecord) => {
   const employee = record.employee as HrRecord | undefined;
   return employee ? `${employee.firstName} ${employee.lastName}` : "—";
 };
-function display(record: HrRecord, key: string, locale: string, translate: (text: string) => string): string | number {
+function display(
+  record: HrRecord,
+  key: string,
+  locale: string,
+  translate: (text: string) => string,
+): string | number {
   if (key === "workSchedule" && Array.isArray(record.workSchedule)) {
     return (record.workSchedule as { day: number }[])
       .map(({ day }) =>
@@ -357,7 +388,9 @@ function display(record: HrRecord, key: string, locale: string, translate: (text
   if (key === "employee") return employeeName(record);
   if (key === "roles") {
     const user = record.user as { roles?: { role: { name: string } }[] } | null;
-    return user?.roles?.map(({ role }) => translate(role.name)).join(", ") || "—";
+    return (
+      user?.roles?.map(({ role }) => translate(role.name)).join(", ") || "—"
+    );
   }
   if (key === "position")
     return String((record.position as HrRecord | null)?.name ?? "—");
@@ -413,37 +446,140 @@ export default function HrPage({ resource }: { resource?: Resource }) {
   const [positionFilter, setPositionFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [filterOpen, setFilterOpen] = useState(false);
-  const activeFilterCount = [departmentFilter, positionFilter, statusFilter]
-    .filter((value) => value !== "all").length;
+  const activeFilterCount = [
+    departmentFilter,
+    positionFilter,
+    statusFilter,
+  ].filter((value) => value !== "all").length;
   const clearEmployeeFilters = () => {
     setDepartmentFilter("all");
     setPositionFilter("all");
     setStatusFilter("all");
   };
   const [busy, setBusy] = useState(false);
+  const [deletingEmployees, setDeletingEmployees] = useState(false);
+  const [employeeSelection, setEmployeeSelection] = useState<{
+    scope: string;
+    ids: string[];
+  }>({ scope: "", ids: [] });
   const [error, setError] = useState("");
   const [adjustmentEmployee, setAdjustmentEmployee] = useState<HrRecord | null>(
     null,
   );
   const positions = useApiResource(
-    useCallback(() => hasPermission(storedUser(), "hr.positions.view") ? hrApi.positions.list() : Promise.resolve([]), []),
+    useCallback(
+      () =>
+        hasPermission(storedUser(), "hr.positions.view")
+          ? hrApi.positions.list()
+          : Promise.resolve([]),
+      [],
+    ),
   );
   const employees = useApiResource(
-    useCallback(() => hasPermission(storedUser(), "hr.employees.view") ? hrApi.employees.list() : Promise.resolve([]), []),
+    useCallback(
+      () =>
+        hasPermission(storedUser(), "hr.employees.view")
+          ? hrApi.employees.list()
+          : Promise.resolve([]),
+      [],
+    ),
   );
-  const salaries = useApiResource(useCallback(() => hasPermission(storedUser(), "hr.salaries.view") ? hrApi.salaries.list() : Promise.resolve([]), []));
-  const users = useApiResource(useCallback(() => hasPermission(storedUser(), "users.view") ? usersApi.list() : Promise.resolve([]), []));
+  const salaries = useApiResource(
+    useCallback(
+      () =>
+        hasPermission(storedUser(), "hr.salaries.view")
+          ? hrApi.salaries.list()
+          : Promise.resolve([]),
+      [],
+    ),
+  );
+  const users = useApiResource(
+    useCallback(
+      () =>
+        hasPermission(storedUser(), "users.view")
+          ? usersApi.list()
+          : Promise.resolve([]),
+      [],
+    ),
+  );
   const departments = useApiResource(
-    useCallback(() => hasPermission(storedUser(), "healthcare.departments.view") ? healthcareApi.departments.list() : Promise.resolve([]), []),
+    useCallback(
+      () =>
+        hasPermission(storedUser(), "healthcare.departments.view")
+          ? healthcareApi.departments.list()
+          : Promise.resolve([]),
+      [],
+    ),
   );
-  const endpoints: Record<Resource, string> = { employees: "/employees", positions: "/employees/positions", salaries: "/employees/records/salaries", attendance: "/employees/records/attendance", payrolls: "/employees/records/payrolls", adjustments: "/employees/records/payroll-adjustments", advances: "/advances/salary" };
-  const current = useServerTable<HrRecord>(endpoints[tab], { search,
-    ...(tab === "employees" ? { departmentId: departmentFilter === "all" ? undefined : departmentFilter, positionId: positionFilter === "all" ? undefined : positionFilter, status: statusFilter === "all" ? undefined : statusFilter } : {}) });
+  const endpoints: Record<Resource, string> = {
+    employees: "/employees",
+    positions: "/employees/positions",
+    salaries: "/employees/records/salaries",
+    attendance: "/employees/records/attendance",
+    payrolls: "/employees/records/payrolls",
+    adjustments: "/employees/records/payroll-adjustments",
+    advances: "/advances/salary",
+  };
+  const current = useServerTable<HrRecord>(endpoints[tab], {
+    search,
+    ...(tab === "employees"
+      ? {
+          departmentId:
+            departmentFilter === "all" ? undefined : departmentFilter,
+          positionId: positionFilter === "all" ? undefined : positionFilter,
+          status: statusFilter === "all" ? undefined : statusFilter,
+        }
+      : {}),
+  });
   const fullPrint = useFullReportPrint(async () => {
     const all = (await apiClient.get<HrRecord[]>(endpoints[tab])).data;
-    return all.filter(row => JSON.stringify(row).toLowerCase().includes(search.trim().toLowerCase()));
+    return all.filter((row) =>
+      JSON.stringify(row).toLowerCase().includes(search.trim().toLowerCase()),
+    );
   });
   const rows = fullPrint.printData ?? current.data ?? [];
+  const canDeleteEmployees =
+    tab === "employees" && hasPermission(storedUser(), "hr.employees.delete");
+  const selectionScope = JSON.stringify([
+    tab,
+    search,
+    departmentFilter,
+    positionFilter,
+    statusFilter,
+    current.pagination.page,
+  ]);
+  const selectedEmployeeIds =
+    employeeSelection.scope === selectionScope
+      ? employeeSelection.ids.filter((id) => rows.some((row) => row.id === id))
+      : [];
+  const selectEmployees = (ids: string[]) =>
+    setEmployeeSelection({ scope: selectionScope, ids });
+  const deleteSelectedEmployees = async () => {
+    if (deletingEmployees || !canDeleteEmployees || !selectedEmployeeIds.length)
+      return;
+    setDeletingEmployees(true);
+    setError("");
+    const failedIds: string[] = [];
+    const failures: string[] = [];
+    try {
+      for (const id of selectedEmployeeIds) {
+        try {
+          await hrApi.employees.remove(id);
+        } catch (cause) {
+          failedIds.push(id);
+          const employee = rows.find((row) => row.id === id);
+          failures.push(
+            `${employee ? `${employee.firstName} ${employee.lastName}` : id}: ${apiErrorMessage(cause)}`,
+          );
+        }
+      }
+      selectEmployees(failedIds);
+      if (failures.length) setError(failures.join("; "));
+      await Promise.all([current.refresh(), employees.refresh()]);
+    } finally {
+      setDeletingEmployees(false);
+    }
+  };
   const options = (field: Field) =>
     field.type === "systemUser"
       ? users.data?.map((user) => [user.id, `${user.name} — @${user.username}`])
@@ -468,18 +604,18 @@ export default function HrPage({ resource }: { resource?: Resource }) {
                 `${e.employeeCode} — ${e.firstName} ${e.lastName}`,
               ])
           : field.type === "position"
-              ? positions.data?.map((p) => [p.id, String(p.name)])
-              : field.type === "salary"
-                ? salaries.data?.map((s) => [
-                    s.id,
-                    `${employeeName(s)} — ${s.baseSalary} ${s.currencyId}`,
-                  ])
-                : field.options?.map((v) => [
-                    v,
-                    field.type === "boolean"
-                      ? v.charAt(0).toUpperCase() + v.slice(1)
-                      : v,
-                  ]);
+            ? positions.data?.map((p) => [p.id, String(p.name)])
+            : field.type === "salary"
+              ? salaries.data?.map((s) => [
+                  s.id,
+                  `${employeeName(s)} — ${s.baseSalary} ${s.currencyId}`,
+                ])
+              : field.options?.map((v) => [
+                  v,
+                  field.type === "boolean"
+                    ? v.charAt(0).toUpperCase() + v.slice(1)
+                    : v,
+                ]);
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setBusy(true);
@@ -530,9 +666,18 @@ export default function HrPage({ resource }: { resource?: Resource }) {
       <div>
         <h1 className="text-2xl font-bold">{tr(configs[tab].title)}</h1>
         <p className="text-sm text-muted-foreground">
-          {["employees", "positions"].includes(tab) ? tr("Employees belong to departments, each with a department leader. Positions describe jobs, and roles control system access through the linked user account.") : t("hr.pageDescription")}
+          {["employees", "positions"].includes(tab)
+            ? tr(
+                "Employees belong to departments, each with a department leader. Positions describe jobs, and roles control system access through the linked user account.",
+              )
+            : t("hr.pageDescription")}
         </p>
       </div>
+      {error && editing === undefined && !adjustmentEmployee && (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
       <Tabs
         value={tab}
         onValueChange={(value) => {
@@ -566,9 +711,36 @@ export default function HrPage({ resource }: { resource?: Resource }) {
                     />
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
+                    {key === "employees" && canDeleteEmployees && (
+                      <DeleteConfirmationDialog
+                        permission="hr.employees.delete"
+                        description={t("hr.deleteSelectedConfirm", {
+                          count: selectedEmployeeIds.length,
+                        })}
+                        onConfirm={deleteSelectedEmployees}
+                      >
+                        <Button
+                          permission="hr.employees.delete"
+                          variant="destructive"
+                          disabled={
+                            deletingEmployees ||
+                            current.isLoading ||
+                            !selectedEmployeeIds.length
+                          }
+                        >
+                          <Trash2 className="size-4" />
+                          {t("hr.deleteSelectedEmployees", {
+                            count: selectedEmployeeIds.length,
+                          })}
+                        </Button>
+                      </DeleteConfirmationDialog>
+                    )}
                     {key === "employees" && (
                       <>
-                        <Button variant="outline" onClick={() => setFilterOpen(true)}>
+                        <Button
+                          variant="outline"
+                          onClick={() => setFilterOpen(true)}
+                        >
                           <SlidersHorizontal className="size-4" />
                           {t("inventory.filters")}
                           {activeFilterCount > 0 && (
@@ -578,22 +750,31 @@ export default function HrPage({ resource }: { resource?: Resource }) {
                           )}
                         </Button>
                         {(search || activeFilterCount > 0) && (
-                          <Button variant="ghost" onClick={() => {
-                            setSearch("");
-                            clearEmployeeFilters();
-                          }}>
+                          <Button
+                            variant="ghost"
+                            onClick={() => {
+                              setSearch("");
+                              clearEmployeeFilters();
+                            }}
+                          >
                             {t("hr.clearFilters")}
                           </Button>
                         )}
                       </>
                     )}
                     {key === "salaries" && (
-                      <Button permission="hr.salaries.print" variant="outline" disabled={fullPrint.printing} onClick={() => void fullPrint.print()}>
+                      <Button
+                        permission="hr.salaries.print"
+                        variant="outline"
+                        disabled={fullPrint.printing}
+                        onClick={() => void fullPrint.print()}
+                      >
                         <Printer className="size-4" />
                         {t("hr.printSalaryList")}
                       </Button>
                     )}
-                    <Button permission="create"
+                    <Button
+                      permission="create"
                       onClick={() => {
                         setError("");
                         setEditing(null);
@@ -614,72 +795,80 @@ export default function HrPage({ resource }: { resource?: Resource }) {
                         </DialogTitle>
                       </DialogHeader>
                       <div className="grid gap-3 sm:grid-cols-2">
-                    <Select
-                      value={departmentFilter}
-                      onValueChange={setDepartmentFilter}
-                    >
-                      <SelectTrigger
-                        className="w-full"
-                        aria-label={tr("Department")}
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">
-                          {t("hr.allDepartments")}
-                        </SelectItem>
-                        {(departments.data ?? []).map((department) => (
-                          <SelectItem key={department.id} value={department.id}>
-                            {String(department.name)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Select
-                      value={positionFilter}
-                      onValueChange={setPositionFilter}
-                    >
-                      <SelectTrigger
-                        className="w-full"
-                        aria-label={tr("Position")}
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">
-                          {t("hr.allPositions")}
-                        </SelectItem>
-                        {(positions.data ?? []).map((position) => (
-                          <SelectItem key={position.id} value={position.id}>
-                            {String(position.name)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Select
-                      value={statusFilter}
-                      onValueChange={setStatusFilter}
-                    >
-                      <SelectTrigger
-                        className="w-full"
-                        aria-label={tr("Status")}
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">
-                          {t("hr.allStatuses")}
-                        </SelectItem>
-                        {["active", "inactive", "terminated"].map((status) => (
-                          <SelectItem key={status} value={status}>
-                            {tr(status)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                        <Select
+                          value={departmentFilter}
+                          onValueChange={setDepartmentFilter}
+                        >
+                          <SelectTrigger
+                            className="w-full"
+                            aria-label={tr("Department")}
+                          >
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">
+                              {t("hr.allDepartments")}
+                            </SelectItem>
+                            {(departments.data ?? []).map((department) => (
+                              <SelectItem
+                                key={department.id}
+                                value={department.id}
+                              >
+                                {String(department.name)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Select
+                          value={positionFilter}
+                          onValueChange={setPositionFilter}
+                        >
+                          <SelectTrigger
+                            className="w-full"
+                            aria-label={tr("Position")}
+                          >
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">
+                              {t("hr.allPositions")}
+                            </SelectItem>
+                            {(positions.data ?? []).map((position) => (
+                              <SelectItem key={position.id} value={position.id}>
+                                {String(position.name)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Select
+                          value={statusFilter}
+                          onValueChange={setStatusFilter}
+                        >
+                          <SelectTrigger
+                            className="w-full"
+                            aria-label={tr("Status")}
+                          >
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">
+                              {t("hr.allStatuses")}
+                            </SelectItem>
+                            {["active", "inactive", "terminated"].map(
+                              (status) => (
+                                <SelectItem key={status} value={status}>
+                                  {tr(status)}
+                                </SelectItem>
+                              ),
+                            )}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div className="grid gap-3 sm:grid-cols-2">
-                        <Button variant="outline" onClick={clearEmployeeFilters}>
+                        <Button
+                          variant="outline"
+                          onClick={clearEmployeeFilters}
+                        >
                           {t("hr.clearFilters")}
                         </Button>
                         <Button onClick={() => setFilterOpen(false)}>
@@ -690,36 +879,106 @@ export default function HrPage({ resource }: { resource?: Resource }) {
                   </Dialog>
                 )}
                 <div className="overflow-x-auto">
-                  <Table className={key === "employees" ? "[&_th]:whitespace-nowrap [&_td]:whitespace-nowrap" : undefined}>
+                  <Table
+                    className={
+                      key === "employees"
+                        ? "[&_th]:whitespace-nowrap [&_td]:whitespace-nowrap"
+                        : undefined
+                    }
+                  >
                     <TableHeader>
                       <TableRow>
+                        {key === "employees" && canDeleteEmployees && (
+                          <TableHead className="print:hidden">
+                            <Checkbox
+                              aria-label={t("hr.selectPageEmployees")}
+                              disabled={
+                                deletingEmployees ||
+                                current.isLoading ||
+                                !rows.length
+                              }
+                              checked={
+                                rows.length > 0 &&
+                                selectedEmployeeIds.length === rows.length
+                                  ? true
+                                  : selectedEmployeeIds.length > 0
+                                    ? "indeterminate"
+                                    : false
+                              }
+                              onCheckedChange={(checked) =>
+                                selectEmployees(
+                                  checked === true
+                                    ? rows.map((row) => row.id)
+                                    : [],
+                                )
+                              }
+                            />
+                          </TableHead>
+                        )}
                         {configs[key].columns.map(([, label]) => (
                           <TableHead key={label}>{tr(label)}</TableHead>
                         ))}
                         <TableHead>{t("hr.actions")}</TableHead>
                       </TableRow>
                     </TableHeader>
-                    <TableBody autoPaginate={false} pagination={fullPrint.printData ? undefined : current.pagination}>
+                    <TableBody
+                      autoPaginate={false}
+                      pagination={
+                        fullPrint.printData ? undefined : current.pagination
+                      }
+                    >
                       <TableResourceState
                         isLoading={current.isLoading}
                         error={current.error}
                         isEmpty={!rows.length}
-                        colSpan={configs[key].columns.length + 1}
+                        colSpan={
+                          configs[key].columns.length +
+                          1 +
+                          (key === "employees" && canDeleteEmployees ? 1 : 0)
+                        }
                       />
                       {!current.isLoading &&
                         !current.error &&
                         rows.map((row) => (
                           <TableRow key={row.id}>
+                            {key === "employees" && canDeleteEmployees && (
+                              <TableCell className="print:hidden">
+                                <Checkbox
+                                  aria-label={t("hr.selectEmployee", {
+                                    name: `${row.firstName} ${row.lastName}`,
+                                  })}
+                                  disabled={deletingEmployees}
+                                  checked={selectedEmployeeIds.includes(row.id)}
+                                  onCheckedChange={(checked) =>
+                                    selectEmployees(
+                                      checked === true
+                                        ? [...selectedEmployeeIds, row.id]
+                                        : selectedEmployeeIds.filter(
+                                            (id) => id !== row.id,
+                                          ),
+                                    )
+                                  }
+                                />
+                              </TableCell>
+                            )}
                             {configs[key].columns.map(([field]) => (
                               <TableCell key={field}>
                                 {field === "status" || field === "type" ? (
                                   <Badge variant="secondary">
-                                    {tr(String(display(row, field, locale, tr)))}
+                                    {tr(
+                                      String(display(row, field, locale, tr)),
+                                    )}
                                   </Badge>
                                 ) : key === "employees" ? (
                                   <span
-                                    className={field === "fullName" ? "inline-block max-w-56 truncate align-middle" : "inline-block max-w-44 truncate align-middle"}
-                                    title={String(display(row, field, locale, tr))}
+                                    className={
+                                      field === "fullName"
+                                        ? "inline-block max-w-56 truncate align-middle"
+                                        : "inline-block max-w-44 truncate align-middle"
+                                    }
+                                    title={String(
+                                      display(row, field, locale, tr),
+                                    )}
                                   >
                                     {display(row, field, locale, tr)}
                                   </span>
@@ -729,9 +988,16 @@ export default function HrPage({ resource }: { resource?: Resource }) {
                               </TableCell>
                             ))}
                             <TableCell className="whitespace-nowrap">
-                              <div className={key === "employees" ? "flex flex-nowrap items-center gap-2" : "flex flex-wrap items-center gap-2"}>
+                              <div
+                                className={
+                                  key === "employees"
+                                    ? "flex flex-nowrap items-center gap-2"
+                                    : "flex flex-wrap items-center gap-2"
+                                }
+                              >
                                 {key === "employees" && (
-                                  <Button permission="hr.payroll-adjustments.create"
+                                  <Button
+                                    permission="hr.payroll-adjustments.create"
                                     variant="ghost"
                                     size="icon"
                                     title={t("hr.rewardPunishment", {
@@ -772,6 +1038,7 @@ export default function HrPage({ resource }: { resource?: Resource }) {
                                     variant="ghost"
                                     size="icon"
                                     className="text-destructive"
+                                    disabled={deletingEmployees}
                                   >
                                     <Trash2 className="size-4" />
                                   </Button>
@@ -829,21 +1096,25 @@ export default function HrPage({ resource }: { resource?: Resource }) {
                         name={field.name}
                         initialValue={String(initial ?? "")}
                         options={choices ?? []}
-                        placeholder={t("hr.selectField", { field: tr(field.label) })}
+                        placeholder={t("hr.selectField", {
+                          field: tr(field.label),
+                        })}
                       />
                     ) : choices ? (
                       <Select
                         name={field.name}
                         defaultValue={
-                          ["currency", "currencyId"].includes(field.name)
-                            ? "USD"
-                            : initial != null
+                          initial != null
                             ? String(initial)
-                            : field.name === "status"
-                              ? "active"
-                              : field.required
-                              ? undefined
-                              : "__none__"
+                            : field.name === "currencyId"
+                              ? "IQD"
+                              : field.name === "currency"
+                                ? "USD"
+                                : field.name === "status"
+                                  ? "active"
+                                  : field.required
+                                    ? undefined
+                                    : "__none__"
                         }
                         required={field.required}
                       >
@@ -925,7 +1196,11 @@ export default function HrPage({ resource }: { resource?: Resource }) {
               )}
             </div>
             <div className="flex shrink-0 justify-end border-t bg-background px-6 py-4">
-              <Button permission={editing ? "update" : "create"} disabled={busy} className="w-full sm:w-auto sm:min-w-32">
+              <Button
+                permission={editing ? "update" : "create"}
+                disabled={busy}
+                className="w-full sm:w-auto sm:min-w-32"
+              >
                 {busy ? t("hr.saving") : t("hr.save")}
               </Button>
             </div>

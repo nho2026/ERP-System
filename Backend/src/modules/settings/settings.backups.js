@@ -65,7 +65,11 @@ export async function createBackup() {
     child.stderr.resume();
     const completion = new Promise((resolve, reject) => {
       child.on("error", (error) =>
-        reject(new Error(`Database backup tool could not start (${error.code || "unknown error"}). Check NHO_MYSQLDUMP_PATH and executable permissions.`)),
+        reject(
+          new Error(
+            `Database backup tool could not start (${error.code || "unknown error"}). Check NHO_MYSQLDUMP_PATH and executable permissions.`,
+          ),
+        ),
       );
       child.on("close", (code) =>
         code === 0
@@ -82,7 +86,10 @@ export async function createBackup() {
       pipeline(child.stdout, createWriteStream(temporary, { mode: 0o600 })),
       completion,
     ]);
-    const failure = results[1].status === "rejected" ? results[1] : results.find(result => result.status === "rejected");
+    const failure =
+      results[1].status === "rejected"
+        ? results[1]
+        : results.find((result) => result.status === "rejected");
     if (failure) throw failure.reason;
     await rename(temporary, path.join(directory, name));
     const settings = await getSettings("system");

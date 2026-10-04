@@ -42,12 +42,32 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { hasPermission, storedUser } from "@/features/auth/access";
-import { WhatsappIcon, MessengerIcon, TiktokIcon } from "../components/InboxChannelIcons";
+import {
+  WhatsappIcon,
+  MessengerIcon,
+  TiktokIcon,
+} from "../components/InboxChannelIcons";
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
 
-const channelLabels = { whatsapp: "WhatsApp", messenger: "Messenger", instagram: "Instagram", tiktok: "TikTok" };
-const channelIcons = { whatsapp: WhatsappIcon, messenger: MessengerIcon, instagram: Instagram, tiktok: TiktokIcon };
-function ChannelIcon({ channel, className }: { channel: WhatsappConversation["channel"]; className?: string }) {
+const channelLabels = {
+  whatsapp: "WhatsApp",
+  messenger: "Messenger",
+  instagram: "Instagram",
+  tiktok: "TikTok",
+};
+const channelIcons = {
+  whatsapp: WhatsappIcon,
+  messenger: MessengerIcon,
+  instagram: Instagram,
+  tiktok: TiktokIcon,
+};
+function ChannelIcon({
+  channel,
+  className,
+}: {
+  channel: WhatsappConversation["channel"];
+  className?: string;
+}) {
   const Icon = channelIcons[channel] ?? MessageCircle;
   return <Icon className={className} />;
 }
@@ -164,8 +184,13 @@ export default function WhatsappPage() {
   useEffect(() => {
     let active = true;
     const url = attachment ? URL.createObjectURL(attachment.file) : "";
-    queueMicrotask(() => { if (active) setPreview(url); });
-    return () => { active = false; if (url) URL.revokeObjectURL(url); };
+    queueMicrotask(() => {
+      if (active) setPreview(url);
+    });
+    return () => {
+      active = false;
+      if (url) URL.revokeObjectURL(url);
+    };
   }, [attachment]);
   useEffect(
     () => () => {
@@ -181,7 +206,8 @@ export default function WhatsappPage() {
   const request = useRef(0);
   const end = useRef<HTMLDivElement>(null);
   const channelAvailable = selected?.channel === "whatsapp" && !selected.isDemo;
-  const canSend = hasPermission(storedUser(), "crm.whatsapp.send") && channelAvailable;
+  const canSend =
+    hasPermission(storedUser(), "crm.whatsapp.send") && channelAvailable;
   const canViewLead = hasPermission(storedUser(), "crm.leads.view");
   const name = (item: WhatsappConversation) =>
     item.profileName || item.lead?.name || `+${item.phone}`;
@@ -244,21 +270,35 @@ export default function WhatsappPage() {
       try {
         await Promise.all([
           refreshConversations(),
-          selectedId ? whatsappApi.conversation(selectedId).then((data) => {
-            if (active && current === request.current) {
-              setSelected((previous) => JSON.stringify(previous) === JSON.stringify(data) ? previous : data);
-              setDetailError("");
-            }
-          }).catch((error: unknown) => {
-            if (active && current === request.current) setDetailError(apiErrorMessage(error));
-          }) : Promise.resolve(),
+          selectedId
+            ? whatsappApi
+                .conversation(selectedId)
+                .then((data) => {
+                  if (active && current === request.current) {
+                    setSelected((previous) =>
+                      JSON.stringify(previous) === JSON.stringify(data)
+                        ? previous
+                        : data,
+                    );
+                    setDetailError("");
+                  }
+                })
+                .catch((error: unknown) => {
+                  if (active && current === request.current)
+                    setDetailError(apiErrorMessage(error));
+                })
+            : Promise.resolve(),
         ]);
       } finally {
         running = false;
       }
     };
-    const timer = window.setInterval(() => { void refreshInbox(); }, 5000);
-    const onVisible = () => { if (!document.hidden) void refreshInbox(); };
+    const timer = window.setInterval(() => {
+      void refreshInbox();
+    }, 5000);
+    const onVisible = () => {
+      if (!document.hidden) void refreshInbox();
+    };
     document.addEventListener("visibilitychange", onVisible);
     return () => {
       active = false;
@@ -266,10 +306,12 @@ export default function WhatsappPage() {
       document.removeEventListener("visibilitychange", onVisible);
     };
   }, [selectedId, refreshConversations, sending, detailLoading]);
-  const rows = (conversations.data ?? []).filter((item) =>
-    (channel === "all" || item.channel === channel) &&
-    `${item.profileName ?? ""} ${item.phone} ${item.lead?.code ?? ""}`
-      .toLowerCase().includes(search.toLowerCase()),
+  const rows = (conversations.data ?? []).filter(
+    (item) =>
+      (channel === "all" || item.channel === channel) &&
+      `${item.profileName ?? ""} ${item.phone} ${item.lead?.code ?? ""}`
+        .toLowerCase()
+        .includes(search.toLowerCase()),
   );
   const recordVoice = async () => {
     if (recorder.current?.state === "recording") {
@@ -422,7 +464,7 @@ export default function WhatsappPage() {
               </Badge>
             </div>
             <div className="relative">
-              <Search className="absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="absolute inset-s-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
@@ -487,8 +529,13 @@ export default function WhatsappPage() {
                           {initials(name(item))}
                         </AvatarFallback>
                       </Avatar>
-                      <span className={`absolute -bottom-1 -end-1 grid size-6 place-items-center rounded-full bg-card shadow-sm ring-1 ring-border ${item.channel === "whatsapp" ? "text-emerald-600" : item.channel === "messenger" ? "text-blue-500" : item.channel === "instagram" ? "text-pink-500" : "text-foreground"}`}>
-                        <ChannelIcon channel={item.channel} className="size-[18px]" />
+                      <span
+                        className={`absolute -bottom-1 -end-1 grid size-6 place-items-center rounded-full bg-card shadow-sm ring-1 ring-border ${item.channel === "whatsapp" ? "text-emerald-600" : item.channel === "messenger" ? "text-blue-500" : item.channel === "instagram" ? "text-pink-500" : "text-foreground"}`}
+                      >
+                        <ChannelIcon
+                          channel={item.channel}
+                          className="size-[18px]"
+                        />
                       </span>
                     </div>
                     <div className="min-w-0 flex-1">
@@ -522,7 +569,9 @@ export default function WhatsappPage() {
                   <Inbox className="mx-auto mb-3 size-8 opacity-40" />
                   {conversations.isLoading
                     ? tr("loading")
-                    : channel === "messenger" || channel === "instagram" || channel === "tiktok"
+                    : channel === "messenger" ||
+                        channel === "instagram" ||
+                        channel === "tiktok"
                       ? tr("notConnected")
                       : search
                         ? tr("noMatches")
@@ -559,8 +608,12 @@ export default function WhatsappPage() {
                 <div className="min-w-0">
                   <h2 className="truncate font-semibold">{name(selected)}</h2>
                   <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <ChannelIcon channel={selected.channel} className="size-3" />
-                    {channelLabels[selected.channel]} · <span dir="ltr">+{selected.phone}</span>
+                    <ChannelIcon
+                      channel={selected.channel}
+                      className="size-3"
+                    />
+                    {channelLabels[selected.channel]} ·{" "}
+                    <span dir="ltr">+{selected.phone}</span>
                   </p>
                 </div>
                 {canSend && (
@@ -716,7 +769,9 @@ export default function WhatsappPage() {
               ) : (
                 <div className="py-20 text-center text-muted-foreground">
                   <MessageCircle className="mx-auto mb-4 size-10 opacity-40" />
-                  {channel === "messenger" || channel === "instagram" || channel === "tiktok"
+                  {channel === "messenger" ||
+                  channel === "instagram" ||
+                  channel === "tiktok"
                     ? tr("notConnected")
                     : tr("selectConversation")}
                 </div>
@@ -725,10 +780,16 @@ export default function WhatsappPage() {
             </div>
           </ScrollArea>
           <div className="border-t bg-card p-4">
-            {(!status.data?.configured || !channelAvailable || status.error) && (
+            {(!status.data?.configured ||
+              !channelAvailable ||
+              status.error) && (
               <p className="mb-3 flex items-center gap-2 text-xs text-muted-foreground">
                 <CircleAlert className="size-3.5 shrink-0" />
-                {selected?.isDemo ? tr("demoReadOnly") : selected && !channelAvailable ? tr("notConnected") : status.error || tr("channelUnavailable")}
+                {selected?.isDemo
+                  ? tr("demoReadOnly")
+                  : selected && !channelAvailable
+                    ? tr("notConnected")
+                    : status.error || tr("channelUnavailable")}
               </p>
             )}
             {attachment && (
@@ -778,7 +839,11 @@ export default function WhatsappPage() {
                 aria-label={tr("attachFile")}
                 title={tr("attachFile")}
                 disabled={
-                  !selected || !status.data?.configured || !channelAvailable || sending || recording
+                  !selected ||
+                  !status.data?.configured ||
+                  !channelAvailable ||
+                  sending ||
+                  recording
                 }
                 onClick={() => fileInput.current?.click()}
               >
@@ -790,7 +855,12 @@ export default function WhatsappPage() {
                 size="icon"
                 aria-label={recording ? tr("stopRecording") : tr("recordVoice")}
                 title={recording ? tr("stopRecording") : tr("recordVoice")}
-                disabled={!selected || !status.data?.configured || !channelAvailable || sending}
+                disabled={
+                  !selected ||
+                  !status.data?.configured ||
+                  !channelAvailable ||
+                  sending
+                }
                 onClick={() => void recordVoice()}
               >
                 {recording ? (
@@ -817,7 +887,11 @@ export default function WhatsappPage() {
                 aria-label={tr("compose")}
                 className="min-h-12 max-h-32 resize-none border-0 bg-transparent shadow-none focus-visible:ring-0"
                 disabled={
-                  !selected || !status.data?.configured || !channelAvailable || sending || !canSend
+                  !selected ||
+                  !status.data?.configured ||
+                  !channelAvailable ||
+                  sending ||
+                  !canSend
                 }
               />
               <Button
@@ -830,7 +904,8 @@ export default function WhatsappPage() {
                   !selected ||
                   (!draft.trim() && !attachment) ||
                   recording ||
-                  !status.data?.configured || !channelAvailable ||
+                  !status.data?.configured ||
+                  !channelAvailable ||
                   sending
                 }
               >
@@ -882,7 +957,10 @@ export default function WhatsappPage() {
                     {tr("channel")}
                   </p>
                   <p className="flex items-center gap-2 text-xs">
-                    <ChannelIcon channel={selected.channel} className="size-3.5" />
+                    <ChannelIcon
+                      channel={selected.channel}
+                      className="size-3.5"
+                    />
                     {channelLabels[selected.channel]}
                   </p>
                 </div>

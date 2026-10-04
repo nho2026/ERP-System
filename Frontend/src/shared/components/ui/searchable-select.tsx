@@ -90,7 +90,7 @@ export function SearchableSelect({
         >
           {showSearch && (
             <div className="relative shrink-0 border-b p-2">
-              <Search className="absolute start-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="absolute inset-s-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 aria-label={searchPlaceholder ?? t("common.searchOptions")}
                 autoFocus
@@ -108,39 +108,39 @@ export function SearchableSelect({
             <div className="p-1">
               {visibleOptions.length ? (
                 <>
-                {visibleOptions.map((option) => (
-                  <Button
-                    key={option.value}
-                    variant="ghost"
-                    type="button"
-                    onClick={() => {
-                      setValue(option.value);
-                      setSearch("");
-                      setOpen(false);
-                    }}
-                    className="flex h-auto min-h-9 w-full items-center justify-start gap-2 whitespace-normal rounded-md px-2 py-2 text-start text-sm"
-                  >
-                    <Check
-                      className={cn(
-                        "size-4 text-primary",
-                        value !== option.value && "opacity-0",
-                      )}
-                    />
-                    <span>{option.label}</span>
-                  </Button>
-                ))}
-                {visibleOptions.length < filtered.length && pageSize && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="mt-1 w-full border-t text-primary"
-                    onClick={() =>
-                      setVisibleCount((current) => current + pageSize)
-                    }
-                  >
-                    {t("common.loadMore", { defaultValue: "Load more" })}
-                  </Button>
-                )}
+                  {visibleOptions.map((option) => (
+                    <Button
+                      key={option.value}
+                      variant="ghost"
+                      type="button"
+                      onClick={() => {
+                        setValue(option.value);
+                        setSearch("");
+                        setOpen(false);
+                      }}
+                      className="flex h-auto min-h-9 w-full items-center justify-start gap-2 whitespace-normal rounded-md px-2 py-2 text-start text-sm"
+                    >
+                      <Check
+                        className={cn(
+                          "size-4 text-primary",
+                          value !== option.value && "opacity-0",
+                        )}
+                      />
+                      <span>{option.label}</span>
+                    </Button>
+                  ))}
+                  {visibleOptions.length < filtered.length && pageSize && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="mt-1 w-full border-t text-primary"
+                      onClick={() =>
+                        setVisibleCount((current) => current + pageSize)
+                      }
+                    >
+                      {t("common.loadMore", { defaultValue: "Load more" })}
+                    </Button>
+                  )}
                 </>
               ) : (
                 <p className="p-6 text-center text-sm text-muted-foreground">

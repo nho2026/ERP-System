@@ -69,8 +69,18 @@ export type LabChoice = {
   price?: string;
 };
 export const labApi = {
-  queuePosition: (id: string) => apiClient.get<{ ahead: number; active: boolean; queue: "accounting" | "laboratory" }>(`/laboratory/orders/${id}/queue-position`).then((r) => r.data),
-  requestPatient: (id: string) => apiClient.post<LabOrder>(`/laboratory/orders/${id}/request-patient`).then((r) => r.data),
+  queuePosition: (id: string) =>
+    apiClient
+      .get<{
+        ahead: number;
+        active: boolean;
+        queue: "accounting" | "laboratory";
+      }>(`/laboratory/orders/${id}/queue-position`)
+      .then((r) => r.data),
+  requestPatient: (id: string) =>
+    apiClient
+      .post<LabOrder>(`/laboratory/orders/${id}/request-patient`)
+      .then((r) => r.data),
   accountingQueue: () =>
     apiClient
       .get<{ tickets: LabOrder[]; total: number }>(

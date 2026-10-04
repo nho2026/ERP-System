@@ -12,13 +12,30 @@ export type PageData = {
 export type StoragePageData = PageData & {
   totals: { products: number; quantity: number; buy: number; sell: number };
 };
-export type ExpiryPageData = PageData & { warehouses: RecordItem[]; categories: RecordItem[]; today: string };
+export type ExpiryPageData = PageData & {
+  warehouses: RecordItem[];
+  categories: RecordItem[];
+  today: string;
+};
 export const inventoryApi = {
-  stockSummary: () => apiClient.get<{
-    warehouseId: string; total: number; units: number; empty: number; low: number;
-  }[]>("/inventory/stock/summary").then((response) => response.data),
+  stockSummary: () =>
+    apiClient
+      .get<
+        {
+          warehouseId: string;
+          total: number;
+          units: number;
+          empty: number;
+          low: number;
+        }[]
+      >("/inventory/stock/summary")
+      .then((response) => response.data),
   expiry: (page = 1, filters: Record<string, string> = {}) =>
-    apiClient.get<ExpiryPageData>("/inventory/expiry", { params: { page, pageSize: 50, ...filters } }).then(response => response.data),
+    apiClient
+      .get<ExpiryPageData>("/inventory/expiry", {
+        params: { page, pageSize: 50, ...filters },
+      })
+      .then((response) => response.data),
   storage: (page = 1, filters: Record<string, string> = {}) =>
     apiClient
       .get<StoragePageData>("/inventory/storage", {
@@ -72,9 +89,11 @@ export const productImageUrl = (url?: string) =>
       : `${(import.meta.env.VITE_API_URL ?? "").replace(/\/api\/?$/, "")}${url}`
     : "";
 export const posApi = {
-  list: (page = 1) =>
+  list: (page = 1, filters: Record<string, string> = {}) =>
     apiClient
-      .get<PageData>("/pos/sales", { params: { page, pageSize: 50 } })
+      .get<PageData>("/pos/sales", {
+        params: { page, pageSize: 50, ...filters },
+      })
       .then((r) => r.data),
   create: (data: Record<string, unknown>) =>
     apiClient.post("/pos/sales", data).then((r) => r.data),

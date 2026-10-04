@@ -28,12 +28,27 @@ const generateProductBarcode = async () => {
 export const productsService = {
   removeImage: async ({ body }) => {
     const imageUrl = body?.imageUrl;
-    if (typeof imageUrl !== "string" || !/^\/public\/product-images\/[a-f0-9-]{36}\.(png|jpg|jpeg|webp|gif)$/.test(imageUrl)) {
-      throw Object.assign(new Error("Invalid product image path."), { status: 400 });
+    if (
+      typeof imageUrl !== "string" ||
+      !/^\/public\/product-images\/[a-f0-9-]{36}\.(png|jpg|jpeg|webp|gif)$/.test(
+        imageUrl,
+      )
+    ) {
+      throw Object.assign(new Error("Invalid product image path."), {
+        status: 400,
+      });
     }
-    if (await productsModel.imageReferences(imageUrl)) return { retained: true };
+    if (await productsModel.imageReferences(imageUrl))
+      return { retained: true };
     try {
-      await unlink(path.resolve(process.cwd(), "public", "product-images", path.basename(imageUrl)));
+      await unlink(
+        path.resolve(
+          process.cwd(),
+          "public",
+          "product-images",
+          path.basename(imageUrl),
+        ),
+      );
     } catch (error) {
       if (error.code !== "ENOENT") throw error;
     }
@@ -42,13 +57,24 @@ export const productsService = {
   updateExpiryDate: async ({ id, body }) => {
     const { expiryDate } = expiryDateSchema.parse(body);
     const product = await productsModel.findUnique({ where: { id } });
-    if (!product || product.status !== "active") throw Object.assign(new Error("Active product not found."), { status: 404 });
-    return productsModel.update({ where: { id }, data: { expiryDate: expiryDate ? new Date(`${expiryDate}T00:00:00.000Z`) : null } });
+    if (!product || product.status !== "active")
+      throw Object.assign(new Error("Active product not found."), {
+        status: 404,
+      });
+    return productsModel.update({
+      where: { id },
+      data: {
+        expiryDate: expiryDate ? new Date(`${expiryDate}T00:00:00.000Z`) : null,
+      },
+    });
   },
   updateSpecialPrice: async ({ id, body }) => {
     const data = specialPriceSchema.parse(body);
     const product = await productsModel.findUnique({ where: { id } });
-    if (!product || product.status !== "active") throw Object.assign(new Error("Active product not found."), { status: 404 });
+    if (!product || product.status !== "active")
+      throw Object.assign(new Error("Active product not found."), {
+        status: 404,
+      });
     return productsModel.update({ where: { id }, data });
   },
   updateSpecial: ({ id, body }) =>
@@ -68,7 +94,16 @@ export const productsService = {
       ...(query.inStock === "true" && { quantity: { gt: 0 } }),
     };
     const where = {
-      ...(query.exactCode && { AND: [{ OR: [{ barcode: String(query.exactCode) }, { sku: String(query.exactCode) }] }] }),
+      ...(query.exactCode && {
+        AND: [
+          {
+            OR: [
+              { barcode: String(query.exactCode) },
+              { sku: String(query.exactCode) },
+            ],
+          },
+        ],
+      }),
       ...(query.hasBarcode === "true" && {
         AND: [{ barcode: { not: null } }, { barcode: { not: "" } }],
       }),
@@ -107,13 +142,17 @@ export const productsService = {
       include: {
         category: true,
         brand: query.compact !== "true",
-        stocks: query.includeStocks === "false" ? false : {
-          ...(warehouseId && { where: { warehouseId } }),
-          ...(query.compact === "true"
-            ? { select: { warehouseId: true, quantity: true } }
-            : { include: { warehouse: true } }),
-        },
-        images: query.compact === "true" ? false : { orderBy: { sortOrder: "asc" } },
+        stocks:
+          query.includeStocks === "false"
+            ? false
+            : {
+                ...(warehouseId && { where: { warehouseId } }),
+                ...(query.compact === "true"
+                  ? { select: { warehouseId: true, quantity: true } }
+                  : { include: { warehouse: true } }),
+              },
+        images:
+          query.compact === "true" ? false : { orderBy: { sortOrder: "asc" } },
       },
       orderBy: [{ name: "asc" }, { id: "asc" }],
     });
@@ -182,7 +221,12 @@ export const productsService = {
       );
     const images = input.images;
     delete input.images;
-    const previous = images ? await productsModel.findUnique({ where: { id }, include: { images: true } }) : null;
+    const previous = images
+      ? await productsModel.findUnique({
+          where: { id },
+          include: { images: true },
+        })
+      : null;
     if (images)
       await productsModel.deleteImages({
         where: { productId: id },
@@ -214,7 +258,9 @@ export const productsService = {
     });
     for (const image of previous?.images ?? []) {
       if (!images.some((item) => item.imageUrl === image.imageUrl)) {
-        await productsService.removeImage({ body: { imageUrl: image.imageUrl } });
+        await productsService.removeImage({
+          body: { imageUrl: image.imageUrl },
+        });
       }
     }
     return updated;

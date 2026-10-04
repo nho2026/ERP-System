@@ -10,14 +10,36 @@ const uploadedFiles = (files = []) =>
     fileSize: file.size,
   }));
 export const taskController = {
-  departments: run(async (req, res) => res.json(await taskService.departments(req.user, req.permissionKeys))),
-  projects: run(async (req, res) => res.json(await taskService.projects(req.user, req.permissionKeys, String(req.query.departmentId ?? "")))),
-  createProject: run(async (req, res) => res.status(201).json(await taskService.createProject(req.user, req.permissionKeys, req.validatedBody))),
+  departments: run(async (req, res) =>
+    res.json(await taskService.departments(req.user, req.permissionKeys)),
+  ),
+  projects: run(async (req, res) =>
+    res.json(
+      await taskService.projects(
+        req.user,
+        req.permissionKeys,
+        String(req.query.departmentId ?? ""),
+      ),
+    ),
+  ),
+  createProject: run(async (req, res) =>
+    res
+      .status(201)
+      .json(
+        await taskService.createProject(
+          req.user,
+          req.permissionKeys,
+          req.validatedBody,
+        ),
+      ),
+  ),
   list: run(async (req, res) =>
     res.json(await taskService.list(req.query, req.user, req.permissionKeys)),
   ),
   get: run(async (req, res) =>
-    res.json(await taskService.get(req.params.id, req.user, req.permissionKeys)),
+    res.json(
+      await taskService.get(req.params.id, req.user, req.permissionKeys),
+    ),
   ),
   assignees: run(async (req, res) =>
     res.json(await taskService.assignees(req.user, req.permissionKeys)),
@@ -25,7 +47,13 @@ export const taskController = {
   create: run(async (req, res) =>
     res
       .status(201)
-      .json(await taskService.create(req.user, req.permissionKeys, req.validatedBody)),
+      .json(
+        await taskService.create(
+          req.user,
+          req.permissionKeys,
+          req.validatedBody,
+        ),
+      ),
   ),
   update: run(async (req, res) =>
     res.json(
@@ -82,10 +110,16 @@ export const taskController = {
       ),
   ),
   monthlyReport: run(async (req, res) =>
-    res.json(await (async () => {
-      const report = await taskService.monthlyReport(req.validatedBody.month);
-      if (req.query.page === undefined) return report;
-      return { ...paginateRows(report.employees, req.query), summary: report.summary, month: report.month };
-    })()),
+    res.json(
+      await (async () => {
+        const report = await taskService.monthlyReport(req.validatedBody.month);
+        if (req.query.page === undefined) return report;
+        return {
+          ...paginateRows(report.employees, req.query),
+          summary: report.summary,
+          month: report.month,
+        };
+      })(),
+    ),
   ),
 };

@@ -21,7 +21,8 @@ export async function printLaboratory(
   kind: "ticket" | "invoice" | "results",
   language = "ku",
 ) {
-  const kiosk = kind === "ticket" && Boolean(window.electronWindow?.printTicket);
+  const kiosk =
+    kind === "ticket" && Boolean(window.electronWindow?.printTicket);
   const token = kiosk ? `nho-ticket-${randomId()}` : null;
   const win = window.open("", "_blank");
   if (!win) throw new Error(labels.popupBlocked);

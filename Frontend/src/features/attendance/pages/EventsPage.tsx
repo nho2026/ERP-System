@@ -274,7 +274,7 @@ function EmployeeFilter({
       </PopoverTrigger>
       <PopoverContent className="w-[300px] p-0" align="start">
         <div className="relative border-b p-2">
-          <Search className="absolute start-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute inset-s-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             className="ps-8"
             value={search}
@@ -350,7 +350,11 @@ export default function EventsPage() {
     () => ({ ...filters, deviceId: selectedDeviceId }),
     [filters, selectedDeviceId],
   );
-  const events = useServerTable<AttendanceEvent>("/attendance/events", { ...deviceFilters, sort: dateSort }, Boolean(selectedDeviceId)),
+  const events = useServerTable<AttendanceEvent>(
+      "/attendance/events",
+      { ...deviceFilters, sort: dateSort },
+      Boolean(selectedDeviceId),
+    ),
     people = useApiResource(
       useCallback(
         () =>
@@ -415,7 +419,10 @@ export default function EventsPage() {
         void refresh();
       }, 300);
     });
-    return () => { clearTimeout(timer); stream.close(); };
+    return () => {
+      clearTimeout(timer);
+      stream.close();
+    };
   }, [events.refresh]);
   const chooseDateRange = (range?: DateRange) => {
     setDateRange(range);
@@ -489,7 +496,8 @@ export default function EventsPage() {
               defaultValue: "matching events",
             })}
           </Badge>
-          <Button permission="sync"
+          <Button
+            permission="sync"
             variant="outline"
             className="ms-auto"
             disabled={syncing || !selectedDeviceId}
@@ -594,8 +602,12 @@ export default function EventsPage() {
                   </TableCell>
                   <TableCell>
                     {new Intl.DateTimeFormat(i18n.resolvedLanguage, {
-                      dateStyle: "medium",
-                      timeStyle: "short",
+                      weekday: "long",
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                      hour: "numeric",
+                      minute: "2-digit",
                       timeZone: "Asia/Baghdad",
                     }).format(new Date(e.occurredAt))}
                   </TableCell>

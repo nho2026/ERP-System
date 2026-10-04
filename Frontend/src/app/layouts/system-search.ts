@@ -84,7 +84,10 @@ export async function searchSystemRecords(
   const user = storedUser();
   const sources = menus.filter((menu) => {
     const endpoint = endpoints[menu.to];
-    return endpoint && hasPermission(user, permissionForRequest("GET", endpoint) ?? undefined);
+    return (
+      endpoint &&
+      hasPermission(user, permissionForRequest("GET", endpoint) ?? undefined)
+    );
   });
   const results: PromiseSettledResult<Result[]>[] = [];
   let cursor = 0;

@@ -44,7 +44,12 @@ const newVariant = (): Variant => ({
   barcode: "",
   productionCompany: "",
 });
-const drugFields = ["doseMgKgDay", "dosesPerDay", "concentrationMg", "concentrationMl"] as const;
+const drugFields = [
+  "doseMgKgDay",
+  "dosesPerDay",
+  "concentrationMg",
+  "concentrationMl",
+] as const;
 type SpecialProduct = {
   doseMgKgDay?: number | null;
   dosesPerDay?: number | null;
@@ -83,7 +88,11 @@ function SpecialProductForm({
       [],
     ),
   );
-  const [drug, setDrug] = useState(() => Object.fromEntries(drugFields.map(field => [field, String(product?.[field] ?? "")])));
+  const [drug, setDrug] = useState(() =>
+    Object.fromEntries(
+      drugFields.map((field) => [field, String(product?.[field] ?? "")]),
+    ),
+  );
   const [name, setName] = useState(product?.name ?? "");
   const [categoryId, setCategoryId] = useState(product?.categoryId ?? "");
   const [size, setSize] = useState(product?.size ?? "");
@@ -112,7 +121,12 @@ function SpecialProductForm({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const lock = useRef(false);
-  const canManage = hasPagePermission(storedUser(), "create", "update", "delete");
+  const canManage = hasPagePermission(
+    storedUser(),
+    "create",
+    "update",
+    "delete",
+  );
   const change = (id: string, patch: Partial<Variant>) =>
     setVariants((rows) =>
       rows.map((row) => (row.id === id ? { ...row, ...patch } : row)),
@@ -144,7 +158,12 @@ function SpecialProductForm({
         specialProfitRate: Number(profit),
         specialPrice: Number(specialPrice),
         productType,
-        ...Object.fromEntries(drugFields.map(field => [field, drug[field] === "" ? null : Number(drug[field])])),
+        ...Object.fromEntries(
+          drugFields.map((field) => [
+            field,
+            drug[field] === "" ? null : Number(drug[field]),
+          ]),
+        ),
         variants: variants.map(({ code, barcode, productionCompany }) => ({
           code,
           barcode,
@@ -170,10 +189,26 @@ function SpecialProductForm({
     <form onSubmit={submit} className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-2">
         <p className="col-span-full font-semibold">{t("drugDose.title")}</p>
-        {drugFields.map(field => <div key={field} className="space-y-1">
-          <Label htmlFor={`drug-${field}`}>{t(`drugDose.${field}`)}</Label>
-          <Input id={`drug-${field}`} type="number" min="0.000001" step={field === "dosesPerDay" ? 1 : "any"} max={field === "dosesPerDay" ? 24 : undefined} disabled={busy} value={drug[field]} onChange={event => setDrug(current => ({ ...current, [field]: event.target.value }))} />
-        </div>)}
+        {drugFields.map((field) => (
+          <div key={field} className="space-y-1">
+            <Label htmlFor={`drug-${field}`}>{t(`drugDose.${field}`)}</Label>
+            <Input
+              id={`drug-${field}`}
+              type="number"
+              min="0.000001"
+              step={field === "dosesPerDay" ? 1 : "any"}
+              max={field === "dosesPerDay" ? 24 : undefined}
+              disabled={busy}
+              value={drug[field]}
+              onChange={(event) =>
+                setDrug((current) => ({
+                  ...current,
+                  [field]: event.target.value,
+                }))
+              }
+            />
+          </div>
+        ))}
       </div>
       {(error || categories.error) && (
         <p role="alert" className="text-sm text-destructive">
@@ -331,7 +366,8 @@ function SpecialProductForm({
         >
           {t("common.cancel")}
         </Button>
-        <Button permission={product ? "update" : "create"}
+        <Button
+          permission={product ? "update" : "create"}
           type="submit"
           disabled={
             busy || !canManage || categories.isLoading || !!categories.error
@@ -351,7 +387,12 @@ export default function AddSpecialProductPage() {
   const [page, setPage] = useState(1);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<SpecialProduct | null>(null);
-  const canManage = hasPagePermission(storedUser(), "create", "update", "delete");
+  const canManage = hasPagePermission(
+    storedUser(),
+    "create",
+    "update",
+    "delete",
+  );
   const result = useApiResource(
     useCallback(
       () =>
@@ -384,7 +425,8 @@ export default function AddSpecialProductPage() {
         <h1 className="text-xl font-semibold">{t("specialProduct.list")}</h1>
         <div className="flex gap-2">
           {canManage && (
-            <Button permission="create"
+            <Button
+              permission="create"
               onClick={() => {
                 setEditing(null);
                 setOpen(true);
@@ -480,7 +522,8 @@ export default function AddSpecialProductPage() {
                   <TableCell>
                     <div className="flex flex-wrap items-center gap-2">
                       {canManage && (
-                        <Button data-action="edit"
+                        <Button
+                          data-action="edit"
                           variant="outline"
                           size="icon"
                           aria-label={`${t("specialProduct.edit")} ${row.name}`}

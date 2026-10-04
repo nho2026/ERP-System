@@ -1,3 +1,4 @@
+import { buildingNavigation } from "@/features/building-expenses/building-navigation";
 import { permissionForPath } from "@/features/auth/permission-policy";
 import {
   AlertDialog,
@@ -148,7 +149,11 @@ const primaryNavigation = [
   },
 ];
 const taskNavigation = [
-  { to: "/tasks/dashboard", label: "navigation.taskDashboard", icon: LayoutDashboard },
+  {
+    to: "/tasks/dashboard",
+    label: "navigation.taskDashboard",
+    icon: LayoutDashboard,
+  },
   { to: "/tasks/review", label: "navigation.taskReview", icon: ListTodo },
   {
     to: "/tasks",
@@ -273,6 +278,14 @@ const laboratoryNavigation = [
     icon: FlaskConical,
   },
 ];
+const icuNavigation = [
+  { to: "/icu/dashboard", label: "ICU Dashboard", icon: LayoutDashboard },
+  { to: "/icu/cases", label: "ICU Cases", icon: HeartPulse },
+  { to: "/icu/staff", label: "ICU Staff", icon: UsersRound },
+  { to: "/icu/operation-types", label: "Operation Types", icon: Stethoscope },
+  { to: "/icu/storage", label: "ICU Storage", icon: Warehouse },
+  { to: "/icu/item-reduction", label: "Item Reduction", icon: Package },
+];
 const healthcareNavigation = [
   {
     to: "/departments",
@@ -353,7 +366,11 @@ const crmNavigation = [
   },
 ];
 const accountingNavigation = [
-  { to: "/accounting", label: "navigation.accountantDashboard", icon: LayoutDashboard },
+  {
+    to: "/accounting",
+    label: "navigation.accountantDashboard",
+    icon: LayoutDashboard,
+  },
   {
     to: "/accounting/overview",
     label: "financeOverview.title",
@@ -690,19 +707,25 @@ export default function DashboardLayout() {
   const [hrExpanded, setHrExpanded] = useState(true);
   const [attendanceExpanded, setAttendanceExpanded] = useState(true);
   const [laboratoryExpanded, setLaboratoryExpanded] = useState(true);
+  const [icuExpanded, setIcuExpanded] = useState(true);
 
   useEffect(() => {
     const preventControlDrag = (event: DragEvent) => {
-      if (event.target instanceof Element && event.target.closest("a, button")) {
+      if (
+        event.target instanceof Element &&
+        event.target.closest("a, button")
+      ) {
         event.preventDefault();
       }
     };
     document.addEventListener("dragstart", preventControlDrag, true);
-    return () => document.removeEventListener("dragstart", preventControlDrag, true);
+    return () =>
+      document.removeEventListener("dragstart", preventControlDrag, true);
   }, []);
   const [healthcareExpanded, setHealthcareExpanded] = useState(true);
   const [crmExpanded, setCrmExpanded] = useState(true);
   const [accountingExpanded, setAccountingExpanded] = useState(true);
+  const [buildingExpanded, setBuildingExpanded] = useState(true);
   const [financeExpanded, setFinanceExpanded] = useState(true);
   const [warehouseGroupsExpanded, setWarehouseGroupsExpanded] = useState({
     cases: true,
@@ -856,6 +879,7 @@ export default function DashboardLayout() {
   const pageTitle = (() => {
     const allItems = [
       ...primaryNavigation,
+      ...buildingNavigation,
       ...taskNavigation,
       ...attendanceNavigation,
       ...hrNavigation,
@@ -881,9 +905,7 @@ export default function DashboardLayout() {
       return t("todayPatients.fullProfile");
     if (location.pathname === "/profile") return t("navigation.profile");
     if (location.pathname === "/settings") return t("navigation.settings");
-    return item
-      ? t(item.label)
-      : systemSettings?.organization.name || "";
+    return item ? t(item.label) : systemSettings?.organization.name || "";
   })();
   const normalizedNavigationSearch = navigationSearch
     .trim()
@@ -919,6 +941,7 @@ export default function DashboardLayout() {
     `group flex h-11 w-full items-center gap-3 rounded-xl px-3 text-[13px] font-semibold outline-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary/25 ${items.some((item) => location.pathname === item.to) ? "bg-primary/8 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`;
 
   const panelGroups = [
+    { key: "building", icon: Building2, items: buildingNavigation },
     {
       key: "warehouse",
       icon: Package,
@@ -933,6 +956,7 @@ export default function DashboardLayout() {
       ],
     },
     { key: "laboratory", icon: FlaskConical, items: laboratoryNavigation },
+    { key: "icu", icon: HeartPulse, items: icuNavigation },
     { key: "healthcare", icon: HeartPulse, items: healthcareNavigation },
     { key: "hr", icon: UsersRound, items: hrNavigation },
     { key: "attendance", icon: CalendarCheck, items: attendanceNavigation },
@@ -1036,7 +1060,12 @@ export default function DashboardLayout() {
   const panelTerm = panelSearch.trim().toLocaleLowerCase();
   const visibleGroups = panelGroups.filter(
     (group) =>
-      t(`controlPanel.${group.key}`).toLocaleLowerCase().includes(panelTerm) ||
+      t(`controlPanel.${group.key}`, {
+        defaultValue:
+          group.key === "building" ? t("buildingExpenses.title") : group.key,
+      })
+        .toLocaleLowerCase()
+        .includes(panelTerm) ||
       group.items.some((item) =>
         t(item.label).toLocaleLowerCase().includes(panelTerm),
       ),
@@ -1152,6 +1181,47 @@ export default function DashboardLayout() {
             </div>
             <div className="contents">
               <div className="space-y-1">{navItems(primaryNavigation)}</div>
+              {buildingNavigation.some(({ to }) =>
+                hasPermission(user, permissionForPath(to)),
+              ) && (
+                <div className="mt-2 space-y-1">
+                  {collapsed ? (
+                    <NavLink
+                      to="/building-expenses"
+                      title={t("buildingExpenses.title")}
+                      className="flex h-11 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted"
+                    >
+                      <Building2 className="size-4.5" />
+                    </NavLink>
+                  ) : (
+                    <>
+                      <Button
+                        variant="ghost"
+                        className={sectionButtonClass(buildingNavigation)}
+                        aria-expanded={
+                          buildingExpanded ||
+                          Boolean(normalizedNavigationSearch)
+                        }
+                        onClick={() => setBuildingExpanded((value) => !value)}
+                      >
+                        <Building2 className="size-4.25 shrink-0" />
+                        <span className="flex-1 text-start">
+                          {t("buildingExpenses.title")}
+                        </span>
+                        <ChevronDown
+                          className={`size-3.5 transition-transform ${buildingExpanded ? "rotate-180" : ""}`}
+                        />
+                      </Button>
+                      {(buildingExpanded ||
+                        Boolean(normalizedNavigationSearch)) && (
+                        <div className="ms-4.5 space-y-0.5 border-s border-primary/20 ps-3">
+                          {navItems(buildingNavigation)}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
               <div
                 className={`mt-2 space-y-1 ${taskNavigation.some(({ to }) => hasPermission(user, permissionForPath(to))) ? "" : "hidden"}`}
               >
@@ -1483,6 +1553,41 @@ export default function DashboardLayout() {
                 )}
               </div>
               <div
+                className={`mt-2 space-y-1 ${icuNavigation.some(({ to }) => hasPermission(user, permissionForPath(to))) ? "" : "hidden"}`}
+              >
+                {collapsed ? (
+                  <NavLink
+                    to="/icu/dashboard"
+                    title="ICU"
+                    aria-label="ICU"
+                    className={({ isActive }) =>
+                      `hidden h-9 items-center justify-center rounded-lg outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/35 lg:flex ${isActive ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-primary/7 hover:text-primary"}`
+                    }
+                  >
+                    <HeartPulse className="size-4.25" />
+                  </NavLink>
+                ) : (
+                  <>
+                    <button
+                      className={sectionButtonClass(icuNavigation)}
+                      aria-expanded={icuExpanded}
+                      onClick={() => setIcuExpanded((value) => !value)}
+                    >
+                      <HeartPulse className="size-4.25 shrink-0" />
+                      <span className="flex-1 text-start">ICU</span>
+                      <ChevronDown
+                        className={`size-3.5 transition-transform ${icuExpanded ? "rotate-180" : ""}`}
+                      />
+                    </button>
+                    {(icuExpanded || Boolean(normalizedNavigationSearch)) && (
+                      <div className="ms-4.5 space-y-0.5 border-s border-primary/20 ps-3">
+                        {navItems(icuNavigation)}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+              <div
                 className={`mt-2 space-y-1 ${healthcareNavigation.some(({ to }) => hasPermission(user, permissionForPath(to))) ? "" : "hidden"}`}
               >
                 {collapsed ? (
@@ -1669,24 +1774,27 @@ export default function DashboardLayout() {
                 {[
                   [Settings, "navigation.settings"],
                   [CircleHelp, "navigation.help"],
-                ].filter(([, label]) =>
-                  label !== "navigation.settings" ||
-                  hasPermission(user, permissionForPath("/settings")),
-                ).map(([Icon, label]) => (
-                  <button
-                    key={String(label)}
-                    onClick={() => {
-                      if (label === "navigation.settings")
-                        navigate("/settings");
-                    }}
-                    className={`flex h-9 w-full items-center gap-3 rounded-lg px-2.5 text-[13px] text-muted-foreground transition-colors hover:bg-primary/7 hover:text-primary ${collapsed ? "lg:justify-center lg:px-0" : ""}`}
-                  >
-                    <Icon className="size-4.25 stroke-[1.7]" />
-                    <span className={collapsed ? "lg:hidden" : ""}>
-                      {t(String(label))}
-                    </span>
-                  </button>
-                ))}
+                ]
+                  .filter(
+                    ([, label]) =>
+                      label !== "navigation.settings" ||
+                      hasPermission(user, permissionForPath("/settings")),
+                  )
+                  .map(([Icon, label]) => (
+                    <button
+                      key={String(label)}
+                      onClick={() => {
+                        if (label === "navigation.settings")
+                          navigate("/settings");
+                      }}
+                      className={`flex h-9 w-full items-center gap-3 rounded-lg px-2.5 text-[13px] text-muted-foreground transition-colors hover:bg-primary/7 hover:text-primary ${collapsed ? "lg:justify-center lg:px-0" : ""}`}
+                    >
+                      <Icon className="size-4.25 stroke-[1.7]" />
+                      <span className={collapsed ? "lg:hidden" : ""}>
+                        {t(String(label))}
+                      </span>
+                    </button>
+                  ))}
               </div>
             </div>
           </nav>
@@ -1796,148 +1904,148 @@ export default function DashboardLayout() {
             />
           </div>
           <div className="ml-auto flex shrink-0 items-center gap-2">
-          <Select
-            value={i18n.resolvedLanguage?.split("-")[0] ?? "en"}
-            onValueChange={(v) => void i18n.changeLanguage(v)}
-          >
-            <SelectTrigger className="h-9 w-24 shrink-0 rounded-lg sm:w-28">
-              <Globe2 className="size-3.5" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="z-10000">
-              <SelectItem value="en">{t("language.english")}</SelectItem>
-              <SelectItem value="ar">{t("language.arabic")}</SelectItem>
-              <SelectItem value="ku">{t("language.kurdish")}</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button
-            className="size-9 shrink-0 rounded-lg"
-            variant="outline"
-            size="icon"
-            onClick={toggleTheme}
-            title={theme === "dark" ? "Use light mode" : "Use dark mode"}
-            aria-label={theme === "dark" ? "Use light mode" : "Use dark mode"}
-          >
-            {theme === "dark" ? (
-              <Sun className="size-4" />
-            ) : (
-              <Moon className="size-4" />
-            )}
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                className="size-9 shrink-0 rounded-lg"
-                variant="outline"
-                size="icon"
-                aria-label={t("navigation.profile")}
-                title={t("navigation.profile")}
-              >
-                <UserRound className="size-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="z-10000 w-56 rounded-xl p-2"
+            <Select
+              value={i18n.resolvedLanguage?.split("-")[0] ?? "en"}
+              onValueChange={(v) => void i18n.changeLanguage(v)}
             >
-              <DropdownMenuLabel className="font-normal">
-                <p className="truncate text-sm font-semibold">{user?.name}</p>
-                <p className="truncate text-xs text-muted-foreground">
-                  @{user?.username}
-                </p>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => navigate("/profile")}>
-                <UserRound />
-                {t("navigation.profile")}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive"
-                disabled={loggingOut}
-                onSelect={() => setLogoutConfirmOpen(true)}
-              >
-                <LogOut />
-                {loggingOut
-                  ? t("navigation.loggingOut")
-                  : t("navigation.logout")}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                className="relative size-9 shrink-0 rounded-lg"
-                variant="outline"
-                size="icon"
-                aria-label={t("notificationCenter.title")}
-              >
-                <Bell className="size-4 fill-red-500 text-red-500 dark:text-red-700" />
-                {unreadCount > 0 && (
-                  <span className="absolute -inset-e-1.5 -top-1.5 grid min-w-4.5 place-items-center rounded-full bg-destructive px-1 text-[10px] font-bold leading-4 text-destructive-foreground">
-                    {unreadCount > 99 ? "99+" : unreadCount}
-                  </span>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="z-10000 w-80 rounded-xl p-2"
+              <SelectTrigger className="h-9 w-24 shrink-0 rounded-lg sm:w-28">
+                <Globe2 className="size-3.5" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="z-10000">
+                <SelectItem value="en">{t("language.english")}</SelectItem>
+                <SelectItem value="ar">{t("language.arabic")}</SelectItem>
+                <SelectItem value="ku">{t("language.kurdish")}</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              className="size-9 shrink-0 rounded-lg"
+              variant="outline"
+              size="icon"
+              onClick={toggleTheme}
+              title={theme === "dark" ? "Use light mode" : "Use dark mode"}
+              aria-label={theme === "dark" ? "Use light mode" : "Use dark mode"}
             >
-              <DropdownMenuLabel className="flex items-center justify-between gap-3">
-                <span>{t("notificationCenter.title")}</span>
-                {unreadCount > 0 && (
-                  <button
-                    className="text-xs font-normal text-primary hover:underline"
-                    onClick={(event) => {
-                      event.preventDefault();
-                      void markAllNotificationsRead();
-                    }}
-                  >
-                    {t("notificationCenter.markAllRead")}
-                  </button>
-                )}
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {notifications.length === 0 ? (
-                <p className="px-2 py-6 text-center text-xs text-muted-foreground">
-                  {t("notificationCenter.empty")}
-                </p>
+              {theme === "dark" ? (
+                <Sun className="size-4" />
               ) : (
-                notifications.map((notification) => (
-                  <DropdownMenuItem
-                    key={notification.id}
-                    className="items-start gap-2 rounded-lg py-2.5"
-                    onSelect={() => void openNotification(notification)}
-                  >
-                    <span
-                      className={`mt-1.5 size-2 shrink-0 rounded-full ${notification.readAt ? "bg-muted" : "bg-primary"}`}
-                    />
-                    <span className="min-w-0">
-                      <span className="block text-xs font-semibold">
-                        {notification.title ??
-                          notificationLabel(notification.type, t)}
-                      </span>
-                      <span className="block truncate text-xs text-muted-foreground">
-                        {notification.warning?.title ??
-                          notification.meeting?.title ??
-                          notification.body ??
-                          notification.task?.title ??
-                          t("notificationCenter.deletedTask")}
-                      </span>
-                      <span className="mt-1 block text-[10px] text-muted-foreground">
-                        {new Intl.DateTimeFormat(i18n.resolvedLanguage, {
-                          dateStyle: "medium",
-                          timeStyle: "short",
-                        }).format(new Date(notification.createdAt))}
-                      </span>
-                    </span>
-                  </DropdownMenuItem>
-                ))
+                <Moon className="size-4" />
               )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <WindowControls />
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  className="size-9 shrink-0 rounded-lg"
+                  variant="outline"
+                  size="icon"
+                  aria-label={t("navigation.profile")}
+                  title={t("navigation.profile")}
+                >
+                  <UserRound className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="z-10000 w-56 rounded-xl p-2"
+              >
+                <DropdownMenuLabel className="font-normal">
+                  <p className="truncate text-sm font-semibold">{user?.name}</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    @{user?.username}
+                  </p>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => navigate("/profile")}>
+                  <UserRound />
+                  {t("navigation.profile")}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  disabled={loggingOut}
+                  onSelect={() => setLogoutConfirmOpen(true)}
+                >
+                  <LogOut />
+                  {loggingOut
+                    ? t("navigation.loggingOut")
+                    : t("navigation.logout")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  className="relative size-9 shrink-0 rounded-lg"
+                  variant="outline"
+                  size="icon"
+                  aria-label={t("notificationCenter.title")}
+                >
+                  <Bell className="size-4 fill-red-500 text-red-500 dark:text-red-700" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -inset-e-1.5 -top-1.5 grid min-w-4.5 place-items-center rounded-full bg-destructive px-1 text-[10px] font-bold leading-4 text-destructive-foreground">
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </span>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="z-10000 w-80 rounded-xl p-2"
+              >
+                <DropdownMenuLabel className="flex items-center justify-between gap-3">
+                  <span>{t("notificationCenter.title")}</span>
+                  {unreadCount > 0 && (
+                    <button
+                      className="text-xs font-normal text-primary hover:underline"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        void markAllNotificationsRead();
+                      }}
+                    >
+                      {t("notificationCenter.markAllRead")}
+                    </button>
+                  )}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {notifications.length === 0 ? (
+                  <p className="px-2 py-6 text-center text-xs text-muted-foreground">
+                    {t("notificationCenter.empty")}
+                  </p>
+                ) : (
+                  notifications.map((notification) => (
+                    <DropdownMenuItem
+                      key={notification.id}
+                      className="items-start gap-2 rounded-lg py-2.5"
+                      onSelect={() => void openNotification(notification)}
+                    >
+                      <span
+                        className={`mt-1.5 size-2 shrink-0 rounded-full ${notification.readAt ? "bg-muted" : "bg-primary"}`}
+                      />
+                      <span className="min-w-0">
+                        <span className="block text-xs font-semibold">
+                          {notification.title ??
+                            notificationLabel(notification.type, t)}
+                        </span>
+                        <span className="block truncate text-xs text-muted-foreground">
+                          {notification.warning?.title ??
+                            notification.meeting?.title ??
+                            notification.body ??
+                            notification.task?.title ??
+                            t("notificationCenter.deletedTask")}
+                        </span>
+                        <span className="mt-1 block text-[10px] text-muted-foreground">
+                          {new Intl.DateTimeFormat(i18n.resolvedLanguage, {
+                            dateStyle: "medium",
+                            timeStyle: "short",
+                          }).format(new Date(notification.createdAt))}
+                        </span>
+                      </span>
+                    </DropdownMenuItem>
+                  ))
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <WindowControls />
           </div>
         </header>
         {panelMode && (
@@ -1995,7 +2103,18 @@ export default function DashboardLayout() {
         )}
         <div className="flex min-h-0 flex-1 flex-col md:flex-row">
           <main className="content-scrollbar min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain scroll-smooth">
-            <div className={location.pathname.replace(/\/$/, "") === "/tasks" && (new URLSearchParams(location.search).has("department") || new URLSearchParams(location.search).has("project") || new URLSearchParams(location.search).get("view") === "review") && !(panelMode && showPanel) ? "flex h-full min-h-0 flex-col overflow-hidden p-3 md:p-5 xl:p-6 [&>button]:shrink-0" : "min-h-full p-3 md:p-5 xl:p-6"}>
+            <div
+              className={
+                location.pathname.replace(/\/$/, "") === "/tasks" &&
+                (new URLSearchParams(location.search).has("department") ||
+                  new URLSearchParams(location.search).has("project") ||
+                  new URLSearchParams(location.search).get("view") ===
+                    "review") &&
+                !(panelMode && showPanel)
+                  ? "flex h-full min-h-0 flex-col overflow-hidden p-3 md:p-5 xl:p-6 [&>button]:shrink-0"
+                  : "min-h-full p-3 md:p-5 xl:p-6"
+              }
+            >
               {panelMode && showPanel ? (
                 <div
                   className="mx-auto max-w-7xl space-y-6 py-3 md:py-6"
@@ -2047,7 +2166,9 @@ export default function DashboardLayout() {
                   <div className="flex items-center justify-between">
                     <h2 className="text-lg font-semibold">
                       {panelGroup
-                        ? t(`controlPanel.${panelGroup}`)
+                        ? panelGroup === "building"
+                          ? t("buildingExpenses.title")
+                          : t(`controlPanel.${panelGroup}`)
                         : t("controlPanel.workspaces")}
                     </h2>
                   </div>
@@ -2070,8 +2191,18 @@ export default function DashboardLayout() {
                               title={t(item.label)}
                               description={t(
                                 `controlPanel.descriptions.${panelGroup}`,
+                                {
+                                  defaultValue:
+                                    panelGroup === "building"
+                                      ? t("buildingExpenses.description")
+                                      : "",
+                                },
                               )}
-                              meta={t(`controlPanel.${panelGroup}`)}
+                              meta={
+                                panelGroup === "building"
+                                  ? t("buildingExpenses.title")
+                                  : t(`controlPanel.${panelGroup}`)
+                              }
                               colorIndex={
                                 panelGroups
                                   .find((group) => group.key === panelGroup)
@@ -2086,9 +2217,20 @@ export default function DashboardLayout() {
                           <WorkspaceCard
                             key={`workspace:${group.key}`}
                             icon={group.icon}
-                            title={t(`controlPanel.${group.key}`)}
+                            title={t(`controlPanel.${group.key}`, {
+                              defaultValue:
+                                group.key === "building"
+                                  ? t("buildingExpenses.title")
+                                  : group.key,
+                            })}
                             description={t(
                               `controlPanel.descriptions.${group.key}`,
+                              {
+                                defaultValue:
+                                  group.key === "building"
+                                    ? t("buildingExpenses.description")
+                                    : "",
+                              },
                             )}
                             meta={t("controlPanel.pages", {
                               count: group.items.length,
@@ -2112,46 +2254,52 @@ export default function DashboardLayout() {
                 </div>
               ) : (
                 <>
-                  {panelMode && !["/tasks", "/tasks/dashboard"].includes(location.pathname.replace(/\/$/, "")) && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mb-4"
-                    onClick={() => {
-                      if (
-                        /^\/crm\/patients\/[^/]+$/.test(location.pathname) &&
-                        location.state?.from === "/crm/today-patients"
-                      ) {
-                        navigate("/crm/today-patients");
-                        return;
-                      }
-                      if (panelMode) {
-                        const workspace =
-                          panelGroups.find((group) =>
-                            group.items.some(
-                              (item) => item.to === location.pathname,
-                            ),
-                          ) ??
-                          panelGroups.find((group) =>
-                            group.items.some((item) =>
-                              location.pathname.startsWith(`${item.to}/`),
-                            ),
-                          );
-                        setPanelGroup(
-                          workspace?.key === "settings"
-                            ? null
-                            : (workspace?.key ?? null),
-                        );
-                        setPanelSearch("");
-                        setShowPanel(true);
-                      } else if (window.history.state?.idx > 0) navigate(-1);
-                      else navigate("/dashboard");
-                    }}
-                  >
-                    <ArrowLeft className="size-4 rtl:rotate-180" />
-                    {t("controlPanel.goBack")}
-                  </Button>
-                  )}
+                  {panelMode &&
+                    !["/tasks", "/tasks/dashboard"].includes(
+                      location.pathname.replace(/\/$/, ""),
+                    ) && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mb-4"
+                        onClick={() => {
+                          if (
+                            /^\/crm\/patients\/[^/]+$/.test(
+                              location.pathname,
+                            ) &&
+                            location.state?.from === "/crm/today-patients"
+                          ) {
+                            navigate("/crm/today-patients");
+                            return;
+                          }
+                          if (panelMode) {
+                            const workspace =
+                              panelGroups.find((group) =>
+                                group.items.some(
+                                  (item) => item.to === location.pathname,
+                                ),
+                              ) ??
+                              panelGroups.find((group) =>
+                                group.items.some((item) =>
+                                  location.pathname.startsWith(`${item.to}/`),
+                                ),
+                              );
+                            setPanelGroup(
+                              workspace?.key === "settings"
+                                ? null
+                                : (workspace?.key ?? null),
+                            );
+                            setPanelSearch("");
+                            setShowPanel(true);
+                          } else if (window.history.state?.idx > 0)
+                            navigate(-1);
+                          else navigate("/dashboard");
+                        }}
+                      >
+                        <ArrowLeft className="size-4 rtl:rotate-180" />
+                        {t("controlPanel.goBack")}
+                      </Button>
+                    )}
                   <Outlet key={location.pathname + location.search} />
                 </>
               )}

@@ -129,15 +129,28 @@ export default function IncomeExpensesPage() {
       return { records: records.data, report: report.data };
     }, [filters, page]),
   );
-  const reportFilters = Object.fromEntries(Object.entries(filters).filter(([,v]) => v && v !== "all"));
-  const departmentRows = useServerTable<Report["departments"][number]>(endpoint + "/report/rows", { ...reportFilters, section: "departments" });
-  const breakdownRows = useServerTable<Report["breakdown"][number]>(endpoint + "/report/rows", { ...reportFilters, section: "breakdown" });
+  const reportFilters = Object.fromEntries(
+    Object.entries(filters).filter(([, v]) => v && v !== "all"),
+  );
+  const departmentRows = useServerTable<Report["departments"][number]>(
+    endpoint + "/report/rows",
+    { ...reportFilters, section: "departments" },
+  );
+  const breakdownRows = useServerTable<Report["breakdown"][number]>(
+    endpoint + "/report/rows",
+    { ...reportFilters, section: "breakdown" },
+  );
   const changeFilter = (key: keyof typeof filters, value: string) => {
     setFilters((current) => ({ ...current, [key]: value }));
     setPage(1);
   };
   const refresh = async () => {
-    await Promise.all([data.refresh(), options.refresh(), departmentRows.refresh(), breakdownRows.refresh()]);
+    await Promise.all([
+      data.refresh(),
+      options.refresh(),
+      departmentRows.refresh(),
+      breakdownRows.refresh(),
+    ]);
   };
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -327,7 +340,8 @@ export default function IncomeExpensesPage() {
             </DialogContent>
           </Dialog>
           {can("create") && (
-            <Button permission="create"
+            <Button
+              permission="create"
               disabled={
                 options.isLoading || !!options.error || !departments.length
               }
@@ -398,7 +412,8 @@ export default function IncomeExpensesPage() {
               </TableHeader>
               <TableBody {...departmentRows.tableProps}>
                 <TableResourceState
-                  isLoading={departmentRows.isLoading} error={departmentRows.error}
+                  isLoading={departmentRows.isLoading}
+                  error={departmentRows.error}
                   isEmpty={!departmentRows.data?.length}
                   colSpan={5}
                 />
@@ -439,7 +454,8 @@ export default function IncomeExpensesPage() {
               </TableHeader>
               <TableBody {...breakdownRows.tableProps}>
                 <TableResourceState
-                  isLoading={breakdownRows.isLoading} error={breakdownRows.error}
+                  isLoading={breakdownRows.isLoading}
+                  error={breakdownRows.error}
                   isEmpty={!breakdownRows.data?.length}
                   colSpan={6}
                 />
@@ -511,7 +527,8 @@ export default function IncomeExpensesPage() {
                     <TableCell>
                       <div className="flex gap-1">
                         {can("update") && (
-                          <Button permission="update"
+                          <Button
+                            permission="update"
                             variant="ghost"
                             size="icon"
                             aria-label={label("edit")}
@@ -543,7 +560,8 @@ export default function IncomeExpensesPage() {
                             user?.permissions?.includes(
                               "finance.cash-flow.approve",
                             )) && (
-                            <Button permission="approve"
+                            <Button
+                              permission="approve"
                               disabled={actionBusy}
                               size="sm"
                               onClick={() => void approve(row.id)}
@@ -554,7 +572,8 @@ export default function IncomeExpensesPage() {
                         {can("delete") &&
                           !row.sourceType &&
                           row.status !== "cancelled" && (
-                            <Button permission="delete"
+                            <Button
+                              permission="delete"
                               variant="ghost"
                               size="sm"
                               onClick={() => setCancelling(row)}
@@ -610,7 +629,8 @@ export default function IncomeExpensesPage() {
             <DialogTitle>{t("financeOverview.cancelEntry")}</DialogTitle>
           </DialogHeader>
           <p>{t("financeOverview.cancelHint")}</p>
-          <Button permission="delete"
+          <Button
+            permission="delete"
             disabled={actionBusy}
             onClick={async () => {
               if (!cancelling || actionBusy) return;
@@ -771,7 +791,11 @@ export default function IncomeExpensesPage() {
                   {error}
                 </p>
               )}
-              <Button permission={editing ? "update" : "create"} disabled={busy} className="sm:col-span-2">
+              <Button
+                permission={editing ? "update" : "create"}
+                disabled={busy}
+                className="sm:col-span-2"
+              >
                 {t(busy ? "finance.saving" : "finance.save")}
               </Button>
             </fieldset>

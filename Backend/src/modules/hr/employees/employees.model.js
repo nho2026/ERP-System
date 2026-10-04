@@ -1,13 +1,27 @@
 import { paginate } from "../../../shared/database/paginate.js";
-import { createWithCode, withoutCode } from "../../../shared/database/automatic-code.js";
+import {
+  createWithCode,
+  withoutCode,
+} from "../../../shared/database/automatic-code.js";
 import { getSettings } from "../../settings/settings.service.js";
 import { prisma } from "../../../shared/database/client.js";
 const recordInclude = {
   user: {
-    select: { id: true, username: true, email: true, name: true, status: true, roles: { select: { role: { select: { id: true, name: true } } } } },
+    select: {
+      id: true,
+      username: true,
+      email: true,
+      name: true,
+      status: true,
+      roles: { select: { role: { select: { id: true, name: true } } } },
+    },
   },
   position: true,
-  department: { include: { manager: { select: { id: true, firstName: true, lastName: true } } } },
+  department: {
+    include: {
+      manager: { select: { id: true, firstName: true, lastName: true } },
+    },
+  },
   _count: {
     select: {
       salaries: true,
@@ -49,11 +63,22 @@ const validateSchedule = (data) => {
 
 export const employeeModel = {
   findAll: (query = {}) =>
-    paginate("employee", query, {
-      where: { ...(query.departmentId && { departmentId: String(query.departmentId) }), ...(query.positionId && { positionId: String(query.positionId) }), ...(query.status && { status: String(query.status) }) },
-      include: recordInclude,
-      orderBy: { createdAt: "desc" },
-    }, ["firstName","lastName","employeeCode"]),
+    paginate(
+      "employee",
+      query,
+      {
+        where: {
+          ...(query.departmentId && {
+            departmentId: String(query.departmentId),
+          }),
+          ...(query.positionId && { positionId: String(query.positionId) }),
+          ...(query.status && { status: String(query.status) }),
+        },
+        include: recordInclude,
+        orderBy: { createdAt: "desc" },
+      },
+      ["firstName", "lastName", "employeeCode"],
+    ),
   create: async (data) => {
     const settings = await getSettings("hr");
     data = {
@@ -62,10 +87,15 @@ export const employeeModel = {
       checkOutTime: data.checkOutTime ?? settings.endTime,
     };
     validateSchedule(data);
-    return createWithCode(prisma.employee, {
-      data: employeeData(data),
-      include: recordInclude,
-    }, "EMP", "employeeCode");
+    return createWithCode(
+      prisma.employee,
+      {
+        data: employeeData(data),
+        include: recordInclude,
+      },
+      "EMP",
+      "employeeCode",
+    );
   },
   update: async (id, data) => {
     const current = await prisma.employee.findUniqueOrThrow({ where: { id } });
@@ -88,7 +118,6 @@ export const employeeModel = {
         where: { managerId: id },
         data: { managerId: null },
       });
-
 
       // Remove dependent operational/history rows in explicit FK order.
       // This avoids MySQL P2003 conflicts from SalaryAdvance (RESTRICT),

@@ -43,7 +43,11 @@ export async function addAttachment(orderId, file, actor, db = prisma) {
         where: { id: orderId },
       });
       if (!order) throw fail("Laboratory request not found.", 404);
-      if (order.status !== "completed") throw fail("Reports can only be attached to completed laboratory results.", 409);
+      if (order.status !== "completed")
+        throw fail(
+          "Reports can only be attached to completed laboratory results.",
+          409,
+        );
       const attachments = Array.isArray(order.attachments)
         ? order.attachments
         : [];

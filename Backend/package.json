@@ -15,6 +15,8 @@
     "db:generate": "prisma generate --schema src/shared/database/prisma/schema.prisma",
     "db:push": "prisma db push --schema src/shared/database/prisma/schema.prisma",
     "db:migrate": "prisma migrate dev --schema src/shared/database/prisma/schema.prisma",
+    "db:deploy": "prisma migrate deploy --schema src/shared/database/prisma/schema.prisma",
+    "db:status": "prisma migrate status --schema src/shared/database/prisma/schema.prisma",
     "db:seed": "node src/shared/database/seed/seed.js",
     "db:seed-laboratory-tests": "node scripts/seed-laboratory-tests.js",
     "db:seed-departments": "node scripts/seed-departments.js",
@@ -22,7 +24,7 @@
     "db:seed-access": "node scripts/seed-access-control.js",
     "db:seed-products": "node scripts/import-products.js",
     "db:provision": "node scripts/provision-mysql.js",
-    "setup": "npm run db:provision && npm run db:generate && npm run db:push && npm run db:seed",
+    "setup": "npm run db:provision && npm run db:generate && npm run db:deploy && npm run db:seed",
     "test": "node --test"
   },
   "author": "",

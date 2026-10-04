@@ -24,7 +24,7 @@ body {
 button {
   border: 0;
   border-radius: 9px;
-  background: #1C9B49;
+  background: #1c9b49;
   color: #fff;
   padding: 11px 20px;
   font: inherit;
@@ -39,7 +39,7 @@ button {
   padding: 40px;
   border-radius: 14px;
   box-shadow: 0 12px 45px #12333a15;
-  border-top: 6px solid #1C9B49;
+  border-top: 6px solid #1c9b49;
 }
 header {
   display: flex;
@@ -76,13 +76,13 @@ h1 {
 .document-heading h2 {
   font-size: 20px;
   margin: 0;
-  color: #1C9B49;
+  color: #1c9b49;
 }
 .rx {
   font:
     36px Georgia,
     serif;
-  color: #1C9B49;
+  color: #1c9b49;
 }
 .meta {
   display: grid;
@@ -133,7 +133,7 @@ h1 {
   flex-shrink: 0;
   border-radius: 8px;
   background: #e8f5f2;
-  color: #1C9B49;
+  color: #1c9b49;
   font-weight: 700;
 }
 h3 {
@@ -164,7 +164,7 @@ p {
 .notes {
   margin-top: 22px;
   padding: 16px;
-  border-inline-start: 3px solid #1C9B49;
+  border-inline-start: 3px solid #1c9b49;
   background: #f0f7f6;
   border-radius: 0 8px 8px 0;
   break-inside: avoid;
@@ -232,7 +232,7 @@ footer {
   }
   header {
     padding-bottom: 18px;
-    border-bottom: 2px solid #1C9B49;
+    border-bottom: 2px solid #1c9b49;
   }
   .medicine,
   .meta,

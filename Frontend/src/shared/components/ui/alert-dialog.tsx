@@ -26,7 +26,7 @@ const AlertDialogContent = React.forwardRef<
     <AlertDialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed start-1/2 top-1/2 z-50 grid w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl border bg-background p-6 shadow-xl rtl:translate-x-1/2",
+        "fixed inset-s-1/2 top-1/2 z-50 grid w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl border bg-background p-6 shadow-xl rtl:translate-x-1/2",
         className,
       )}
       {...props}
@@ -76,17 +76,19 @@ const AlertDialogDescription = React.forwardRef<
 AlertDialogDescription.displayName = "AlertDialogDescription";
 const AlertDialogAction = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Action>,
-  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Action> & { permission?: string }
+  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Action> & {
+    permission?: string;
+  }
 >(({ className, permission, ...props }, ref) => {
   const allowed = useActionPermission(permission);
   if (!allowed) return null;
   return (
-  <AlertDialogPrimitive.Action
-    ref={ref}
-    className={cn(buttonVariants({ variant: "destructive" }), className)}
-    {...props}
-  />
-);
+    <AlertDialogPrimitive.Action
+      ref={ref}
+      className={cn(buttonVariants({ variant: "destructive" }), className)}
+      {...props}
+    />
+  );
 });
 AlertDialogAction.displayName = "AlertDialogAction";
 const AlertDialogCancel = React.forwardRef<

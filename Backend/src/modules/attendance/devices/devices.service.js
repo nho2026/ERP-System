@@ -10,7 +10,10 @@ const safe = (d) => ({ ...d, password: undefined }),
 const authorize = async (user, password) => {
   if (!user.roles.some(({ role }) => role.name === "Super Administrator"))
     fail("Only a Super Administrator can delete attendance records.", 403);
-  if ((await getSettings("security")).passwordForDeletion && !(await verifySecret(password || "", user.passwordHash)))
+  if (
+    (await getSettings("security")).passwordForDeletion &&
+    !(await verifySecret(password || "", user.passwordHash))
+  )
     fail("Super Administrator password is incorrect.", 403);
 };
 export const deviceService = {

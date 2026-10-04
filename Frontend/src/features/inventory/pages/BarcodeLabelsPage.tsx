@@ -167,7 +167,9 @@ export default function BarcodeLabelsPage() {
           <Label className="flex h-10 cursor-pointer items-center gap-2 rounded-lg border bg-background px-3 text-sm font-medium shadow-sm hover:bg-muted">
             <Checkbox
               className="size-5 rounded-md"
-              disabled={products.isLoading || Boolean(products.error) || !rows.length}
+              disabled={
+                products.isLoading || Boolean(products.error) || !rows.length
+              }
               checked={
                 rows.length > 0 && rows.every((row) => selected.has(row.id))
               }
@@ -177,7 +179,9 @@ export default function BarcodeLabelsPage() {
                 )
               }
             />
-            {t("inventory.barcode.selectPage", { defaultValue: "Select this page" })}
+            {t("inventory.barcode.selectPage", {
+              defaultValue: "Select this page",
+            })}
           </Label>
           <Button
             permission="print"
