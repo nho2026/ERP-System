@@ -35,6 +35,8 @@ export const defaults = {
     endTime: "17:00",
     weekends: [5, 6],
     graceMinutes: 0,
+    penaltyMultiplier: 1,
+    targetMinutes: 480,
   },
   healthcare: {
     appointmentMinutes: 30,
@@ -106,6 +108,8 @@ export const schemas = {
     endTime: time,
     weekends: days,
     graceMinutes: z.number().int().min(0).max(120),
+    penaltyMultiplier: z.number().min(0).max(10),
+    targetMinutes: z.number().int().min(1).max(1440),
   }),
   healthcare: z
     .object({

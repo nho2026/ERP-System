@@ -75,6 +75,8 @@ const labels: Record<string, string> = {
   endTime: "Default work end",
   weekends: "Weekend days",
   graceMinutes: "Late arrival grace (minutes)",
+  penaltyMultiplier: "Attendance deduction multiplier",
+  targetMinutes: "Default target work minutes",
   appointmentMinutes: "Default appointment duration (minutes)",
   bookingStart: "Public booking opens",
   bookingEnd: "Public booking closes",

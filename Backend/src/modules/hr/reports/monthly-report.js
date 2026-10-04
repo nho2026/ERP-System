@@ -28,7 +28,8 @@ export async function monthlyReport(query, payroll = false) {
       const own = adjustments.filter(row => row.employeeId === employee.id);
       const reward = own.filter(row => row.type === "reward").reduce((sum, row) => sum + Number(row.amount), 0);
       const punishment = own.filter(row => row.type === "punishment").reduce((sum, row) => sum + Number(row.amount), 0);
-      return { employee, salary, minutesLost, adjustments: own, ...calc.payrollAmounts(Number(salary.baseSalary), minutesLost, calc.scheduledMinutes(employee) / 60, reward, punishment) };
+      const monthlyScheduledHours = calc.monthlyScheduledMinutes(employee, month) / 60;
+      return { employee, salary, minutesLost, monthlyScheduledHours, adjustments: own, ...calc.payrollAmounts(Number(salary.baseSalary), minutesLost, monthlyScheduledHours, reward, punishment) };
     });
     if (query.export === "true") return rows;
     return paginateRows(rows, query);

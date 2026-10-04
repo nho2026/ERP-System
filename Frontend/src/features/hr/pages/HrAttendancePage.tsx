@@ -529,14 +529,6 @@ export default function HrAttendancePage() {
                 </span>
               </DialogTitle>
             </DialogHeader>
-            {canManage && (
-              <Button permission="hr.attendance-permissions.create"
-                className="shrink-0 rounded-xl"
-                onClick={() => setPermissionOpen(true)}
-              >
-                <ShieldCheck /> {tx("grantPermission", "Grant permission")}
-              </Button>
-            )}
             </div>
             <div className="mt-4 grid grid-cols-3 divide-x divide-border rounded-xl border bg-muted/25 rtl:divide-x-reverse">
               <div className="min-w-0 px-3 py-3 sm:px-5">
@@ -738,6 +730,16 @@ export default function HrAttendancePage() {
             </div>
             </div>
           </div>
+          {canManage && (
+            <div className="shrink-0 border-t bg-card px-4 py-3 sm:px-6">
+              <Button permission="hr.attendance-permissions.create"
+                className="w-full rounded-xl sm:ms-auto sm:w-auto"
+                onClick={() => setPermissionOpen(true)}
+              >
+                <ShieldCheck /> {tx("grantPermission", "Grant permission")}
+              </Button>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
       <DeleteConfirmationDialog permission="hr.attendance-permissions.delete"

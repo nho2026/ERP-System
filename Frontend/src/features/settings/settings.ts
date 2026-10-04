@@ -29,6 +29,8 @@ export type Settings = {
     endTime: string;
     weekends: number[];
     graceMinutes: number;
+    penaltyMultiplier: number;
+    targetMinutes: number;
   };
   healthcare: {
     appointmentMinutes: number;

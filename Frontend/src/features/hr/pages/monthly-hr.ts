@@ -5,10 +5,8 @@ import type {
   Person,
 } from "@/features/attendance/api/attendance.api";
 
-export const WORK_DAYS = 26;
-export const HOURS_PER_DAY = 8;
-export const PENALTY_MULTIPLIER = 3;
-export const TARGET_MINUTES = HOURS_PER_DAY * 60;
+const targetMinutes = () => settingsSnapshot()?.hr.targetMinutes ?? 480;
+const penaltyMultiplier = () => settingsSnapshot()?.hr.penaltyMultiplier ?? 1;
 
 export const monthValue = (date = new Date()) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
@@ -36,18 +34,18 @@ export const lostMinutes = (record: HrRecord, permissions: HrRecord[] = []) => {
   if (record.status === "leave" || record.status === "holiday") return 0;
   let lost =
     record.status === "absent"
-      ? Number(record.expectedMinutes ?? TARGET_MINUTES)
+      ? Number(record.expectedMinutes ?? targetMinutes())
       : record.flexibleSchedule
         ? Number(record.missingMinutes ?? 0)
         : record.source === "device"
           ? Math.min(
-              Number(record.expectedMinutes ?? TARGET_MINUTES),
+              Number(record.expectedMinutes ?? targetMinutes()),
               Number(record.lateMinutes ?? 0) +
                 Number(record.earlyLeaveMinutes ?? 0),
             )
           : Math.max(
               0,
-              Number(record.expectedMinutes ?? TARGET_MINUTES) -
+              Number(record.expectedMinutes ?? targetMinutes()) -
                 Number(record.workedMinutes ?? 0),
             );
   const permitted = approved
@@ -104,6 +102,29 @@ export const scheduledMinutes = (employee: HrRecord): number => {
   return end - start;
 };
 
+export const monthlyScheduledMinutes = (employee: HrRecord, month: string): number => {
+  const [year, monthNumber] = month.split("-").map(Number);
+  const weekends = settingsSnapshot()?.hr.weekends ?? [5, 6];
+  let total = 0;
+  const daysInMonth = new Date(Date.UTC(year, monthNumber, 0)).getUTCDate();
+  for (let day = 1; day <= daysInMonth; day++) {
+    const weekday = new Date(Date.UTC(year, monthNumber - 1, day)).getUTCDay();
+    if (Array.isArray(employee.workSchedule)) {
+      const entry = (employee.workSchedule as { day: number; hours?: number; checkInTime?: string; checkOutTime?: string }[])
+        .find((item) => item.day === weekday);
+      if (!entry) continue;
+      total += scheduledMinutes(
+        employee.scheduleType === "dynamic"
+          ? { ...employee, ...entry, workSchedule: undefined }
+          : employee,
+      );
+    } else if (!weekends.includes(weekday)) {
+      total += scheduledMinutes(employee);
+    }
+  }
+  return total;
+};
+
 export const duration = (minutes: number) => {
   const hours = Math.floor(minutes / 60);
   const rest = Math.round(minutes % 60);
@@ -135,13 +156,13 @@ export const activeSalaryFor = (
 export const payrollAmounts = (
   baseSalary: number,
   minutesLost: number,
-  hoursPerDay = HOURS_PER_DAY,
+  monthlyScheduledHours: number,
   rewardAmount = 0,
   punishmentAmount = 0,
 ) => {
   const lostHours = minutesLost / 60;
-  const hourlyRate = baseSalary / (WORK_DAYS * hoursPerDay);
-  const deduction = hourlyRate * lostHours * PENALTY_MULTIPLIER;
+  const hourlyRate = monthlyScheduledHours > 0 ? baseSalary / monthlyScheduledHours : 0;
+  const deduction = hourlyRate * lostHours * penaltyMultiplier();
   return {
     hourlyRate,
     deduction,
@@ -155,8 +176,12 @@ export const payrollAmounts = (
 };
 
 const localDateKey = (value: string) => {
-  const date = new Date(value);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Baghdad",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(value));
 };
 
 export const deviceAttendanceRecords = (
