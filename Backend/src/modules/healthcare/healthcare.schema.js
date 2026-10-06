@@ -12,6 +12,13 @@ export const departmentSchema = z.object({
   managerId: z.string().trim().min(1),
   status: z.enum(["active", "inactive"]).default("active"),
 });
+export const departmentIdsSchema = z.object({
+  ids: z
+    .array(z.string().trim().min(1).max(191))
+    .min(1)
+    .max(100)
+    .refine((ids) => new Set(ids).size === ids.length, "IDs must be unique."),
+});
 export const staffSchema = z.object({
   positionId: z.string().min(1).nullable().optional(),
   employeeId: z.string(),

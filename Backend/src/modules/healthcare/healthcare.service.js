@@ -22,6 +22,7 @@ export const healthcareService = {
     return item;
   },
   removeDepartment: model.removeDepartment,
+  removeDepartments: model.removeDepartments,
   listStaff: model.listStaff,
   async createStaff(data) {
     await requireHospital(data.departmentId);

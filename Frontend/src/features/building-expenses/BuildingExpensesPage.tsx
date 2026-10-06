@@ -1,6 +1,12 @@
 import { useBuildingTranslation } from "./useBuildingTranslation";
 import { useSearchParams } from "react-router-dom";
-import { MoreHorizontal, Plus, Trash2 } from "lucide-react";
+import {
+  ExternalLink,
+  MoreHorizontal,
+  Paperclip,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -8,7 +14,7 @@ import {
   DropdownMenuItem,
 } from "@/shared/components/ui/dropdown-menu";
 import { BuildingStatusBadge } from "./BuildingStatusBadge";
-import { useCallback, useState, type ReactNode } from "react";
+import { useCallback, useRef, useState, type ReactNode } from "react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
@@ -39,6 +45,7 @@ import {
 } from "@/shared/components/ui/dialog";
 import { FormDatePicker } from "@/shared/components/ui/form-date-picker";
 import { apiClient, apiErrorMessage } from "@/shared/api/client";
+import { productImageUrl } from "@/features/inventory/api/inventory.api";
 import { useApiResource } from "@/shared/hooks/useApiResource";
 import { hasPermission, storedUser } from "@/features/auth/access";
 
@@ -60,11 +67,13 @@ type Item = {
 };
 type Request = {
   id: string;
-  departmentId: string;
-  department: Department;
+  departmentId: string | null;
+  department: Department | null;
   kind: string;
   status: string;
   note: string;
+  invoiceNumber: string | null;
+  attachmentUrl: string | null;
   items: Item[];
   paidAmount: string | number;
   paymentMethod: string;
@@ -73,8 +82,8 @@ type Request = {
 };
 type Expense = {
   id: string;
-  departmentId: string;
-  department: Department;
+  departmentId: string | null;
+  department: Department | null;
   category: string;
   description: string;
   amount: number | string;
@@ -87,8 +96,8 @@ export type BuildingData = {
   products: Product[];
   allocations: {
     id: string;
-    departmentId: string;
-    department: Department;
+    departmentId: string | null;
+    department: Department | null;
     product: Product;
     quantity: number;
   }[];
@@ -206,6 +215,8 @@ export default function BuildingExpensesPage({ page }: { page: BuildingPage }) {
     previousQuantity: 0,
   });
   const [busy, setBusy] = useState(false);
+  const [uploadingInvoice, setUploadingInvoice] = useState(false);
+  const invoiceFileInput = useRef<HTMLInputElement>(null);
   const [error, setError] = useState("");
   const [product, setProduct] = useState({
     name: "",
@@ -226,6 +237,8 @@ export default function BuildingExpensesPage({ page }: { page: BuildingPage }) {
   const [request, setRequest] = useState({
     departmentId: "",
     kind: page === "sales" ? "sale" : "purchase",
+    invoiceNumber: "",
+    attachmentUrl: null as string | null,
     note: "",
     paidAmount: 0,
     paymentMethod: "cash",
@@ -244,7 +257,7 @@ export default function BuildingExpensesPage({ page }: { page: BuildingPage }) {
     data?.departments.map((d) => ({ value: d.id, label: d.name })) ?? [];
   const match = (value: string) =>
     value.toLowerCase().includes(search.toLowerCase());
-  const inDepartment = (value: { departmentId: string }) =>
+  const inDepartment = (value: { departmentId: string | null }) =>
     department === "all" || value.departmentId === department;
   const visibleCount = !data
     ? 0
@@ -310,6 +323,8 @@ export default function BuildingExpensesPage({ page }: { page: BuildingPage }) {
     setRequest({
       departmentId: department === "all" ? "" : department,
       kind: page === "sales" ? "sale" : "purchase",
+      invoiceNumber: "",
+      attachmentUrl: null,
       note: "",
       paidAmount: 0,
       paymentMethod: "cash",
@@ -320,14 +335,46 @@ export default function BuildingExpensesPage({ page }: { page: BuildingPage }) {
     setId(row.id);
     setError("");
     setRequest({
-      departmentId: row.departmentId,
+      departmentId: row.departmentId ?? "",
       kind: row.kind,
+      invoiceNumber: row.invoiceNumber ?? "",
+      attachmentUrl: row.attachmentUrl,
       note: row.note,
       paidAmount: Number(row.paidAmount),
       paymentMethod: row.paymentMethod,
       items: row.items,
     });
     setDialog("request");
+  };
+  const uploadInvoice = async (file: File) => {
+    if (
+      file.size > 5 * 1024 * 1024 ||
+      !["image/jpeg", "image/png", "image/webp", "image/gif"].includes(
+        file.type,
+      )
+    ) {
+      setError(t("Choose a supported image smaller than 5 MB."));
+      return;
+    }
+    const body = new FormData();
+    body.append("invoice", file);
+    setUploadingInvoice(true);
+    setError("");
+    try {
+      const response = await apiClient.post<{ attachmentUrl: string }>(
+        "/building-expenses/invoices",
+        body,
+        { headers: { "Content-Type": "multipart/form-data" } },
+      );
+      setRequest((current) => ({
+        ...current,
+        attachmentUrl: response.data.attachmentUrl,
+      }));
+    } catch (cause) {
+      setError(apiErrorMessage(cause));
+    } finally {
+      setUploadingInvoice(false);
+    }
   };
   const updateItem = (index: number, change: Partial<Item>) =>
     setRequest((current) => ({
@@ -382,29 +429,24 @@ export default function BuildingExpensesPage({ page }: { page: BuildingPage }) {
           />
         </Field>
         {tab === "requests" && (
-          <Choice
-            label={t("Status")}
-            value={status}
-            onChange={setStatus}
-            options={[
-              "all",
-              "draft",
-              "pending",
-              "approved",
-              "ordered",
-              "completed",
-              "rejected",
-              "cancelled",
-            ].map((value) => ({ value, label: value }))}
-          />
+          <div className="w-32 shrink-0">
+            <Choice
+              label={t("Status")}
+              value={status}
+              onChange={setStatus}
+              options={[
+                "all",
+                "draft",
+                "pending",
+                "approved",
+                "ordered",
+                "completed",
+                "rejected",
+                "cancelled",
+              ].map((value) => ({ value, label: value }))}
+            />
+          </div>
         )}
-        <Button
-          variant="outline"
-          disabled={resource.isLoading}
-          onClick={() => void resource.refresh()}
-        >
-          {t("Refresh")}
-        </Button>
         {can("create") && tab !== "departments" && (
           <Button
             onClick={() =>
@@ -439,7 +481,7 @@ export default function BuildingExpensesPage({ page }: { page: BuildingPage }) {
       {resource.isLoading ? (
         <p role="status">{t("Loading building expenses…")}</p>
       ) : !data ? (
-        <p>{t("Unable to load data. Use Refresh to try again.")}</p>
+        <p>{t("Unable to load building expenses.")}</p>
       ) : (
         <Card className="overflow-hidden rounded-2xl shadow-none">
           <div className="flex items-center justify-between border-b px-5 py-4">
@@ -448,7 +490,9 @@ export default function BuildingExpensesPage({ page }: { page: BuildingPage }) {
               {t("{{count}} records", { count: visibleCount })}
             </Badge>
           </div>
-          <Table className="[&_td]:py-4 [&_td]:align-middle [&_td:last-child:not([colspan])]:text-end">
+          <Table
+            className={`${tab === "requests" ? "min-w-[1100px]" : ""} [&_td]:py-4 [&_td]:align-middle [&_td:last-child:not([colspan])]:text-end`}
+          >
             <TableHeader className="bg-muted/40">
               <TableRow>
                 {(tab === "products"
@@ -482,6 +526,7 @@ export default function BuildingExpensesPage({ page }: { page: BuildingPage }) {
                           "Department / reference",
                           "Type",
                           "Products",
+                          "Invoice number",
                           "Total",
                           "Paid / balance",
                           "Status",
@@ -517,7 +562,7 @@ export default function BuildingExpensesPage({ page }: { page: BuildingPage }) {
                 <TableRow>
                   <TableCell
                     colSpan={
-                      tab === "products" ? 6 : tab === "departments" ? 5 : 7
+                      tab === "products" ? 6 : tab === "departments" ? 5 : 8
                     }
                     className="h-24 !text-center"
                   >
@@ -579,7 +624,7 @@ export default function BuildingExpensesPage({ page }: { page: BuildingPage }) {
                   )
                   .map((row) => (
                     <TableRow key={row.id}>
-                      <TableCell>{row.department.name}</TableCell>
+                      <TableCell>{row.department?.name ?? t("Unassigned department")}</TableCell>
                       <TableCell className="max-w-64 font-medium">
                         <span
                           className="block truncate"
@@ -625,7 +670,7 @@ export default function BuildingExpensesPage({ page }: { page: BuildingPage }) {
                           row.date.slice(0, 10) + "T12:00:00",
                         ).toLocaleDateString(locale)}
                       </TableCell>
-                      <TableCell>{row.department.name}</TableCell>
+                      <TableCell>{row.department?.name ?? t("Unassigned department")}</TableCell>
                       <TableCell>{t(row.category)}</TableCell>
                       <TableCell>
                         {row.description}
@@ -648,6 +693,7 @@ export default function BuildingExpensesPage({ page }: { page: BuildingPage }) {
                               setId(row.id);
                               setExpense({
                                 ...row,
+                                departmentId: row.departmentId ?? "",
                                 date: row.date.slice(0, 10),
                                 amount: Number(row.amount),
                               });
@@ -681,7 +727,7 @@ export default function BuildingExpensesPage({ page }: { page: BuildingPage }) {
                   .map((row) => (
                     <TableRow key={row.id}>
                       <TableCell>
-                        {row.department.name}
+                        {row.department?.name ?? t("Unassigned department")}
                         <p
                           className="max-w-44 truncate font-mono text-xs text-muted-foreground"
                           title={row.id}
@@ -693,9 +739,50 @@ export default function BuildingExpensesPage({ page }: { page: BuildingPage }) {
                         {t(row.kind)}
                       </TableCell>
                       <TableCell>
-                        {row.items
-                          .map((item) => `${item.name} × ${item.quantity}`)
-                          .join(", ")}
+                        <div className="flex max-w-64 flex-wrap gap-1.5">
+                          {row.items.slice(0, 3).map((item, index) => (
+                            <span
+                              key={`${item.name}-${index}`}
+                              className="rounded-md bg-muted px-2 py-1 text-xs"
+                            >
+                              {item.name}{" "}
+                              <span className="font-semibold">
+                                × {item.quantity}
+                              </span>
+                            </span>
+                          ))}
+                          {row.items.length > 3 && (
+                            <span className="self-center text-xs text-muted-foreground">
+                              {t("+{{count}} more", {
+                                count: row.items.length - 3,
+                              })}
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-start">
+                        <div className="space-y-1">
+                          <span className="font-medium">
+                            {row.kind === "purchase"
+                              ? row.invoiceNumber || "—"
+                              : "—"}
+                          </span>
+                          {row.kind === "purchase" && row.attachmentUrl ? (
+                            <a
+                              href={productImageUrl(row.attachmentUrl)}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                            >
+                              <ExternalLink className="size-3" />
+                              {t("View invoice")}
+                            </a>
+                          ) : row.kind === "purchase" ? (
+                            <span className="block text-xs text-muted-foreground">
+                              {t("No invoice attached")}
+                            </span>
+                          ) : null}
+                        </div>
                       </TableCell>
                       <TableCell className="text-end tabular-nums whitespace-nowrap">
                         {money(total(row.items))}
@@ -725,7 +812,9 @@ export default function BuildingExpensesPage({ page }: { page: BuildingPage }) {
                               size="icon"
                               disabled={busy}
                               aria-label={t("Actions for {{department}}", {
-                                department: row.department.name,
+                                department:
+                                  row.department?.name ??
+                                  t("Unassigned department"),
                               })}
                             >
                               <MoreHorizontal className="size-4" />
@@ -759,7 +848,9 @@ export default function BuildingExpensesPage({ page }: { page: BuildingPage }) {
                                   {t("Record payment")}
                                 </DropdownMenuItem>
                               )}
-                            {row.status === "draft" && can("update") && (
+                            {row.status === "draft" &&
+                              row.departmentId &&
+                              can("update") && (
                               <DropdownMenuItem
                                 disabled={busy}
                                 onClick={() =>
@@ -773,14 +864,17 @@ export default function BuildingExpensesPage({ page }: { page: BuildingPage }) {
                                 {t("Submit")}
                               </DropdownMenuItem>
                             )}
-                            {row.status === "draft" && can("update") && (
+                            {row.status === "draft" &&
+                              row.departmentId &&
+                              can("update") && (
                               <DropdownMenuItem
                                 onClick={() => editRequest(row)}
                               >
                                 {t("Edit draft")}
                               </DropdownMenuItem>
                             )}
-                            {can("approve") &&
+                            {row.departmentId &&
+                              can("approve") &&
                               (transitions[row.status] ?? [])
                                 .filter((next) => next !== "pending")
                                 .filter(
@@ -1087,41 +1181,155 @@ export default function BuildingExpensesPage({ page }: { page: BuildingPage }) {
                 )}
                 {dialog === "request" && (
                   <>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <Choice
-                        label={t("Department")}
-                        value={request.departmentId}
-                        onChange={(departmentId) =>
-                          setRequest({ ...request, departmentId })
-                        }
-                        options={departments}
-                      />
-                      <Choice
-                        label={t("Request type")}
-                        value={request.kind}
-                        onChange={(kind) => setRequest({ ...request, kind })}
-                        options={
-                          page === "sales"
-                            ? [{ value: "sale", label: "Sale to department" }]
-                            : page === "purchases"
-                              ? [{ value: "purchase", label: "Purchase order" }]
-                              : [
-                                  {
-                                    value: "purchase",
-                                    label: "Purchase order",
-                                  },
-                                  {
-                                    value: "sale",
-                                    label: "Sale to department",
-                                  },
-                                ]
-                        }
-                      />
+                    <div
+                      className={`grid min-w-0 gap-4 ${request.kind === "purchase" ? "lg:grid-cols-2" : ""}`}
+                    >
+                      <Card className="rounded-2xl border bg-card p-5">
+                        <h3 className="mb-5 text-sm font-semibold">
+                          {t("Invoice details")}
+                        </h3>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <Choice
+                            label={t("Department")}
+                            value={request.departmentId}
+                            onChange={(departmentId) =>
+                              setRequest({ ...request, departmentId })
+                            }
+                            options={departments}
+                          />
+                          <Choice
+                            label={t("Request type")}
+                            value={request.kind}
+                            onChange={(kind) => setRequest({ ...request, kind })}
+                            options={
+                              page === "sales"
+                                ? [{ value: "sale", label: "Sale to department" }]
+                                : page === "purchases"
+                                  ? [{ value: "purchase", label: "Purchase order" }]
+                                  : [
+                                      { value: "purchase", label: "Purchase order" },
+                                      { value: "sale", label: "Sale to department" },
+                                    ]
+                            }
+                          />
+                          {request.kind === "purchase" && (
+                            <Field label={t("Invoice number")}>
+                              <Input
+                                aria-label={t("Invoice number")}
+                                maxLength={100}
+                                value={request.invoiceNumber}
+                                onChange={(event) =>
+                                  setRequest({
+                                    ...request,
+                                    invoiceNumber: event.target.value,
+                                  })
+                                }
+                              />
+                            </Field>
+                          )}
+                          <Field label={t("Total")}>
+                            <Input
+                              className="bg-muted/50 font-semibold tabular-nums"
+                              aria-label={t("Total")}
+                              readOnly
+                              value={money(total(request.items))}
+                            />
+                          </Field>
+                        </div>
+                      </Card>
+                      {request.kind === "purchase" && (
+                        <Card className="rounded-2xl border bg-card p-5">
+                          <h3 className="text-sm font-semibold">
+                            {t("Attach invoice")}
+                          </h3>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {t("JPG, PNG, WebP or GIF · Maximum 5 MB")}
+                          </p>
+                          <Input
+                            ref={invoiceFileInput}
+                            id="building-purchase-invoice"
+                            aria-label={t("Invoice attachment")}
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp,image/gif"
+                            disabled={uploadingInvoice}
+                            className="hidden"
+                            onChange={(event) => {
+                              const file = event.target.files?.[0];
+                              if (file) void uploadInvoice(file);
+                              event.currentTarget.value = "";
+                            }}
+                          />
+                          <div className="mt-4 flex min-h-40 flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed bg-muted/20 p-5">
+                            {request.attachmentUrl ? (
+                              <img
+                                src={productImageUrl(request.attachmentUrl)}
+                                alt={t("Invoice attachment")}
+                                className="max-h-48 max-w-full rounded-lg object-contain"
+                              />
+                            ) : (
+                              <>
+                                <Paperclip className="mb-3 size-8 text-primary" />
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  disabled={uploadingInvoice}
+                                  onClick={() =>
+                                    invoiceFileInput.current?.click()
+                                  }
+                                >
+                                  {uploadingInvoice
+                                    ? t("Uploading invoice…")
+                                    : t("Attach invoice")}
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                          {request.attachmentUrl && (
+                            <div className="mt-3 flex items-center justify-between gap-3">
+                              <a
+                                href={productImageUrl(request.attachmentUrl)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                              >
+                                <ExternalLink className="size-4" />
+                                {t("View invoice")}
+                              </a>
+                              <div className="flex items-center gap-1">
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() =>
+                                    invoiceFileInput.current?.click()
+                                  }
+                                >
+                                  {t("Replace")}
+                                </Button>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="ghost"
+                                  className="text-muted-foreground"
+                                  onClick={() =>
+                                    setRequest({
+                                      ...request,
+                                      attachmentUrl: null,
+                                    })
+                                  }
+                                >
+                                  {t("Remove")}
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                        </Card>
+                      )}
                     </div>
-                    <div className="overflow-hidden rounded-xl border">
+                    <Card className="overflow-hidden rounded-2xl border bg-card p-0">
                       <div className="flex items-center justify-between border-b px-4 py-3">
                         <h3 className="text-sm font-semibold">
-                          {t("Products")}{" "}
+                          {t("Items")}{" "}
                           <span className="ms-1 text-muted-foreground">
                             ({request.items.length})
                           </span>
@@ -1326,49 +1534,54 @@ export default function BuildingExpensesPage({ page }: { page: BuildingPage }) {
                           ))}
                         </TableBody>
                       </Table>
-                    </div>
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_2fr]">
-                      <Field label={t("Amount paid")}>
-                        <Input
-                          aria-label={t("Amount paid")}
-                          required
-                          type="number"
-                          min="0"
-                          max={total(request.items)}
-                          step="0.01"
-                          value={request.paidAmount}
-                          onChange={(e) =>
-                            setRequest({
-                              ...request,
-                              paidAmount: Number(e.target.value),
-                            })
+                    </Card>
+                    <Card className="rounded-2xl border bg-card p-5">
+                      <h3 className="mb-4 text-sm font-semibold">
+                        {t("Payment and notes")}
+                      </h3>
+                      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_2fr]">
+                        <Field label={t("Amount paid")}>
+                          <Input
+                            aria-label={t("Amount paid")}
+                            required
+                            type="number"
+                            min="0"
+                            max={total(request.items)}
+                            step="0.01"
+                            value={request.paidAmount}
+                            onChange={(e) =>
+                              setRequest({
+                                ...request,
+                                paidAmount: Number(e.target.value),
+                              })
+                            }
+                          />
+                        </Field>
+                        <Choice
+                          label={t("Payment method")}
+                          value={request.paymentMethod}
+                          onChange={(paymentMethod) =>
+                            setRequest({ ...request, paymentMethod })
                           }
+                          options={["cash", "card", "bank"].map((value) => ({
+                            value,
+                            label: value,
+                          }))}
                         />
-                      </Field>
-                      <Choice
-                        label={t("Payment method")}
-                        value={request.paymentMethod}
-                        onChange={(paymentMethod) =>
-                          setRequest({ ...request, paymentMethod })
-                        }
-                        options={["cash", "card", "bank"].map((value) => ({
-                          value,
-                          label: value,
-                        }))}
-                      />
-                      <Field label={t("Request notes")}>
-                        <Textarea
-                          aria-label={t("Request notes")}
-                          className="min-h-10 resize-none"
-                          rows={1}
-                          maxLength={5000}
-                          value={request.note}
-                          onChange={(e) =>
-                            setRequest({ ...request, note: e.target.value })
-                          }
-                        />
-                      </Field>
-                    </div>
+                        <Field label={t("Request notes")}>
+                          <Textarea
+                            aria-label={t("Request notes")}
+                            className="min-h-10 resize-none"
+                            rows={1}
+                            maxLength={5000}
+                            value={request.note}
+                            onChange={(e) =>
+                              setRequest({ ...request, note: e.target.value })
+                            }
+                          />
+                        </Field>
+                      </div>
+                    </Card>
                   </>
                 )}
               </fieldset>
@@ -1408,6 +1621,7 @@ export default function BuildingExpensesPage({ page }: { page: BuildingPage }) {
                     type="submit"
                     disabled={
                       busy ||
+                      uploadingInvoice ||
                       (dialog === "expense" && !expense.departmentId) ||
                       (dialog === "request" &&
                         (!request.departmentId ||
@@ -1428,9 +1642,28 @@ export default function BuildingExpensesPage({ page }: { page: BuildingPage }) {
           {dialog === "details" && selected && (
             <div className="space-y-4">
               <p>
-                {selected.department.name} · {t(selected.kind)} ·{" "}
+                {selected.department?.name ??
+                  t("Unassigned department")} · {t(selected.kind)} ·{" "}
                 <Badge variant="outline">{t(selected.status)}</Badge>
               </p>
+              {selected.kind === "purchase" && (
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border bg-muted/20 px-3 py-2 text-sm">
+                  <span>
+                    {t("Invoice number")}: {selected.invoiceNumber || "—"}
+                  </span>
+                  {selected.attachmentUrl && (
+                    <a
+                      href={productImageUrl(selected.attachmentUrl)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+                    >
+                      <ExternalLink className="size-4" />
+                      {t("View invoice")}
+                    </a>
+                  )}
+                </div>
+              )}
               <p>
                 {t("Created by:")}
                 {selected.createdBy}
@@ -1578,7 +1811,9 @@ export default function BuildingExpensesPage({ page }: { page: BuildingPage }) {
                       "Completing this request records its catalog products in the department. This action cannot be repeated or reversed.",
                     )
                   : t("Update {{department}}'s request to {{status}}.", {
-                      department: selected.department.name,
+                      department:
+                        selected.department?.name ??
+                        t("Unassigned department"),
                       status: t(nextStatus),
                     })}
               </p>

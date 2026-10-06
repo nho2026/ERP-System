@@ -1,7 +1,9 @@
-import { useSyncExternalStore } from "react";
 import { apiClient } from "@/shared/api/client";
 import i18n from "@/i18n";
 import defaultLogo from "@/assets/icons/logo.png";
+import { store } from "@/app/store";
+import { useAppSelector } from "@/app/store/hooks";
+import { settingsLoaded } from "./store/settings.slice";
 export type Settings = {
   meetings: {
     videoQuality: string;
@@ -66,12 +68,11 @@ export type Settings = {
     backupRetentionDays: number;
   };
 };
-let current: Settings | null = null;
-const listeners = new Set<() => void>();
-export const settingsSnapshot = () => current;
+export const settingsSnapshot = () => store.getState().settings;
 export async function loadSettings() {
   const response = await apiClient.get<Settings>("/settings/runtime");
-  current = response.data;
+  const current = response.data;
+  store.dispatch(settingsLoaded(current));
   const branding = current.organization;
   document.title = branding.name;
   for (const icon of document.querySelectorAll<HTMLLinkElement>(
@@ -92,19 +93,13 @@ export async function loadSettings() {
   }
   if (!localStorage.getItem("nho-language"))
     void i18n.changeLanguage(current.system.language);
-  for (const listener of listeners) listener();
   return current;
 }
 export function useSettings() {
-  return useSyncExternalStore((listener) => {
-    listeners.add(listener);
-    return () => {
-      listeners.delete(listener);
-    };
-  }, settingsSnapshot);
+  return useAppSelector((state) => state.settings);
 }
 export function formatSystemDate(value: string | Date) {
-  const system = current?.system;
+  const system = settingsSnapshot()?.system;
   const parts = new Intl.DateTimeFormat("en-GB", {
     timeZone: system?.timezone,
     year: "numeric",

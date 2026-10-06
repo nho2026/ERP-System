@@ -39,7 +39,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/shared/components/ui/alert-dialog";
-import { printPosInvoice } from "../components/print-pos-invoice";
+import { printPosInvoice } from "../components/logic/print-pos-invoice";
 import { storedUser } from "@/features/auth/access";
 import { SaleFilters } from "../components/SaleFilters";
 export default function PosPage({ mode }: { mode: "checkout" | "sales" }) {
@@ -337,7 +337,7 @@ export default function PosPage({ mode }: { mode: "checkout" | "sales" }) {
               </Select>
             </div>
           </CardHeader>
-          <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <CardContent className="grid gap-3 sm:grid-cols-2 grid-cols-5">
             {products.map((p) => (
               <Button
                 variant="outline"

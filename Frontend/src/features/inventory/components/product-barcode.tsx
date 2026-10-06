@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { renderBarcode } from "./render-barcode";
+import { renderBarcode } from "./logic/render-barcode";
 
 export function ProductBarcode({ value }: { value: string }) {
   const ref = useRef<SVGSVGElement>(null);

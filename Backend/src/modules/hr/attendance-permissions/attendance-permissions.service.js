@@ -3,6 +3,18 @@ import { verifySecret } from "../../../shared/security/password.js";
 import { attendancePermissionModel } from "./attendance-permissions.model.js";
 export const attendancePermissionService = {
   ...createCrudService(attendancePermissionModel),
+  async create(data) {
+    if (
+      data.status === "approved" &&
+      (await attendancePermissionModel.findApprovedOverlap(data))
+    ) {
+      throw Object.assign(
+        new Error("This employee already has an approved permission for that date."),
+        { status: 409 },
+      );
+    }
+    return attendancePermissionModel.create(data);
+  },
   async remove(id, user, password) {
     if (!user?.roles?.some(({ role }) => role.name === "Super Administrator"))
       throw Object.assign(

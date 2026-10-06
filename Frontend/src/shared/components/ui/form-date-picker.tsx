@@ -27,6 +27,7 @@ type Props = {
   mode?: "date" | "month";
   required?: boolean;
   minDate?: Date;
+  disabledDates?: Date[];
 };
 function parseValue(value?: string, month = false) {
   if (!value) return undefined;
@@ -48,6 +49,7 @@ export function FormDatePicker({
   mode = "date",
   required,
   minDate,
+  disabledDates = [],
 }: Props) {
   const { t, i18n } = useTranslation();
   const system = useSettings()?.system;
@@ -226,7 +228,17 @@ export function FormDatePicker({
           ) : (
             <Calendar
               mode="single"
-              disabled={minDate ? { before: minDate } : undefined}
+              disabled={(day) =>
+                Boolean(
+                  (minDate && day < minDate) ||
+                    disabledDates.some(
+                      (disabledDate) =>
+                        day.getFullYear() === disabledDate.getFullYear() &&
+                        day.getMonth() === disabledDate.getMonth() &&
+                        day.getDate() === disabledDate.getDate(),
+                    ),
+                )
+              }
               selected={date}
               defaultMonth={date}
               onSelect={(selected) => {

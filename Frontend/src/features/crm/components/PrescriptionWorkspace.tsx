@@ -28,7 +28,7 @@ import { useSettings } from "@/features/settings/settings";
 import defaultLogo from "@/assets/icons/logo.png";
 import arabicFont from "@/assets/fonts/arabic.ttf";
 import kurdishFont from "@/assets/fonts/kurdish.ttf";
-import { escapeReportHtml as esc } from "@/features/inventory/components/patient-report";
+import { escapeReportHtml as esc } from "@/features/inventory/components/logic/patient-report";
 type Line = {
   product?: DrugProduct;
   medicine: string;

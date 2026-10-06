@@ -18,6 +18,7 @@ export async function monthlyReport(query, payroll = false) {
     hr,
     salariesRaw,
     adjustmentsRaw,
+    advancesRaw,
   ] = await Promise.all([
     employeeModel.findAll(),
     prisma.attendanceEvent.findMany({
@@ -46,17 +47,22 @@ export async function monthlyReport(query, payroll = false) {
           orderBy: [{ createdAt: "desc" }, { id: "asc" }],
         })
       : [],
+    payroll
+      ? prisma.salaryAdvance.findMany()
+      : [],
   ]);
   // Match the dates/decimals supplied to the existing browser calculations.
-  const [employees, events, permissions, salaries, adjustments] = JSON.parse(
-    JSON.stringify([
+  const [employees, events, permissions, salaries, adjustments, advances] =
+    JSON.parse(
+      JSON.stringify([
       employeesRaw,
       eventsRaw,
       permissionsRaw,
       salariesRaw,
       adjustmentsRaw,
-    ]),
-  );
+      advancesRaw,
+      ]),
+    );
   const calc = monthlyCalculations({ hr });
   const records = calc.deviceAttendanceRecords(events, [], employees, month);
   if (payroll) {
@@ -77,21 +83,70 @@ export async function monthlyReport(query, payroll = false) {
         const punishment = own
           .filter((row) => row.type === "punishment")
           .reduce((sum, row) => sum + Number(row.amount), 0);
+        const monthStart = `${month}-01`;
+        const advanceDeductions = advances
+          .filter((advance) => {
+            const start = String(
+              advance.deductionStartDate ??
+                advance.approvedAt ??
+                advance.requestedAt,
+            ).slice(0, 7);
+            const status = String(advance.status ?? "").toLowerCase();
+            return (
+              advance.employeeId === employee.id &&
+              ["approved", "active"].includes(status) &&
+              String(advance.currency ?? "").toUpperCase() ===
+                String(salary.currencyId ?? "").toUpperCase() &&
+              start <= month
+            );
+          })
+          .map((advance) => {
+            const startDate = new Date(
+              `${String(
+                advance.deductionStartDate ??
+                  advance.approvedAt ??
+                  advance.requestedAt,
+              ).slice(0, 7)}-01T00:00:00Z`,
+            );
+            const payrollDate = new Date(`${monthStart}T00:00:00Z`);
+            const elapsedMonths =
+              (payrollDate.getUTCFullYear() - startDate.getUTCFullYear()) *
+                12 +
+              payrollDate.getUTCMonth() -
+              startDate.getUTCMonth();
+            if (elapsedMonths < 0) return null;
+            const installment = Number((Number(advance.amount) / advance.installments).toFixed(2));
+            // If earlier payroll periods were not processed, carry the unpaid
+            // balance into the current report instead of making it disappear
+            // after the planned installment window has ended.
+            const due = elapsedMonths >= advance.installments - 1
+              ? Number(advance.amount) - installment * (advance.installments - 1)
+              : installment;
+            // remainingAmount already reflects any installments recorded on the
+            // advance, so do not subtract earlier scheduled months from it again.
+            const remaining = Math.max(0, Number(advance.remainingAmount));
+            return remaining > 0 ? Math.min(due, remaining) : 0;
+          })
+          .filter((amount) => amount !== null)
+          .reduce((sum, amount) => sum + amount, 0);
         const monthlyScheduledHours =
           calc.monthlyScheduledMinutes(employee, month) / 60;
+        const payrollAmounts = calc.payrollAmounts(
+          Number(salary.baseSalary),
+          minutesLost,
+          monthlyScheduledHours,
+          reward,
+          punishment,
+        );
         return {
           employee,
           salary,
           minutesLost,
           monthlyScheduledHours,
           adjustments: own,
-          ...calc.payrollAmounts(
-            Number(salary.baseSalary),
-            minutesLost,
-            monthlyScheduledHours,
-            reward,
-            punishment,
-          ),
+          advanceDeduction: advanceDeductions,
+          ...payrollAmounts,
+          netSalary: Math.max(0, payrollAmounts.netSalary - advanceDeductions),
         };
       });
     if (query.export === "true") return rows;

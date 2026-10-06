@@ -15,6 +15,9 @@ export const healthcareController = {
     await service.removeDepartment(req.params.id);
     res.status(204).end();
   }),
+  removeDepartments: run(async (req, res) =>
+    res.json(await service.removeDepartments(req.validatedBody.ids)),
+  ),
   staff: run(async (req, res) => res.json(await service.listStaff(req.query))),
   createStaff: run(async (req, res) =>
     res.status(201).json(await service.createStaff(req.validatedBody)),

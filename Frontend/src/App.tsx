@@ -66,6 +66,7 @@ import HrAttendancePage from "@/features/hr/pages/HrAttendancePage";
 import PayrollPage from "@/features/hr/pages/PayrollPage";
 import TargetsPage from "@/features/targets/pages/TargetsPage";
 import CrmPage from "@/features/crm/pages/CrmPage";
+import CrmDashboardPage from "@/features/crm/pages/CrmDashboardPage";
 import PatientPrescriptionsPage from "@/features/crm/pages/PatientPrescriptionsPage";
 import FollowUpPatientsPage from "@/features/crm/pages/FollowUpPatientsPage";
 import PatientProfilePage from "@/features/crm/pages/PatientProfilePage";
@@ -264,6 +265,7 @@ export default function App() {
             path="/appointments"
             element={<Navigate to="/crm/appointments" replace />}
           />
+          <Route path="/crm" element={secured(<CrmDashboardPage />)} />
           <Route
             path="/crm/leads"
             element={secured(<CrmPage resource="leads" />)}

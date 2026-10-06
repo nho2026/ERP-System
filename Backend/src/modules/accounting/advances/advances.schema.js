@@ -6,7 +6,7 @@ const optionalDate = z.union([date, z.null()]).optional();
 export const salaryAdvanceSchema = z.object({
   employeeId: z.string(),
   amount: z.coerce.number().positive(),
-  currency: z.literal("USD").default("USD"),
+  currency: z.enum(["USD", "IQD"]).default("USD"),
   requestedAt: date,
   approvedAt: optionalDate,
   deductionStartDate: optionalDate,

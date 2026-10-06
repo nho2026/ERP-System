@@ -71,7 +71,25 @@ export const healthcareModel = {
       data,
       include: departmentInclude,
     }),
-  removeDepartment: (id) => prisma.department.delete({ where: { id } }),
+  removeDepartment: async (id) => {
+    await healthcareModel.removeDepartments([id]);
+  },
+  removeDepartments: async (ids) =>
+    prisma.$transaction(async (tx) => {
+      await tx.financeCashFlow.updateMany({
+        where: { departmentId: { in: ids } },
+        data: { departmentId: null },
+      });
+      const result = await tx.department.deleteMany({
+        where: { id: { in: ids } },
+      });
+      if (result.count !== ids.length)
+        throw Object.assign(
+          new Error("One or more departments no longer exist."),
+          { status: 409 },
+        );
+      return { success: true, deletedCount: result.count };
+    }),
   assignDepartment: (employeeId, departmentId) =>
     prisma.employee.update({
       where: { id: employeeId },

@@ -20,7 +20,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { inventoryApi } from "../api/inventory.api";
 import { ProductBarcode } from "../components/product-barcode";
-import { printProductBarcodes } from "../components/print-product-barcodes";
+import { printProductBarcodes } from "../components/logic/print-product-barcodes";
 import { useApiResource } from "@/shared/hooks/useApiResource";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent } from "@/shared/components/ui/card";

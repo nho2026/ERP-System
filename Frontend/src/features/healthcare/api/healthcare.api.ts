@@ -13,7 +13,11 @@ const resource = (path: string) => ({
 
 export const healthcareApi = {
   specializations: resource("/healthcare/specializations"),
-  departments: resource("/healthcare/departments"),
+  departments: {
+    ...resource("/healthcare/departments"),
+    removeMany: (ids: string[]) =>
+      apiClient.delete("/healthcare/departments/bulk", { data: { ids } }),
+  },
   staff: resource("/healthcare/staff"),
   appointments: resource("/crm/appointments"),
 };

@@ -38,6 +38,7 @@ import { useApiResource } from "@/shared/hooks/useApiResource";
 import { TableResourceState } from "@/shared/components/ui/table-resource-state";
 import { FormDatePicker } from "@/shared/components/ui/form-date-picker";
 import { DeleteConfirmationDialog } from "@/shared/components/ui/confirmation-dialog";
+import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent } from "@/shared/components/ui/card";
@@ -762,6 +763,32 @@ export default function HealthcarePage({
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const rows = data.data ?? [];
+  const departmentSelectionScope = `${resource}|${search}|${data.pagination.page}`;
+  const [departmentSelection, setDepartmentSelection] = useState({
+    scope: departmentSelectionScope,
+    ids: [] as string[],
+  });
+  const selectedDepartmentIds =
+    departmentSelection.scope === departmentSelectionScope
+      ? departmentSelection.ids
+      : [];
+  const allVisibleDepartmentsSelected =
+    rows.length > 0 &&
+    rows.every((row) => selectedDepartmentIds.includes(row.id));
+  const toggleVisibleDepartments = (checked: boolean) => {
+    const visibleIds = new Set(rows.map((row) => row.id));
+    setDepartmentSelection((current) => {
+      const selected =
+        current.scope === departmentSelectionScope ? current.ids : [];
+      return {
+        scope: departmentSelectionScope,
+        ids: checked
+          ? [...new Set([...selected, ...visibleIds])]
+          : selected.filter((id) => !visibleIds.has(id)),
+      };
+    });
+  };
   useEffect(() => {
     if (resource !== "appointments" || !searchParams.get("patientName")) return;
     setQuickAppointment({
@@ -773,7 +800,6 @@ export default function HealthcarePage({
     setEditing(null);
     setSearchParams({}, { replace: true });
   }, [resource, searchParams, setSearchParams]);
-  const rows = data.data ?? [];
   const options = (field: Field) =>
     field.type === "position"
       ? (positions.data ?? [])
@@ -858,6 +884,20 @@ export default function HealthcarePage({
       setBusy(false);
     }
   };
+  const removeSelectedDepartments = async () => {
+    if (!selectedDepartmentIds.length) return;
+    setBusy(true);
+    try {
+      await healthcareApi.departments.removeMany(selectedDepartmentIds);
+      setDepartmentSelection({ scope: departmentSelectionScope, ids: [] });
+      await data.refresh();
+      toast.success(tr("departmentsDeleted"));
+    } catch (cause) {
+      toast.error(apiErrorMessage(cause));
+    } finally {
+      setBusy(false);
+    }
+  };
   return (
     <div className="space-y-5">
       <div>
@@ -883,6 +923,19 @@ export default function HealthcarePage({
               />
             </div>
             <div className="flex items-center gap-2">
+              {resource === "departments" && selectedDepartmentIds.length > 0 && (
+                <DeleteConfirmationDialog
+                  description={tr("deleteSelectedDepartmentsConfirm")}
+                  onConfirm={removeSelectedDepartments}
+                >
+                  <Button variant="destructive" disabled={busy}>
+                    <Trash2 className="size-4" />
+                    {t("healthcareAdmin.deleteSelectedDepartments", {
+                      count: selectedDepartmentIds.length,
+                    })}
+                  </Button>
+                </DeleteConfirmationDialog>
+              )}
               {resource === "appointments" && (
                 <div className="flex rounded-lg border p-1">
                   <Button
@@ -941,6 +994,24 @@ export default function HealthcarePage({
               <Table>
                 <TableHeader>
                   <TableRow>
+                    {resource === "departments" && (
+                      <TableHead className="w-12">
+                        <Checkbox
+                          aria-label={tr("selectVisibleDepartments")}
+                          checked={
+                            allVisibleDepartmentsSelected
+                              ? true
+                              : selectedDepartmentIds.length > 0
+                                ? "indeterminate"
+                                : false
+                          }
+                          disabled={busy || !rows.length}
+                          onCheckedChange={(checked) =>
+                            toggleVisibleDepartments(checked !== false)
+                          }
+                        />
+                      </TableHead>
+                    )}
                     {config.columns.map(([, label]) => (
                       <TableHead key={label}>{tr(label)}</TableHead>
                     ))}
@@ -952,12 +1023,40 @@ export default function HealthcarePage({
                     isLoading={data.isLoading}
                     error={data.error}
                     isEmpty={!rows.length}
-                    colSpan={config.columns.length + 1}
+                    colSpan={
+                      config.columns.length +
+                      1 +
+                      (resource === "departments" ? 1 : 0)
+                    }
                   />
                   {!data.isLoading &&
                     !data.error &&
                     rows.map((row) => (
                       <TableRow key={row.id}>
+                        {resource === "departments" && (
+                          <TableCell>
+                            <Checkbox
+                              aria-label={`${tr("selectDepartment")} ${String(row.name ?? "")}`}
+                              checked={selectedDepartmentIds.includes(row.id)}
+                              disabled={busy}
+                              onCheckedChange={(checked) => {
+                                const select = checked === true;
+                                setDepartmentSelection((current) => {
+                                  const selected =
+                                    current.scope === departmentSelectionScope
+                                      ? current.ids
+                                      : [];
+                                  return {
+                                    scope: departmentSelectionScope,
+                                    ids: select
+                                      ? [...new Set([...selected, row.id])]
+                                      : selected.filter((id) => id !== row.id),
+                                  };
+                                });
+                              }}
+                            />
+                          </TableCell>
+                        )}
                         {config.columns.map(([key]) => (
                           <TableCell key={key}>
                             {key === "type" ||

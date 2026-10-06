@@ -3,6 +3,16 @@ import { prisma } from "../../../shared/database/client.js";
 
 const include = { employee: { include: { position: true } } };
 export const attendancePermissionModel = {
+  findApprovedOverlap: ({ employeeId, fromDate, toDate }) =>
+    prisma.attendancePermission.findFirst({
+      where: {
+        employeeId,
+        status: "approved",
+        fromDate: { lte: toDate },
+        toDate: { gte: fromDate },
+      },
+      select: { id: true },
+    }),
   findAll: (query = {}) =>
     paginate(
       "attendancePermission",

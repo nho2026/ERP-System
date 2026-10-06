@@ -25,6 +25,12 @@ export const expenseSchema = z.object({
 export const requestSchema = z.object({
   departmentId: text,
   kind: z.enum(["purchase", "sale"]),
+  invoiceNumber: z.string().trim().max(100).nullable().optional(),
+  attachmentUrl: z
+    .string()
+    .regex(/^\/public\/product-images\/[a-f0-9-]{36}\.(png|jpg|jpeg|webp|gif)$/)
+    .nullable()
+    .optional(),
   paidAmount: money.default(0),
   paymentMethod: z.enum(["cash", "card", "bank"]).default("cash"),
   note: z.string().trim().max(5000).default(""),
@@ -40,6 +46,18 @@ export const requestSchema = z.object({
     )
     .min(1)
     .max(100),
+});
+export const allocationSchema = z.object({
+  quantity: z.number().int().min(0).max(1000000),
+  previousQuantity: z.number().int().min(0),
+});
+export const paymentSchema = z.object({
+  amount: z.number().finite().positive().max(999999999),
+  paymentMethod: z.enum(["cash", "card", "bank"]),
+});
+export const requestStatusSchema = z.object({
+  status: z.string(),
+  reason: z.string().trim().max(5000).default(""),
 });
 export const transitions = {
   draft: ["pending", "cancelled"],

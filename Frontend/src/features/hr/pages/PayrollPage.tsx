@@ -32,6 +32,7 @@ export default function PayrollPage() {
     hourlyRate: number;
     adjustments: HrRecord[];
     deduction: number;
+    advanceDeduction: number;
     netSalary: number;
     rewardAmount: number;
     punishmentAmount: number;
@@ -87,22 +88,22 @@ export default function PayrollPage() {
       {loadError && <p className="text-sm text-destructive">{loadError}</p>}
       <Card className="print-document print-document-visible salary-list-print">
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
+          <Table className="w-max min-w-full">
               <TableHeader>
                 <TableRow>
-                  <TableHead>#</TableHead>
-                  <TableHead>{t("hr.employee")}</TableHead>
-                  <TableHead>{t("hr.baseSalary")}</TableHead>
-                  <TableHead>{tx("lostHours", "Lost hours")}</TableHead>
-                  <TableHead>{tx("hourlyRate", "Hourly rate")}</TableHead>
-                  <TableHead>
+                  <TableHead className="w-12 whitespace-nowrap">#</TableHead>
+                  <TableHead className="min-w-36">{t("hr.employee")}</TableHead>
+                  <TableHead className="whitespace-nowrap">{t("hr.baseSalary")}</TableHead>
+                  <TableHead className="whitespace-nowrap">{tx("lostHours", "Lost hours")}</TableHead>
+                  <TableHead className="whitespace-nowrap">{tx("hourlyRate", "Hourly rate")}</TableHead>
+                  <TableHead className="whitespace-nowrap">
                     {tx("attendanceDeduction", "Attendance deduction")}
                   </TableHead>
-                  <TableHead>{tx("rewards", "Rewards")}</TableHead>
-                  <TableHead>{tx("punishments", "Punishments")}</TableHead>
-                  <TableHead>{tx("adjustmentReasons", "Reasons")}</TableHead>
-                  <TableHead>{t("hr.net")}</TableHead>
+                  <TableHead className="whitespace-nowrap">{tx("rewards", "Rewards")}</TableHead>
+                  <TableHead className="whitespace-nowrap">{tx("punishments", "Punishments")}</TableHead>
+                  <TableHead className="whitespace-nowrap">{tx("advanceDeduction", "Advance deduction")}</TableHead>
+                  <TableHead className="min-w-56">{tx("adjustmentReasons", "Reasons")}</TableHead>
+                  <TableHead className="whitespace-nowrap">{t("hr.net")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody
@@ -113,14 +114,14 @@ export default function PayrollPage() {
                   isLoading={isLoading}
                   error={loadError ?? null}
                   isEmpty={!rows.length}
-                  colSpan={10}
+                  colSpan={11}
                 />
                 {!isLoading &&
                   !loadError &&
                   rows.map((row, index) => (
                     <TableRow key={row.employee.id}>
-                      <TableCell>{index + 1}</TableCell>
-                      <TableCell>
+                      <TableCell className="whitespace-nowrap">{index + 1}</TableCell>
+                      <TableCell className="min-w-36 max-w-52">
                         <p className="font-medium">
                           {employeeLabel(row.employee)}
                         </p>
@@ -130,25 +131,28 @@ export default function PayrollPage() {
                       </TableCell>
                       {row.salary ? (
                         <>
-                          <TableCell>
+                          <TableCell className="whitespace-nowrap">
                             {money(
                               Number(row.salary.baseSalary),
                               row.salary.currencyId,
                             )}
                           </TableCell>
-                          <TableCell>{duration(row.minutesLost)}</TableCell>
-                          <TableCell>
+                          <TableCell className="whitespace-nowrap">{duration(row.minutesLost)}</TableCell>
+                          <TableCell className="whitespace-nowrap">
                             {money(row.hourlyRate, row.salary.currencyId)}
                           </TableCell>
-                          <TableCell className="text-destructive">
+                          <TableCell className="whitespace-nowrap text-destructive">
                             − {money(row.deduction, row.salary.currencyId)}
                           </TableCell>
-                          <TableCell className="text-emerald-700">
+                          <TableCell className="whitespace-nowrap text-emerald-700">
                             + {money(row.rewardAmount, row.salary.currencyId)}
                           </TableCell>
-                          <TableCell className="text-destructive">
+                          <TableCell className="whitespace-nowrap text-destructive">
                             −{" "}
                             {money(row.punishmentAmount, row.salary.currencyId)}
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap text-destructive">
+                            − {money(row.advanceDeduction, row.salary.currencyId)}
                           </TableCell>
                           <TableCell className="min-w-56">
                             {row.adjustments.length ? (
@@ -176,7 +180,7 @@ export default function PayrollPage() {
                               "—"
                             )}
                           </TableCell>
-                          <TableCell className="font-bold text-emerald-700">
+                          <TableCell className="whitespace-nowrap font-bold text-emerald-700">
                             {money(row.netSalary, row.salary.currencyId)}
                           </TableCell>
                         </>
@@ -191,8 +195,7 @@ export default function PayrollPage() {
                     </TableRow>
                   ))}
               </TableBody>
-            </Table>
-          </div>
+          </Table>
         </CardContent>
       </Card>
     </div>

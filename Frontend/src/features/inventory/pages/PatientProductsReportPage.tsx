@@ -2,7 +2,7 @@ import type { Page } from "@/shared/api/pagination";
 import defaultLogo from "@/assets/icons/logo.png";
 import arabicFont from "@/assets/fonts/arabic.ttf";
 import kurdishFont from "@/assets/fonts/kurdish.ttf";
-import printStyles from "../components/patient-report-print.css?inline";
+import printStyles from "../components/styles/patient-report-print.css?inline";
 import { useSettings } from "@/features/settings/settings";
 import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -38,7 +38,7 @@ import {
   reportTotals,
   type PatientProductRow,
   type ReportFilters,
-} from "../components/patient-report";
+} from "../components/logic/patient-report";
 const columns = [
   "patientName",
   "patientCode",

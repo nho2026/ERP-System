@@ -45,6 +45,7 @@ import { useLogin } from "../hooks/useLogin";
 import type { LoginMethod } from "../types/auth.types";
 import { landingPage } from "../access";
 import { WindowControls } from "@/shared/components/WindowControls";
+import { loginSchema } from "../schema/login.schema";
 
 function LoginPage() {
   const { t, i18n } = useTranslation();
@@ -74,6 +75,7 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
   const [pin, setPin] = useState("");
+  const [missingField, setMissingField] = useState<"username" | "password" | null>(null);
   const { login, isLoading, error, clearError } = useLogin();
 
   const submitLogin = async (event: FormEvent<HTMLFormElement>) => {
@@ -81,33 +83,43 @@ function LoginPage() {
     clearError();
     const form = new FormData(event.currentTarget);
     if (method === "credentials") {
-      const user = await login({
+      const username = String(form.get("username") ?? "").trim();
+      const password = String(form.get("password") ?? "");
+      const validation = loginSchema.safeParse({
         method,
-        username: String(form.get("username") ?? "").trim(),
-        password: String(form.get("password") ?? ""),
+        username,
+        password,
         remember,
       });
+      if (!validation.success) {
+        const field = validation.error.issues[0]?.path[0];
+        setMissingField(field === "username" ? "username" : "password");
+        return;
+      }
+      setMissingField(null);
+      const user = await login(validation.data);
       if (user) navigate(landingPage(user));
     } else {
-      const user = await login({ method, pin });
+      const validation = loginSchema.safeParse({ method, pin });
+      if (!validation.success) return;
+      const user = await login(validation.data);
       if (user) navigate(landingPage(user));
     }
   };
 
   return (
     <main className="flex min-h-svh items-center justify-center bg-background p-4 text-foreground sm:p-8">
-      <div className="electron-titlebar fixed inset-x-0 top-0 z-50 flex h-12 items-center justify-end gap-2 px-3">
-        <div className="flex items-center gap-1.5 text-muted-foreground">
-          <Globe2 className="size-4" aria-hidden="true" />
+      <div className="electron-titlebar fixed inset-x-0 top-0 z-50 flex h-12 items-center justify-between gap-2 px-3">
+        <div className="flex items-center text-muted-foreground">
           <Select
             value={i18n.resolvedLanguage?.split("-")[0] ?? "en"}
             onValueChange={(value) => void i18n.changeLanguage(value)}
           >
             <SelectTrigger
-              className="h-9 w-29.5 border-border bg-card text-xs text-card-foreground shadow-sm"
+              className="h-9 w-9 justify-center border-border bg-card p-0 text-card-foreground shadow-sm [&>svg:last-child]:hidden"
               aria-label={t("language.label")}
             >
-              <SelectValue />
+              <Globe2 className="size-4" aria-hidden="true" />
             </SelectTrigger>
             <SelectContent
               className="z-10000 border-border bg-popover text-popover-foreground shadow-xl"
@@ -189,7 +201,7 @@ function LoginPage() {
                 </TabsList>
 
                 <TabsContent value="credentials" className="mt-0">
-                  <form className="min-w-0 space-y-4" onSubmit={submitLogin}>
+                  <form className="min-w-0 space-y-4" onSubmit={submitLogin} noValidate>
                     <div className="space-y-2">
                       <Label
                         htmlFor="username"
@@ -207,7 +219,18 @@ function LoginPage() {
                           placeholder={t("auth.usernamePlaceholder")}
                           required
                           autoFocus
+                          onChange={(event) => {
+                            if (event.currentTarget.value.trim()) setMissingField(null);
+                          }}
                         />
+                        {missingField === "username" && (
+                          <span
+                            className="absolute inset-s-0 top-full z-20 mt-1 rounded-md bg-foreground px-2.5 py-1.5 text-xs text-background shadow-lg"
+                            role="alert"
+                          >
+                            {t("auth.errors.usernameRequired")}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="space-y-2">
@@ -227,6 +250,9 @@ function LoginPage() {
                           autoComplete="current-password"
                           placeholder={t("auth.passwordPlaceholder")}
                           required
+                          onChange={(event) => {
+                            if (event.currentTarget.value) setMissingField(null);
+                          }}
                         />
                         <Button
                           className="absolute inset-e-1 top-1/2 size-9 -translate-y-1/2 text-muted-foreground hover:text-primary"
@@ -246,6 +272,14 @@ function LoginPage() {
                             <Eye className="size-4" />
                           )}
                         </Button>
+                        {missingField === "password" && (
+                          <span
+                            className="absolute inset-s-0 top-full z-20 mt-1 rounded-md bg-foreground px-2.5 py-1.5 text-xs text-background shadow-lg"
+                            role="alert"
+                          >
+                            {t("auth.errors.passwordRequired")}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center justify-between gap-3">

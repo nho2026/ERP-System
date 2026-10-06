@@ -168,7 +168,8 @@
 .electron-titlebar input,
 .electron-titlebar select,
 .electron-titlebar [role="button"],
-.electron-window-controls {
+.electron-window-controls,
+.electron-window-controls * {
   -webkit-app-region: no-drag;
 }
 
@@ -320,6 +321,56 @@ html[lang="ku"] [data-sonner-toaster] {
     background: white;
     color: #0f172a;
     font-size: 11px;
+  }
+  body.printing-document .salary-list-print .overflow-auto {
+    overflow: visible !important;
+  }
+  body.printing-document .salary-list-print table {
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed;
+    font-size: 9px;
+  }
+  body.printing-document .salary-list-print th,
+  body.printing-document .salary-list-print td {
+    padding: 4px 3px;
+    overflow-wrap: anywhere;
+  }
+  body.printing-document .salary-list-print th:nth-child(1),
+  body.printing-document .salary-list-print td:nth-child(1) {
+    width: 3%;
+  }
+  body.printing-document .salary-list-print th:nth-child(2),
+  body.printing-document .salary-list-print td:nth-child(2) {
+    width: 14%;
+  }
+  body.printing-document .salary-list-print th:nth-child(3),
+  body.printing-document .salary-list-print td:nth-child(3),
+  body.printing-document .salary-list-print th:nth-child(5),
+  body.printing-document .salary-list-print td:nth-child(5),
+  body.printing-document .salary-list-print th:nth-child(10),
+  body.printing-document .salary-list-print td:nth-child(10) {
+    width: 10%;
+  }
+  body.printing-document .salary-list-print th:nth-child(4),
+  body.printing-document .salary-list-print td:nth-child(4) {
+    width: 7%;
+  }
+  body.printing-document .salary-list-print th:nth-child(6),
+  body.printing-document .salary-list-print td:nth-child(6) {
+    width: 12%;
+  }
+  body.printing-document .salary-list-print th:nth-child(7),
+  body.printing-document .salary-list-print td:nth-child(7) {
+    width: 8%;
+  }
+  body.printing-document .salary-list-print th:nth-child(8),
+  body.printing-document .salary-list-print td:nth-child(8) {
+    width: 10%;
+  }
+  body.printing-document .salary-list-print th:nth-child(9),
+  body.printing-document .salary-list-print td:nth-child(9) {
+    width: 16%;
   }
   .salary-list-print header {
     display: flex;

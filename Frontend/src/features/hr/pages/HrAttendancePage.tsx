@@ -13,9 +13,11 @@ import {
   Search,
   TimerOff,
   UsersRound,
+  SlidersHorizontal,
   LayoutGrid,
   List,
   BriefcaseBusiness,
+  Eye,
   ShieldCheck,
   Trash2,
 } from "lucide-react";
@@ -54,6 +56,11 @@ import {
   DialogTitle,
 } from "@/shared/components/ui/dialog";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/shared/components/ui/popover";
+import {
   duration,
   employeeLabel,
   lostMinutes,
@@ -87,6 +94,9 @@ export default function HrAttendancePage() {
   const [deletingPermission, setDeletingPermission] = useState<HrRecord | null>(
     null,
   );
+  const [viewingPermission, setViewingPermission] = useState<HrRecord | null>(
+    null,
+  );
   const canManage = hasPermission(
     storedUser(),
     "hr.attendance-permissions.create",
@@ -98,6 +108,7 @@ export default function HrAttendancePage() {
   const [directoryView, setDirectoryView] = useState<"grid" | "table">("grid");
   const [selected, setSelected] = useState<HrRecord>();
   const [permissionOpen, setPermissionOpen] = useState(false);
+  const [employeePermissions, setEmployeePermissions] = useState<HrRecord[]>([]);
   const [permissionType, setPermissionType] = useState("full_day");
   const table = useServerTable<
     HrRecord,
@@ -125,6 +136,20 @@ export default function HrAttendancePage() {
     data: table.pageData?.permissions ?? [],
     refresh: table.refresh,
   };
+  const permissionDates = [
+    ...(permissions.data ?? []),
+    ...employeePermissions,
+  ]
+    .filter(
+      (permission) =>
+        permission.employeeId === selected?.id &&
+        permission.status === "approved",
+    )
+    .map((permission) => {
+      const date = String(permission.fromDate).slice(0, 10);
+      const [year, month, day] = date.split("-").map(Number);
+      return new Date(year, month - 1, day);
+    });
   const departmentOptions = table.pageData?.departments ?? [];
   const recordsFor = (id: string) =>
     monthRecords.filter((x) => x.employeeId === id);
@@ -170,6 +195,19 @@ export default function HrAttendancePage() {
         tx("permissionError", "Unable to grant attendance permission."),
       );
     }
+  };
+  const openGrantPermission = async () => {
+    if (!selected) return;
+    try {
+      const existing = await attendancePermissionsApi.list({
+        employeeId: selected.id,
+        status: "approved",
+      });
+      setEmployeePermissions(existing);
+    } catch {
+      setEmployeePermissions([]);
+    }
+    setPermissionOpen(true);
   };
 
   return (
@@ -253,88 +291,6 @@ export default function HrAttendancePage() {
           </div>
         </div>
       </section>
-      <Card>
-        <CardContent className="flex flex-wrap items-end gap-4 p-4">
-          <div className="min-w-48 flex-1 space-y-2">
-            <Label htmlFor="attendance-department-filter">
-              {tx("filterDepartment", "Department")}
-            </Label>
-            <Select
-              value={departmentFilter}
-              onValueChange={setDepartmentFilter}
-              dir={i18n.dir()}
-            >
-              <SelectTrigger
-                id="attendance-department-filter"
-                className="w-full"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">
-                  {tx("allDepartments", "All departments")}
-                </SelectItem>
-                <SelectItem value="none">
-                  {tx("noDepartment", "No department")}
-                </SelectItem>
-                {departmentOptions.map(([id, name]) => (
-                  <SelectItem key={id} value={id}>
-                    {name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="min-w-56 flex-1 space-y-2">
-            <Label htmlFor="attendance-status-filter">
-              {tx("monthlyAttendanceFilter", "Attendance in selected month")}
-            </Label>
-            <Select
-              value={attendanceFilter}
-              onValueChange={setAttendanceFilter}
-              dir={i18n.dir()}
-            >
-              <SelectTrigger id="attendance-status-filter" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries({
-                  all: "All employees",
-                  recorded: "Has attendance records",
-                  noRecords: "No attendance records",
-                  late: "Late arrival",
-                  missingCheckout: "Missing check-out",
-                }).map(([value, label]) => (
-                  <SelectItem key={value} value={value}>
-                    {tx(`attendanceFilter_${value}`, label)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <Button
-            variant="outline"
-            onClick={() => {
-              setSearch("");
-              setDepartmentFilter("all");
-              setAttendanceFilter("all");
-            }}
-            disabled={
-              !search &&
-              departmentFilter === "all" &&
-              attendanceFilter === "all"
-            }
-          >
-            {tx("clearFilters", "Clear filters")}
-          </Button>
-          <p className="text-sm text-muted-foreground" role="status">
-            {t("hrMonthly.filteredEmployees", {
-              count: table.pagination.total,
-              total: table.pageData?.totals.employees ?? 0,
-            })}
-          </p>
-        </CardContent>
-      </Card>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-lg font-bold tracking-tight">
@@ -348,6 +304,106 @@ export default function HrAttendancePage() {
           </p>
         </div>
         <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
+          <p className="me-2 text-xs text-muted-foreground" role="status">
+            {t("hrMonthly.filteredEmployees", {
+              count: table.pagination.total,
+              total: table.pageData?.totals.employees ?? 0,
+            })}
+          </p>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="h-11 shrink-0 rounded-xl">
+                <SlidersHorizontal className="size-4" />
+                {tx("filters", "Filters")}
+                {(departmentFilter !== "all" || attendanceFilter !== "all") && (
+                  <span className="grid size-5 place-items-center rounded-full bg-primary text-[10px] text-primary-foreground">
+                    {Number(departmentFilter !== "all") +
+                      Number(attendanceFilter !== "all")}
+                  </span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              className="max-h-[calc(100vh-2rem)] w-[min(18rem,calc(100vw-2rem))] space-y-4 overflow-y-auto p-4"
+              align="end"
+              collisionPadding={12}
+              dir={i18n.dir()}
+            >
+              <div className="space-y-2">
+                <Label htmlFor="attendance-department-filter">
+                  {tx("filterDepartment", "Department")}
+                </Label>
+                <Select
+                  value={departmentFilter}
+                  onValueChange={setDepartmentFilter}
+                  dir={i18n.dir()}
+                >
+                  <SelectTrigger
+                    id="attendance-department-filter"
+                    className="w-full"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">
+                      {tx("allDepartments", "All departments")}
+                    </SelectItem>
+                    <SelectItem value="none">
+                      {tx("noDepartment", "No department")}
+                    </SelectItem>
+                    {departmentOptions.map(([id, name]) => (
+                      <SelectItem key={id} value={id}>
+                        {name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="attendance-status-filter">
+                  {tx("monthlyAttendanceFilter", "Attendance in selected month")}
+                </Label>
+                <Select
+                  value={attendanceFilter}
+                  onValueChange={setAttendanceFilter}
+                  dir={i18n.dir()}
+                >
+                  <SelectTrigger id="attendance-status-filter" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries({
+                      all: "All employees",
+                      recorded: "Has attendance records",
+                      noRecords: "No attendance records",
+                      late: "Late arrival",
+                      missingCheckout: "Missing check-out",
+                    }).map(([value, label]) => (
+                      <SelectItem key={value} value={value}>
+                        {tx(`attendanceFilter_${value}`, label)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  setSearch("");
+                  setDepartmentFilter("all");
+                  setAttendanceFilter("all");
+                }}
+                disabled={
+                  !search &&
+                  departmentFilter === "all" &&
+                  attendanceFilter === "all"
+                }
+              >
+                {tx("clearFilters", "Clear filters")}
+              </Button>
+            </PopoverContent>
+          </Popover>
           <div className="relative w-full sm:w-80">
             <Search className="absolute inset-s-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -611,28 +667,37 @@ export default function HrAttendancePage() {
                       (permission) => permission.employeeId === selected.id,
                     )
                     .map((permission) => (
-                      <Badge
-                        key={permission.id}
-                        variant="outline"
-                        className="gap-2 bg-background py-1.5"
-                      >
-                        <ShieldCheck className="size-3.5 text-emerald-600" />
-                        {tx(
-                          String(permission.permissionType),
-                          String(permission.permissionType).replaceAll(
-                            "_",
-                            " ",
-                          ),
-                        )}
-                        : {String(permission.fromDate).slice(0, 10)}
-                        {String(permission.fromDate).slice(0, 10) !==
-                          String(permission.toDate).slice(0, 10) &&
-                          ` — ${String(permission.toDate).slice(0, 10)}`}
+                      <div key={permission.id} className="flex items-center gap-1">
+                        <Badge variant="outline" className="gap-2 bg-background py-1.5">
+                          <ShieldCheck className="size-3.5 text-emerald-600" />
+                          {tx(
+                            String(permission.permissionType),
+                            String(permission.permissionType).replaceAll(
+                              "_",
+                              " ",
+                            ),
+                          )}
+                          : {String(permission.fromDate).slice(0, 10)}
+                          {String(permission.fromDate).slice(0, 10) !==
+                            String(permission.toDate).slice(0, 10) &&
+                            ` — ${String(permission.toDate).slice(0, 10)}`}
+                        </Badge>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="size-7 shrink-0 rounded-full border-emerald-200 bg-background p-0 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
+                          type="button"
+                          aria-label={tx("viewPermissionDetails", "View permission details")}
+                          title={tx("viewPermissionDetails", "View permission details")}
+                          onClick={() => setViewingPermission(permission)}
+                        >
+                          <Eye className="size-3.5 text-primary" />
+                        </Button>
                         {canDeletePermission && (
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             size="icon"
-                            className="size-5"
+                            className="size-7 shrink-0 rounded-full border-destructive/20 bg-background p-0"
                             permission="hr.attendance-permissions.delete"
                             data-action="delete"
                             type="button"
@@ -642,7 +707,7 @@ export default function HrAttendancePage() {
                             <Trash2 className="size-3.5 text-destructive" />
                           </Button>
                         )}
-                      </Badge>
+                      </div>
                     ))}
                 </div>
               )}
@@ -741,6 +806,20 @@ export default function HrAttendancePage() {
                       </p>
                       {row ? (
                         <div className="space-y-2 text-xs tabular-nums">
+                          {dayPermissions.map((permission) =>
+                            permission.reason ? (
+                              <p
+                                key={permission.id}
+                                className="line-clamp-2 rounded-md bg-emerald-50 px-2 py-1 text-[11px] leading-snug text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-200"
+                                title={String(permission.reason)}
+                              >
+                                <span className="font-semibold">
+                                  {tx("reason", "Reason")}:
+                                </span>{" "}
+                                {String(permission.reason)}
+                              </p>
+                            ) : null,
+                          )}
                           <div className="flex items-center justify-between gap-1 text-muted-foreground">
                             <LogIn className="size-3.5 text-emerald-600" />
                             <span>{time(row.checkIn)}</span>
@@ -770,22 +849,39 @@ export default function HrAttendancePage() {
                         </div>
                       ) : (
                         <div className="flex min-h-10 items-end">
-                          <span
-                            className={`rounded-full px-2.5 py-1 text-xs ${dayPermissions.length ? "bg-emerald-100 font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" : "bg-muted/70 text-muted-foreground/80"}`}
-                          >
-                            {dayPermissions.length
-                              ? tx(
-                                  String(dayPermissions[0].permissionType),
-                                  String(
-                                    dayPermissions[0].permissionType,
-                                  ).replaceAll("_", " "),
-                                )
-                              : !schedule
-                                ? t("employeeSchedule.dayOff", {
-                                    defaultValue: "Day off",
-                                  })
-                                : tx("noRecord", "No record")}
-                          </span>
+                          <div className="space-y-1">
+                            {dayPermissions.length ? (
+                              dayPermissions.map((permission) => (
+                                <div key={permission.id}>
+                                  <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                                    {tx(
+                                      String(permission.permissionType),
+                                      String(permission.permissionType).replaceAll(
+                                        "_",
+                                        " ",
+                                      ),
+                                    )}
+                                  </span>
+                                  {permission.reason ? (
+                                    <p
+                                      className="mt-1 max-w-full break-words text-[11px] leading-snug text-muted-foreground"
+                                      title={String(permission.reason)}
+                                    >
+                                      {String(permission.reason)}
+                                    </p>
+                                  ) : null}
+                                </div>
+                              ))
+                            ) : (
+                              <span className="rounded-full bg-muted/70 px-2.5 py-1 text-xs text-muted-foreground/80">
+                                {!schedule
+                                  ? t("employeeSchedule.dayOff", {
+                                      defaultValue: "Day off",
+                                    })
+                                  : tx("noRecord", "No record")}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -809,7 +905,7 @@ export default function HrAttendancePage() {
               <Button
                 permission="hr.attendance-permissions.create"
                 className="w-full rounded-xl sm:ms-auto sm:w-auto"
-                onClick={() => setPermissionOpen(true)}
+                onClick={openGrantPermission}
               >
                 <ShieldCheck /> {tx("grantPermission", "Grant permission")}
               </Button>
@@ -864,7 +960,11 @@ export default function HrAttendancePage() {
             </Label>
             <Label className="grid gap-2">
               {tx("date", "Date")}
-              <FormDatePicker name="date" required />
+              <FormDatePicker
+                name="date"
+                required
+                disabledDates={permissionDates}
+              />
             </Label>
             {permissionType === "hours" && (
               <Label className="grid gap-2">
@@ -888,6 +988,47 @@ export default function HrAttendancePage() {
               {tx("savePermission", "Save permission")}
             </Button>
           </form>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={!!viewingPermission}
+        onOpenChange={(open) => {
+          if (!open) setViewingPermission(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {tx("permissionDetails", "Permission details")}
+            </DialogTitle>
+          </DialogHeader>
+          {viewingPermission && (
+            <div className="mt-4 space-y-3 text-sm">
+              <p className="font-semibold">
+                {tx(
+                  String(viewingPermission.permissionType),
+                  String(viewingPermission.permissionType).replaceAll("_", " "),
+                )}
+              </p>
+              <p className="text-muted-foreground">
+                {String(viewingPermission.fromDate).slice(0, 10)}
+                {String(viewingPermission.fromDate).slice(0, 10) !==
+                  String(viewingPermission.toDate).slice(0, 10) &&
+                  ` — ${String(viewingPermission.toDate).slice(0, 10)}`}
+              </p>
+              <div className="rounded-lg border bg-muted/30 p-3">
+                <p className="mb-1 text-xs font-semibold text-muted-foreground">
+                  {tx("reason", "Reason")}
+                </p>
+                <p className="whitespace-pre-wrap break-words">
+                  {String(
+                    viewingPermission.reason ||
+                      tx("noReasonProvided", "No reason provided"),
+                  )}
+                </p>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

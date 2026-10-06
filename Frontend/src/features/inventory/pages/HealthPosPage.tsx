@@ -47,7 +47,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/ui/dialog";
-import { printPosInvoice } from "../components/print-pos-invoice";
+import { printPosInvoice } from "../components/logic/print-pos-invoice";
 import {
   Select,
   SelectContent,
@@ -216,7 +216,7 @@ export default function HealthPosPage() {
   };
   return (
     <div className="h-svh overflow-hidden bg-background">
-      <header className="electron-titlebar relative flex h-16 items-center gap-3 border-b border-primary/15 bg-card px-4 shadow-[0_4px_20px_-16px_var(--primary)] before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-linear-to-r before:from-primary before:via-teal-400 before:to-teal-400">
+      <header className="electron-titlebar relative flex h-16 items-center justify-between gap-3 border-b border-primary/15 bg-card px-4 shadow-[0_4px_20px_-16px_var(--primary)] before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-linear-to-r before:from-primary before:via-teal-400 before:to-teal-400">
         <Link
           to={cashier ? "/profile" : "/dashboard"}
           className="grid size-9 place-items-center rounded-lg border border-primary/20 bg-primary/5 text-primary transition hover:bg-primary/12"

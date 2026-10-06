@@ -1,36 +1,32 @@
 import { toast } from "sonner";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AuthApiError, loginUser } from "../api/auth.api";
-import type { AuthUser, LoginRequest } from "../types/auth.types";
+import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
+import { clearAuthError, signIn } from "../store/auth.slice";
+import type { LoginRequest } from "../types/auth.types";
 
 export function useLogin() {
   const { t } = useTranslation();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const dispatch = useAppDispatch();
+  const { user, status, error } = useAppSelector((state) => state.auth);
 
   const login = async (request: LoginRequest) => {
-    setIsLoading(true);
-    setError(null);
+    dispatch(clearAuthError());
     try {
-      const result = await loginUser(request);
-      setUser(result.user);
-      sessionStorage.setItem("nho-current-user", JSON.stringify(result.user));
+      const authenticatedUser = await dispatch(signIn(request)).unwrap();
       toast.success(t("auth.loginSuccess"));
-      return result.user;
+      return authenticatedUser;
     } catch (cause) {
-      const message =
-        cause instanceof AuthApiError
-          ? cause.message
-          : t("auth.errors.unavailable");
-      setError(message);
+      const message = typeof cause === "string" ? cause : t("auth.errors.unavailable");
       toast.error(message, { id: "login-error" });
       return null;
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  return { login, isLoading, error, user, clearError: () => setError(null) };
+  return {
+    login,
+    isLoading: status === "loading",
+    error,
+    user,
+    clearError: () => dispatch(clearAuthError()),
+  };
 }

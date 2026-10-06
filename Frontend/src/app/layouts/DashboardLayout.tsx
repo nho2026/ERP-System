@@ -1,4 +1,26 @@
 import { buildingNavigation } from "@/features/building-expenses/building-navigation";
+import {
+  primaryNavigation,
+  taskNavigation,
+  attendanceNavigation,
+  hrNavigation,
+  laboratoryNavigation,
+  icuNavigation,
+  healthcareNavigation,
+  crmNavigation,
+  accountingNavigation,
+  financeNavigation,
+  warehouseDashboardNavigation,
+  buyNavigation,
+  productNavigation,
+  storageNavigation,
+  warehouseExtraNavigation,
+  warehouseDirectoryNavigation,
+  warehouseGroups,
+  inventoryNavigation,
+  posNavigation,
+  accessNavigation,
+} from "@/app/navigations";
 import { permissionForPath } from "@/features/auth/permission-policy";
 import {
   AlertDialog,
@@ -11,11 +33,10 @@ import {
   AlertDialogAction,
 } from "@/shared/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { MeetingSessionHost } from "@/features/meetings/MeetingSessionHost";
+import { MeetingSessionHost } from "@/features/meetings/pages/MeetingSessionHost";
 import { HeaderSearch } from "./HeaderSearch";
 import { WorkspaceCard } from "./WorkspaceCard";
 import { Input } from "@/shared/components/ui/input";
-import { warehousePages } from "@/features/inventory/warehouse-pages";
 import {
   loadSettings,
   useSettings,
@@ -26,12 +47,9 @@ import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   Bell,
-  BadgeDollarSign,
   BriefcaseBusiness,
   Building2,
   CalendarCheck,
-  CalendarClock,
-  CalendarPlus,
   ChevronDown,
   CircleHelp,
   Clock3,
@@ -41,45 +59,27 @@ import {
   FlaskConical,
   LayoutDashboard,
   Landmark,
-  BookOpenText,
-  ChartNoAxesCombined,
-  ReceiptText,
-  CreditCard,
   LogOut,
   Menu,
   Moon,
-  Radio,
   Search,
   Settings,
   ShieldCheck,
   Stethoscope,
-  UserCheck,
   UserRound,
   UsersRound,
   X,
   WalletCards,
-  ArrowRightLeft,
-  ChartLine,
-  HandCoins,
   Package,
   PanelLeftClose,
   PanelLeftOpen,
   Barcode,
-  Tags,
   Warehouse,
-  Video,
   Boxes,
-  ArrowLeftRight,
   ShoppingCart,
   ListTodo,
   Lightbulb,
-  TriangleAlert,
-  Star,
   Sun,
-  Goal,
-  ScrollText,
-  FileText,
-  MessageCircle,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import logo from "@/assets/icons/logo.png";
@@ -90,7 +90,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/shared/components/ui/select";
 import {
   DropdownMenu,
@@ -101,7 +100,8 @@ import {
   DropdownMenuTrigger,
 } from "@/shared/components/ui/dropdown-menu";
 import { getCurrentUser, logoutUser } from "@/features/auth/api/auth.api";
-import type { AuthUser } from "@/features/auth/types/auth.types";
+import { clearAuth, setAuthenticatedUser } from "@/features/auth/store/auth.slice";
+import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { useTheme } from "@/shared/hooks/useTheme";
 import { WindowControls } from "@/shared/components/WindowControls";
 import { hasPermission } from "@/features/auth/access";
@@ -130,477 +130,6 @@ function notificationLabel(
     return t("notificationCenter.taskStatusUpdated");
   return t("notificationCenter.taskAssigned");
 }
-
-const primaryNavigation = [
-  {
-    to: "/dashboard",
-    label: "navigation.dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    to: "/meetings",
-    label: "navigation.liveMeetings",
-    icon: Video,
-  },
-  {
-    to: "/targets",
-    label: "navigation.targets",
-    icon: Goal,
-  },
-];
-const taskNavigation = [
-  {
-    to: "/tasks/dashboard",
-    label: "navigation.taskDashboard",
-    icon: LayoutDashboard,
-  },
-  { to: "/tasks/review", label: "navigation.taskReview", icon: ListTodo },
-  {
-    to: "/tasks",
-    label: "tasks.list",
-    icon: ListTodo,
-  },
-  {
-    to: "/tasks/reports",
-    label: "tasks.report.title",
-    icon: ChartNoAxesCombined,
-  },
-];
-const attendanceNavigation = [
-  {
-    to: "/attendance/devices",
-    label: "attendancePage.devices",
-    icon: Radio,
-  },
-  {
-    to: "/attendance/users",
-    label: "attendancePage.users",
-    icon: UsersRound,
-  },
-  {
-    to: "/attendance/events",
-    label: "attendancePage.events",
-    icon: CalendarClock,
-  },
-];
-const hrNavigation = [
-  { to: "/hr", label: "navigation.hrDashboard", icon: LayoutDashboard },
-  {
-    to: "/employees",
-    label: "navigation.employees",
-    icon: UsersRound,
-  },
-  {
-    to: "/positions",
-    label: "navigation.positions",
-    icon: BriefcaseBusiness,
-  },
-  {
-    to: "/salaries",
-    label: "navigation.salaries",
-    icon: BadgeDollarSign,
-  },
-  {
-    to: "/hr-attendance",
-    label: "navigation.hrAttendance",
-    icon: UserCheck,
-  },
-  {
-    to: "/payrolls",
-    label: "navigation.payrolls",
-    icon: ContactRound,
-  },
-  {
-    to: "/salary-advances",
-    label: "navigation.salaryAdvances",
-    icon: BadgeDollarSign,
-  },
-  {
-    to: "/hr/reports",
-    label: "navigation.hrReports",
-    icon: ChartNoAxesCombined,
-  },
-  {
-    to: "/hr/warnings",
-    label: "hrWarnings.title",
-    icon: TriangleAlert,
-  },
-];
-const laboratoryNavigation = [
-  {
-    to: "/laboratory",
-    label: "laboratory.dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    to: "/laboratory/reception",
-    label: "laboratory.reception",
-    icon: FlaskConical,
-  },
-  {
-    to: "/laboratory/queue",
-    label: "laboratory.queue",
-    icon: FlaskConical,
-  },
-  {
-    to: "/laboratory/tickets",
-    label: "laboratory.accountingTickets",
-    icon: CreditCard,
-  },
-  {
-    to: "/laboratory/display",
-    label: "laboratory.ticketDisplay",
-    icon: LayoutDashboard,
-  },
-  {
-    to: "/laboratory/accounting",
-    label: "laboratory.accounting",
-    icon: CreditCard,
-  },
-  {
-    to: "/laboratory/room",
-    label: "laboratory.room",
-    icon: FlaskConical,
-  },
-  {
-    to: "/laboratory/completed",
-    label: "laboratory.completed",
-    icon: FlaskConical,
-  },
-  {
-    to: "/laboratory/received",
-    label: "laboratory.received",
-    icon: ContactRound,
-  },
-  {
-    to: "/laboratory/tests",
-    label: "laboratory.tests",
-    icon: FlaskConical,
-  },
-];
-const icuNavigation = [
-  { to: "/icu/dashboard", label: "ICU Dashboard", icon: LayoutDashboard },
-  { to: "/icu/cases", label: "ICU Cases", icon: HeartPulse },
-  { to: "/icu/staff", label: "ICU Staff", icon: UsersRound },
-  { to: "/icu/operation-types", label: "Operation Types", icon: Stethoscope },
-  { to: "/icu/storage", label: "ICU Storage", icon: Warehouse },
-  { to: "/icu/item-reduction", label: "Item Reduction", icon: Package },
-];
-const healthcareNavigation = [
-  {
-    to: "/departments",
-    label: "navigation.departments",
-    icon: Building2,
-  },
-  {
-    to: "/health-staff",
-    label: "navigation.healthStaff",
-    icon: Stethoscope,
-  },
-  {
-    to: "/feedback",
-    label: "feedback.title",
-    icon: Star,
-  },
-];
-const crmNavigation = [
-  {
-    to: "/crm/whatsapp",
-    label: "navigation.crmWhatsapp",
-    icon: MessageCircle,
-  },
-  {
-    to: "/crm/leads",
-    label: "navigation.crmLeads",
-    icon: ContactRound,
-  },
-  {
-    to: "/crm/leads/progress",
-    label: "navigation.leadProgressOverview",
-    icon: ChartLine,
-  },
-  {
-    to: "/crm/patients",
-    label: "navigation.crmPatients",
-    icon: UsersRound,
-  },
-  {
-    to: "/crm/appointments",
-    label: "navigation.doctorAppointments",
-    icon: CalendarPlus,
-  },
-  {
-    to: "/crm/payments",
-    label: "navigation.crmPayments",
-    icon: CreditCard,
-  },
-  {
-    to: "/crm/follow-up",
-    label: "postDischargeFollowUp.title",
-    icon: CalendarClock,
-  },
-  {
-    to: "/crm/referrals",
-    label: "navigation.crmReferrals",
-    icon: ArrowRightLeft,
-  },
-  {
-    to: "/crm/forms",
-    label: "navigation.crmForms",
-    icon: FileText,
-  },
-  {
-    to: "/crm/today-patients",
-    label: "todayPatients.title",
-    icon: CalendarClock,
-  },
-  {
-    to: "/crm/surgery-appointments",
-    label: "navigation.surgeryAppointments",
-    icon: CalendarClock,
-  },
-  {
-    to: "/crm/surgeries",
-    label: "navigation.surgeries",
-    icon: HeartPulse,
-  },
-];
-const accountingNavigation = [
-  {
-    to: "/accounting",
-    label: "navigation.accountantDashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    to: "/accounting/overview",
-    label: "financeOverview.title",
-    icon: ChartNoAxesCombined,
-  },
-  {
-    to: "/accounting/income-expenses",
-    label: "incomeExpenses.title",
-    icon: WalletCards,
-  },
-  {
-    to: "/accounting/accounts",
-    label: "navigation.chartOfAccounts",
-    icon: Landmark,
-  },
-  {
-    to: "/accounting/journals",
-    label: "navigation.journalEntries",
-    icon: BookOpenText,
-  },
-  {
-    to: "/accounting/customers",
-    label: "navigation.customers",
-    icon: UsersRound,
-  },
-  {
-    to: "/accounting/invoices",
-    label: "navigation.invoices",
-    icon: ReceiptText,
-  },
-  {
-    to: "/accounting/payments",
-    label: "navigation.payments",
-    icon: CreditCard,
-  },
-  {
-    to: "/accounting/service-advances",
-    label: "navigation.serviceAdvances",
-    icon: BadgeDollarSign,
-  },
-  {
-    to: "/accounting/reports",
-    label: "navigation.financialReports",
-    icon: ChartNoAxesCombined,
-  },
-];
-const financeNavigation = [
-  {
-    to: "/finance/budgets",
-    label: "navigation.budgets",
-    icon: WalletCards,
-  },
-  {
-    to: "/finance/cash-flow",
-    label: "navigation.cashFlow",
-    icon: ArrowRightLeft,
-  },
-  {
-    to: "/finance/forecasts",
-    label: "navigation.forecasts",
-    icon: ChartLine,
-  },
-  {
-    to: "/finance/analysis",
-    label: "navigation.financialAnalysis",
-    icon: ChartNoAxesCombined,
-  },
-  {
-    to: "/finance/funding",
-    label: "navigation.funding",
-    icon: HandCoins,
-  },
-];
-const warehouseDashboardNavigation = [
-  {
-    to: "/warehouses",
-    label: "warehouseDashboard.navigation",
-    icon: LayoutDashboard,
-  },
-];
-const buyNavigation = [
-  {
-    to: "/inventory/department-requests",
-    label: "departmentRequest.title",
-    icon: Building2,
-  },
-  {
-    to: "/warehouses/buy/product",
-    label: "warehouseModule.buyProduct",
-    icon: ShoppingCart,
-  },
-  {
-    to: "/warehouses/buy/debts",
-    label: "warehouseModule.buyDebts",
-    icon: HandCoins,
-  },
-  {
-    to: "/warehouses/buy/order",
-    label: "warehouseModule.order",
-    icon: ListTodo,
-  },
-  {
-    to: "/warehouses/buy/department-orders",
-    label: "warehouseModule.departmentOrders",
-    icon: Building2,
-  },
-];
-const productNavigation = [
-  {
-    to: "/inventory/products",
-    label: "warehouseModule.addProduct",
-    icon: Package,
-  },
-  {
-    to: "/warehouses/product/special",
-    label: "warehouseModule.addSpecialProduct",
-    icon: Star,
-  },
-  {
-    to: "/warehouses/product/transfer",
-    label: "warehouseModule.transferProduct",
-    icon: ArrowLeftRight,
-  },
-];
-const storageNavigation = [
-  {
-    to: "/inventory/stock",
-    label: "warehouseModule.storage",
-    icon: Boxes,
-  },
-  {
-    to: "/warehouses/storage/special-price",
-    label: "warehouseModule.editSpecialPrice",
-    icon: Tags,
-  },
-  {
-    to: "/inventory/warehouses",
-    label: "warehouseModule.addStorage",
-    icon: Warehouse,
-  },
-  {
-    to: "/warehouses/storage/expire-soon",
-    label: "warehouseModule.expireSoon",
-    icon: CalendarClock,
-  },
-  {
-    to: "/warehouses/storage/threshold",
-    label: "warehouseModule.threshold",
-    icon: TriangleAlert,
-  },
-];
-const warehouseExtraNavigation = warehousePages.map((page) => ({
-  to: page.path,
-  label: page.label,
-  icon:
-    page.section === "reports"
-      ? ChartNoAxesCombined
-      : page.section === "cases"
-        ? HeartPulse
-        : page.section === "utilities"
-          ? Settings
-          : page.label === "warehouseModule.productionCompanies"
-            ? Building2
-            : UsersRound,
-}));
-const warehouseDirectoryNavigation = [
-  ...warehouseExtraNavigation.filter((item) =>
-    warehousePages.some((page) => page.path === item.to && !page.section),
-  ),
-  {
-    to: "/inventory/categories",
-    label: "warehouseModule.categories",
-    icon: Tags,
-  },
-];
-const warehouseGroups = [
-  {
-    key: "cases",
-    icon: HeartPulse,
-  },
-  {
-    key: "utilities",
-    icon: Settings,
-  },
-  {
-    key: "reports",
-    icon: ChartNoAxesCombined,
-  },
-] as const;
-const inventoryNavigation = [
-  {
-    to: "/inventory/brands",
-    label: "navigation.productBrands",
-    icon: Tags,
-  },
-  {
-    to: "/inventory/barcodes",
-    label: "navigation.barcodes",
-    icon: Barcode,
-  },
-];
-const posNavigation = [
-  {
-    to: "/pos/checkout",
-    label: "navigation.newSale",
-    icon: ShoppingCart,
-  },
-  {
-    to: "/pos/sales",
-    label: "navigation.salesHistory",
-    icon: ReceiptText,
-  },
-];
-const accessNavigation = [
-  {
-    to: "/users",
-    label: "navigation.users",
-    icon: UsersRound,
-  },
-  {
-    to: "/roles",
-    label: "navigation.roles",
-    icon: ShieldCheck,
-  },
-  {
-    to: "/system-logs",
-    label: "navigation.systemLogs",
-    icon: ScrollText,
-  },
-];
 
 function LiveDateTime({
   locale,
@@ -676,18 +205,13 @@ function LiveDateTime({
 }
 
 export default function DashboardLayout() {
+  const dispatch = useAppDispatch();
+  const user = useAppSelector((state) => state.auth.user);
   const { theme, toggleTheme } = useTheme();
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(
     () => localStorage.getItem("nho-sidebar-collapsed") === "true",
   );
-  const [user, setUser] = useState<AuthUser | null>(() => {
-    try {
-      return JSON.parse(sessionStorage.getItem("nho-current-user") ?? "null");
-    } catch {
-      return null;
-    }
-  });
   const [loggingOut, setLoggingOut] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const knownNotificationIds = useRef<Set<string> | null>(null);
@@ -749,14 +273,14 @@ export default function DashboardLayout() {
   useEffect(() => {
     void getCurrentUser()
       .then((current) => {
-        setUser(current);
+        dispatch(setAuthenticatedUser(current));
         sessionStorage.setItem("nho-current-user", JSON.stringify(current));
       })
       .catch(() => {
         if (!sessionStorage.getItem("nho-current-user"))
           navigate("/login", { replace: true });
       });
-  }, [navigate]);
+  }, [dispatch, navigate]);
   useEffect(() => {
     return window.electronWindow?.onNotificationClick((route) =>
       navigate(route),
@@ -857,6 +381,7 @@ export default function DashboardLayout() {
     try {
       await logoutUser();
     } finally {
+      dispatch(clearAuth());
       sessionStorage.removeItem("nho-current-user");
       navigate("/login", { replace: true });
       setLoggingOut(false);
@@ -1558,8 +1083,8 @@ export default function DashboardLayout() {
                 {collapsed ? (
                   <NavLink
                     to="/icu/dashboard"
-                    title="ICU"
-                    aria-label="ICU"
+                    title={t("controlPanel.icu")}
+                    aria-label={t("controlPanel.icu")}
                     className={({ isActive }) =>
                       `hidden h-9 items-center justify-center rounded-lg outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/35 lg:flex ${isActive ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-primary/7 hover:text-primary"}`
                     }
@@ -1574,7 +1099,9 @@ export default function DashboardLayout() {
                       onClick={() => setIcuExpanded((value) => !value)}
                     >
                       <HeartPulse className="size-4.25 shrink-0" />
-                      <span className="flex-1 text-start">ICU</span>
+                      <span className="flex-1 text-start">
+                        {t("controlPanel.icu")}
+                      </span>
                       <ChevronDown
                         className={`size-3.5 transition-transform ${icuExpanded ? "rotate-180" : ""}`}
                       />
@@ -1862,7 +1389,7 @@ export default function DashboardLayout() {
       <div
         className={`flex h-svh min-w-0 flex-col overflow-hidden transition-[padding] duration-300 ${panelMode ? "" : collapsed ? "lg:ps-20" : "lg:ps-71.5"}`}
       >
-        <header className="electron-titlebar relative z-40 flex min-h-16 shrink-0 flex-wrap items-center gap-2 border-b border-border/60 bg-card/92 px-3 py-2 backdrop-blur-xl sm:flex-nowrap sm:gap-3 md:px-6">
+        <header className="electron-titlebar relative z-40 flex min-h-16 shrink-0 flex-wrap items-center justify-between gap-2 border-b border-border/60 bg-card/92 px-3 py-2 backdrop-blur-xl sm:flex-nowrap sm:gap-3 md:px-6">
           {!panelMode && (
             <Button
               className="border lg:hidden"
@@ -1903,14 +1430,16 @@ export default function DashboardLayout() {
               }}
             />
           </div>
-          <div className="ml-auto flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <Select
               value={i18n.resolvedLanguage?.split("-")[0] ?? "en"}
               onValueChange={(v) => void i18n.changeLanguage(v)}
             >
-              <SelectTrigger className="h-9 w-24 shrink-0 rounded-lg sm:w-28">
-                <Globe2 className="size-3.5" />
-                <SelectValue />
+              <SelectTrigger
+                className="h-9 w-9 shrink-0 justify-center rounded-lg p-0 [&>svg:last-child]:hidden"
+                aria-label={t("language.label")}
+              >
+                <Globe2 className="size-4" aria-hidden="true" />
               </SelectTrigger>
               <SelectContent className="z-10000">
                 <SelectItem value="en">{t("language.english")}</SelectItem>

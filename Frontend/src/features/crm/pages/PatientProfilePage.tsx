@@ -410,7 +410,7 @@ export default function PatientProfilePage({
                       });
                       await crmApi.patients.update(id, { status: "icu" });
                       await profile.refresh();
-                      toast.success("Patient sent to ICU.");
+                      toast.success(t("icu.ui.patientSentToUnit"));
                     } catch (error) {
                       toast.error(apiErrorMessage(error));
                     } finally {
@@ -418,7 +418,7 @@ export default function PatientProfilePage({
                     }
                   }}
                 >
-                  <HeartPulse /> Send to ICU
+                  <HeartPulse /> {t("icu.ui.sendToUnit")}
                 </Button>
               )}
             {patient.status === "post_discharge_follow_up" && (

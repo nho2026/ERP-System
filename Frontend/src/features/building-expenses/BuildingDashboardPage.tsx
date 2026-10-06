@@ -16,7 +16,6 @@ import {
   Building2,
   WalletCards,
   ArrowRight,
-  RefreshCw,
 } from "lucide-react";
 import { Card } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
@@ -128,17 +127,6 @@ export default function BuildingDashboardPage() {
               )}
             </p>
           </div>
-          <Button
-            className="rounded-full bg-emerald-800 px-5 text-white hover:bg-emerald-900"
-            variant="default"
-            disabled={isLoading}
-            onClick={() => void refresh()}
-          >
-            <RefreshCw
-              className={`size-4 ${isLoading ? "animate-spin" : ""}`}
-            />
-            {t("Refresh overview")}
-          </Button>
         </div>
         {error && (
           <Card className="flex items-center justify-between gap-3 p-4 text-destructive">
@@ -212,7 +200,7 @@ export default function BuildingDashboardPage() {
               {debts.map((row) => (
                 <TableRow key={row.id}>
                   <TableCell className="py-4">
-                    <p className="font-medium">{row.department.name}</p>
+                    <p className="font-medium">{row.department?.name ?? t("Unassigned department")}</p>
                     <p className="text-xs text-muted-foreground" title={row.id}>
                       #{row.id.slice(-8).toUpperCase()}
                     </p>
@@ -386,7 +374,7 @@ export default function BuildingDashboardPage() {
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">
-                        {row.department.name}
+                        {row.department?.name ?? t("Unassigned department")}
                       </p>
                       <p className="truncate text-xs text-muted-foreground">
                         {row.items[0]?.name} · {money(total(row.items))}

@@ -3307,6 +3307,7 @@
     "/appointments": "healthcare.appointments",
     "/crm/today-patients": "healthcare.appointments",
     "/crm/appointments": "healthcare.appointments",
+    "/crm": "crm.lookups",
     "/crm/patients/:id/medications": "crm.prescriptions",
     "/accounting": "finance.overview",
     "/accounting/overview": "finance.overview",

@@ -47,19 +47,21 @@ import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import { Badge } from "@/shared/components/ui/badge";
 import { useApiResource } from "@/shared/hooks/useApiResource";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 type Page =
   "dashboard" | "staff" | "operation-types" | "storage" | "item-reduction";
 type Operation = { id: string; name: string; status: string };
-const headings: Record<Page, string> = {
-  dashboard: "ICU Dashboard",
-  staff: "ICU Staff",
-  "operation-types": "ICU Operation Types",
-  storage: "ICU Storage",
-  "item-reduction": "ICU Item Reduction",
+const headingKeys: Record<Page, string> = {
+  dashboard: "icu.navDashboard",
+  staff: "icu.navStaff",
+  "operation-types": "icu.navOperationTypes",
+  storage: "icu.navStorage",
+  "item-reduction": "icu.navItemReduction",
 };
 
 export default function IcuModulePage({ page }: { page: Page }) {
+  const { t, i18n } = useTranslation();
   const [version, setVersion] = useState(0);
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<Operation | null>(null);
@@ -134,35 +136,35 @@ export default function IcuModulePage({ page }: { page: Page }) {
     .slice(0, 5);
   const cards = [
     {
-      label: "Patients in ICU",
+      label: t("icu.ui.patientsInUnit"),
       value: data?.activeCases ?? "—",
       href: "/icu/cases",
       icon: BedDouble,
-      note: "Currently admitted",
+      note: t("icu.ui.currentlyAdmitted"),
       color: "text-rose-600 bg-rose-500/10",
     },
     {
-      label: "Cases recorded",
+      label: t("icu.ui.casesRecorded"),
       value: data?.totalCases ?? "—",
       href: "/icu/cases",
       icon: Activity,
-      note: "All ICU admissions",
+      note: t("icu.ui.allAdmissions"),
       color: "text-sky-700 bg-sky-500/10",
     },
     {
-      label: "ICU staff",
+      label: t("icu.ui.staffCount"),
       value: data?.staff ?? "—",
       href: "/icu/staff",
       icon: UsersRound,
-      note: "Active department staff",
+      note: t("icu.ui.activeDepartmentStaff"),
       color: "text-violet-700 bg-violet-500/10",
     },
     {
-      label: "Operation types",
+      label: t("icu.ui.operationTypes"),
       value: data?.operations ?? "—",
       href: "/icu/operation-types",
       icon: HeartPulse,
-      note: "Available procedures",
+      note: t("icu.ui.availableProcedures"),
       color: "text-emerald-700 bg-emerald-500/10",
     },
   ];
@@ -194,7 +196,7 @@ export default function IcuModulePage({ page }: { page: Page }) {
         date,
         notes,
       });
-      toast.success("ICU stock reduction recorded.");
+      toast.success(t("icu.ui.reductionRecorded"));
       setProductId("");
       setQuantity("1");
       setNotes("");
@@ -209,13 +211,13 @@ export default function IcuModulePage({ page }: { page: Page }) {
     <main className="space-y-5 p-1">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold">{headings[page]}</h1>
+          <h1 className="text-2xl font-semibold">{t(headingKeys[page])}</h1>
           <p className="text-sm text-muted-foreground">
-            ICU patient care and department resources
+            {t("icu.ui.moduleSubtitle")}
           </p>
         </div>
         <Button variant="outline" onClick={refresh}>
-          Refresh
+          {t("icu.ui.refresh")}
         </Button>
       </div>
       {resource.error && (
@@ -232,18 +234,17 @@ export default function IcuModulePage({ page }: { page: Page }) {
               <div className="max-w-2xl">
                 <Badge className="mb-4 border-white/20 bg-white/10 text-white hover:bg-white/10">
                   <Activity className="me-1 size-3.5" />
-                  Critical care overview
+                  {t("icu.ui.criticalCareOverview")}
                 </Badge>
                 <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                  ICU Operations
+                  {t("icu.ui.operations")}
                 </h2>
                 <p className="mt-2 max-w-xl text-sm leading-6 text-teal-50/85">
-                  A clear view of patient admissions, care teams, procedures,
-                  and unit supplies.
+                  {t("icu.ui.overviewDescription")}
                 </p>
                 <div className="mt-5 flex items-center gap-2 text-sm text-teal-50/75">
                   <CalendarDays className="size-4" />
-                  {new Intl.DateTimeFormat(undefined, {
+                  {new Intl.DateTimeFormat(i18n.resolvedLanguage, {
                     weekday: "long",
                     year: "numeric",
                     month: "long",
@@ -257,7 +258,7 @@ export default function IcuModulePage({ page }: { page: Page }) {
               >
                 <Link to="/icu/cases">
                   <Plus className="size-4" />
-                  Open ICU cases
+                  {t("icu.ui.openCases")}
                 </Link>
               </Button>
             </div>
@@ -291,14 +292,14 @@ export default function IcuModulePage({ page }: { page: Page }) {
             <Card className="overflow-hidden border-border/70">
               <div className="flex items-center justify-between gap-3 border-b px-5 py-4">
                 <div>
-                  <h2 className="font-semibold">Recent ICU cases</h2>
+                  <h2 className="font-semibold">{t("icu.ui.recentCases")}</h2>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Latest patient activity in the unit
+                    {t("icu.ui.latestActivity")}
                   </p>
                 </div>
                 <Button asChild variant="ghost" size="sm">
                   <Link to="/icu/cases">
-                    View all <ArrowRight className="ms-1 size-4" />
+                  {t("icu.ui.viewAll")} <ArrowRight className="ms-1 size-4" />
                   </Link>
                 </Button>
               </div>
@@ -325,7 +326,7 @@ export default function IcuModulePage({ page }: { page: Page }) {
                           </p>
                           <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
                             <Clock3 className="size-3.5" />
-                            Admitted {new Date(row.entry).toLocaleString()}
+                            {t("icu.ui.admitted", { date: new Date(row.entry).toLocaleString(i18n.resolvedLanguage) })}
                           </p>
                         </div>
                       </div>
@@ -333,7 +334,7 @@ export default function IcuModulePage({ page }: { page: Page }) {
                         variant={row.exit ? "secondary" : "default"}
                         className={row.exit ? "" : "bg-emerald-600"}
                       >
-                        {row.exit ? "Discharged" : "In ICU"}
+                        {row.exit ? t("icu.ui.discharged") : t("icu.ui.inUnit")}
                       </Badge>
                     </div>
                   ))
@@ -342,9 +343,9 @@ export default function IcuModulePage({ page }: { page: Page }) {
                     <span className="mx-auto grid size-12 place-items-center rounded-full bg-muted">
                       <BedDouble className="size-5 text-muted-foreground" />
                     </span>
-                    <p className="mt-3 font-medium">No ICU cases yet</p>
+                    <p className="mt-3 font-medium">{t("icu.ui.noCases")}</p>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      New admissions will appear here.
+                      {t("icu.ui.newAdmissions")}
                     </p>
                   </div>
                 )}
@@ -355,9 +356,9 @@ export default function IcuModulePage({ page }: { page: Page }) {
               <Card className="border-border/70 p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h2 className="font-semibold">Supply watch</h2>
+                    <h2 className="font-semibold">{t("icu.ui.supplyWatch")}</h2>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      Items at or below their reorder level
+                      {t("icu.ui.lowStockDescription")}
                     </p>
                   </div>
                   <span className="grid size-10 place-items-center rounded-xl bg-amber-500/10 text-amber-700">
@@ -376,14 +377,14 @@ export default function IcuModulePage({ page }: { page: Page }) {
                             {row.product?.name}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            Reorder level {row.reorderLevel}
+                            {t("icu.ui.reorderLevel", { level: row.reorderLevel })}
                           </p>
                         </div>
                         <Badge
                           variant="outline"
                           className="shrink-0 border-amber-500/30 text-amber-700"
                         >
-                          {row.quantity} left
+                          {t("icu.ui.remaining", { count: row.quantity })}
                         </Badge>
                       </div>
                     ))}
@@ -392,17 +393,17 @@ export default function IcuModulePage({ page }: { page: Page }) {
                   <div className="mt-4 rounded-xl bg-emerald-500/5 p-4">
                     <div className="flex items-center gap-2 text-sm font-medium text-emerald-700">
                       <CheckCircle2 className="size-4" />
-                      No low-stock alerts
+                      {t("icu.ui.noLowStock")}
                     </div>
                     <p className="mt-1 text-xs text-muted-foreground">
                       {icuStorage.data?.warehouse
-                        ? `Monitoring ${icuStorage.data.warehouse.name}`
-                        : "Connect an ICU warehouse to monitor supplies."}
+                        ? t("icu.ui.monitoringWarehouse", { name: icuStorage.data.warehouse.name })
+                        : t("icu.ui.connectWarehouse")}
                     </p>
                   </div>
                 )}
                 <Button asChild variant="outline" className="mt-4 w-full">
-                  <Link to="/icu/storage">View ICU storage</Link>
+                  <Link to="/icu/storage">{t("icu.ui.viewStorage")}</Link>
                 </Button>
               </Card>
               <Card className="border-border/70 p-5">
@@ -411,9 +412,9 @@ export default function IcuModulePage({ page }: { page: Page }) {
                     <UsersRound className="size-5" />
                   </span>
                   <div>
-                    <h2 className="font-semibold">Care team</h2>
+                    <h2 className="font-semibold">{t("icu.ui.careTeam")}</h2>
                     <p className="text-xs text-muted-foreground">
-                      Department staffing overview
+                      {t("icu.ui.staffingOverview")}
                     </p>
                   </div>
                 </div>
@@ -421,11 +422,11 @@ export default function IcuModulePage({ page }: { page: Page }) {
                   <div>
                     <p className="text-3xl font-bold">{data?.staff ?? "—"}</p>
                     <p className="text-xs text-muted-foreground">
-                      active ICU staff
+                      {t("icu.ui.activeStaff")}
                     </p>
                   </div>
                   <Button asChild variant="secondary" size="sm">
-                    <Link to="/icu/staff">View team</Link>
+                    <Link to="/icu/staff">{t("icu.ui.viewTeam")}</Link>
                   </Button>
                 </div>
               </Card>
@@ -437,17 +438,17 @@ export default function IcuModulePage({ page }: { page: Page }) {
         <Card className="p-4">
           <p className="mb-3 text-sm text-muted-foreground">
             {data?.department
-              ? `Department: ${data.department.name}`
-              : "Create an active department with ICU in its name and assign staff to it."}
+              ? t("icu.ui.department", { name: data.department.name })
+              : t("icu.ui.staffSetupHelp")}
           </p>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Employee</TableHead>
-                <TableHead>Code</TableHead>
-                <TableHead>Position</TableHead>
-                <TableHead>Staff type</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>{t("icu.ui.employee")}</TableHead>
+                <TableHead>{t("icu.ui.code")}</TableHead>
+                <TableHead>{t("icu.ui.position")}</TableHead>
+                <TableHead>{t("icu.ui.staffType")}</TableHead>
+                <TableHead>{t("icu.ui.status")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -458,8 +459,20 @@ export default function IcuModulePage({ page }: { page: Page }) {
                   </TableCell>
                   <TableCell>{row.employee?.employeeCode}</TableCell>
                   <TableCell>{row.employee?.position?.name ?? "—"}</TableCell>
-                  <TableCell>{row.staffType}</TableCell>
-                  <TableCell>{row.status}</TableCell>
+                  <TableCell>
+                    {row.staffType
+                      ? t(String(row.staffType), {
+                          defaultValue: String(row.staffType),
+                        })
+                      : "—"}
+                  </TableCell>
+                  <TableCell>
+                    {row.status
+                      ? t(String(row.status), {
+                          defaultValue: String(row.status),
+                        })
+                      : "—"}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -476,23 +489,27 @@ export default function IcuModulePage({ page }: { page: Page }) {
                 setOpen(true);
               }}
             >
-              Add operation type
+              {t("icu.ui.addOperationType")}
             </Button>
           </div>
           <Card className="p-4">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Operation type</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
+                <TableHead>{t("icu.ui.operationType")}</TableHead>
+                <TableHead>{t("icu.ui.status")}</TableHead>
+                <TableHead>{t("icu.ui.actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {items.map((row: Operation) => (
                   <TableRow key={row.id}>
                     <TableCell>{row.name}</TableCell>
-                    <TableCell>{row.status}</TableCell>
+                    <TableCell>
+                      {t(String(row.status), {
+                        defaultValue: String(row.status),
+                      })}
+                    </TableCell>
                     <TableCell>
                       <Button
                         variant="outline"
@@ -502,7 +519,7 @@ export default function IcuModulePage({ page }: { page: Page }) {
                           setOpen(true);
                         }}
                       >
-                        Edit
+                        {t("icu.ui.edit")}
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -514,11 +531,13 @@ export default function IcuModulePage({ page }: { page: Page }) {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>
-                  {selected ? "Edit operation type" : "Add operation type"}
+                  {selected
+                    ? t("icu.ui.editOperationType")
+                    : t("icu.ui.addOperationType")}
                 </DialogTitle>
               </DialogHeader>
               <form className="space-y-4" onSubmit={saveOperation}>
-                <Label htmlFor="icu-operation-name">Name</Label>
+                <Label htmlFor="icu-operation-name">{t("icu.ui.name")}</Label>
                 <Input
                   id="icu-operation-name"
                   value={name}
@@ -527,7 +546,7 @@ export default function IcuModulePage({ page }: { page: Page }) {
                   maxLength={191}
                 />
                 <Button disabled={busy}>
-                  {selected ? "Update" : "Create"}
+                  {selected ? t("icu.ui.update") : t("icu.ui.create")}
                 </Button>
               </form>
             </DialogContent>
@@ -538,17 +557,17 @@ export default function IcuModulePage({ page }: { page: Page }) {
         <Card className="p-4">
           <p className="mb-3 text-sm text-muted-foreground">
             {data?.warehouse
-              ? `Warehouse: ${data.warehouse.name}`
-              : "No active ICU warehouse found."}
+              ? t("icu.ui.warehouse", { name: data.warehouse.name })
+              : t("icu.ui.noWarehouse")}
           </p>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Product</TableHead>
-                <TableHead>SKU</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Quantity</TableHead>
-                <TableHead>Unit</TableHead>
+                <TableHead>{t("icu.ui.product")}</TableHead>
+                <TableHead>{t("icu.ui.sku")}</TableHead>
+                <TableHead>{t("icu.ui.category")}</TableHead>
+                <TableHead>{t("icu.ui.quantity")}</TableHead>
+                <TableHead>{t("icu.ui.unit")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -573,7 +592,7 @@ export default function IcuModulePage({ page }: { page: Page }) {
               onSubmit={reduceItem}
             >
               <div className="space-y-2">
-                <Label htmlFor="icu-reduction-product">Product</Label>
+                <Label htmlFor="icu-reduction-product">{t("icu.ui.product")}</Label>
                 <Popover
                   open={productPickerOpen}
                   onOpenChange={setProductPickerOpen}
@@ -590,7 +609,7 @@ export default function IcuModulePage({ page }: { page: Page }) {
                       {(productOptions.find((row) => row.id === productId)
                         ?.name ??
                         productId) ||
-                        "Select a product"}
+                        t("icu.ui.selectProduct")}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent
@@ -599,14 +618,14 @@ export default function IcuModulePage({ page }: { page: Page }) {
                   >
                     <Input
                       value={productSearch}
-                      placeholder="Search ICU products"
+                      placeholder={t("icu.ui.searchProducts")}
                       onChange={(event) => {
                         setProductSearch(event.target.value);
                         setProductPage(1);
                         setProductOptions([]);
                         loadingMoreProducts.current = false;
                       }}
-                      aria-label="Search ICU products"
+                      aria-label={t("icu.ui.searchProducts")}
                     />
                     <ScrollArea
                       className="my-2 h-56"
@@ -648,27 +667,28 @@ export default function IcuModulePage({ page }: { page: Page }) {
                         {!productOptions.length && (
                           <p className="p-3 text-sm text-muted-foreground">
                             {products.isLoading
-                              ? "Loading products…"
-                              : "No products found"}
+                              ? t("icu.ui.loadingProducts")
+                              : t("icu.ui.noProductsFound")}
                           </p>
                         )}
                         {products.isLoading && productOptions.length > 0 && (
                           <p className="p-2 text-center text-xs text-muted-foreground">
-                            Loading more products…
+                            {t("icu.ui.loadingMoreProducts")}
                           </p>
                         )}
                       </div>
                     </ScrollArea>
                     <p className="border-t pt-2 text-center text-xs text-muted-foreground">
-                      Scroll to load more · Page{" "}
-                      {products.data?.pagination?.page ?? productPage} of{" "}
-                      {products.data?.pagination?.totalPages ?? 1}
+                      {t("icu.ui.paginationHint", {
+                        page: products.data?.pagination?.page ?? productPage,
+                        totalPages: products.data?.pagination?.totalPages ?? 1,
+                      })}
                     </p>
                   </PopoverContent>
                 </Popover>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="icu-reduction-qty">Quantity</Label>
+                <Label htmlFor="icu-reduction-qty">{t("icu.ui.quantity")}</Label>
                 <Input
                   id="icu-reduction-qty"
                   type="number"
@@ -680,11 +700,11 @@ export default function IcuModulePage({ page }: { page: Page }) {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Date</Label>
+                <Label>{t("icu.ui.date")}</Label>
                 <FormDatePicker value={date} onValueChange={setDate} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="icu-reduction-notes">Notes</Label>
+                <Label htmlFor="icu-reduction-notes">{t("icu.ui.notes")}</Label>
                 <Input
                   id="icu-reduction-notes"
                   value={notes}
@@ -695,26 +715,26 @@ export default function IcuModulePage({ page }: { page: Page }) {
                 className="sm:col-span-2 xl:col-span-4"
                 disabled={busy || !productId}
               >
-                Record reduction
+                {t("icu.ui.recordReduction")}
               </Button>
             </form>
           </Card>
           <Card className="p-4">
-            <h2 className="mb-3 font-semibold">Recent ICU reductions</h2>
+            <h2 className="mb-3 font-semibold">{t("icu.ui.recentReductions")}</h2>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Product</TableHead>
-                  <TableHead>Quantity</TableHead>
-                  <TableHead>Notes</TableHead>
+                  <TableHead>{t("icu.ui.date")}</TableHead>
+                  <TableHead>{t("icu.ui.product")}</TableHead>
+                  <TableHead>{t("icu.ui.quantity")}</TableHead>
+                  <TableHead>{t("icu.ui.notes")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {items.map((row: any) => (
                   <TableRow key={row.id}>
                     <TableCell>
-                      {new Date(row.occurredAt).toLocaleDateString()}
+                      {new Date(row.occurredAt).toLocaleDateString(i18n.resolvedLanguage)}
                     </TableCell>
                     <TableCell>{row.product?.name}</TableCell>
                     <TableCell>{Math.abs(row.quantity)}</TableCell>

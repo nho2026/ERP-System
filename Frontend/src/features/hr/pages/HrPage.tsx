@@ -294,7 +294,7 @@ const configs: Record<
         name: "currency",
         label: "Currency",
         type: "select",
-        options: ["USD"],
+        options: ["USD", "IQD"],
         required: true,
       },
       {
@@ -441,6 +441,8 @@ export default function HrPage({ resource }: { resource?: Resource }) {
   const [selectedTab, setSelectedTab] = useState<Resource>("employees");
   const tab = resource ?? selectedTab;
   const [editing, setEditing] = useState<HrRecord | null | undefined>();
+  const [advanceEmployeeId, setAdvanceEmployeeId] = useState("");
+  const [advanceCurrency, setAdvanceCurrency] = useState("USD");
   const [search, setSearch] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState("all");
   const [positionFilter, setPositionFilter] = useState("all");
@@ -777,6 +779,10 @@ export default function HrPage({ resource }: { resource?: Resource }) {
                       permission="create"
                       onClick={() => {
                         setError("");
+                        if (key === "advances") {
+                          setAdvanceEmployeeId("");
+                          setAdvanceCurrency("USD");
+                        }
                         setEditing(null);
                       }}
                     >
@@ -1017,6 +1023,10 @@ export default function HrPage({ resource }: { resource?: Resource }) {
                                   size="icon"
                                   onClick={() => {
                                     setError("");
+                                    if (key === "advances") {
+                                      setAdvanceEmployeeId(String(row.employeeId ?? ""));
+                                      setAdvanceCurrency(String(row.currency ?? "USD"));
+                                    }
                                     setEditing(row);
                                   }}
                                 >
@@ -1103,8 +1113,17 @@ export default function HrPage({ resource }: { resource?: Resource }) {
                     ) : choices ? (
                       <Select
                         name={field.name}
+                        value={
+                          tab === "advances" && field.name === "employeeId"
+                            ? advanceEmployeeId
+                            : tab === "advances" && field.name === "currency"
+                              ? advanceCurrency
+                              : undefined
+                        }
                         defaultValue={
-                          initial != null
+                          tab === "advances" && ["employeeId", "currency"].includes(field.name)
+                            ? undefined
+                            : initial != null
                             ? String(initial)
                             : field.name === "currencyId"
                               ? "IQD"
@@ -1116,6 +1135,17 @@ export default function HrPage({ resource }: { resource?: Resource }) {
                                     ? undefined
                                     : "__none__"
                         }
+                        onValueChange={(value) => {
+                          if (tab !== "advances") return;
+                          if (field.name === "employeeId") {
+                            setAdvanceEmployeeId(value);
+                            const salary = salaries.data?.find(
+                              (item) => item.employeeId === value,
+                            );
+                            if (salary) setAdvanceCurrency(String(salary.currencyId));
+                          }
+                          if (field.name === "currency") setAdvanceCurrency(value);
+                        }}
                         required={field.required}
                       >
                         <SelectTrigger className="w-full">

@@ -5,17 +5,21 @@ import "./index.css";
 import "./i18n";
 import App from "./App.tsx";
 import ConnectivityGate from "./shared/components/connectivity/ConnectivityGate";
+import { Provider } from "react-redux";
+import { store } from "./app/store";
 
 const Router =
   window.location.protocol === "file:" ? HashRouter : BrowserRouter;
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <Router>
-      <ConnectivityGate>
-        <App />
-      </ConnectivityGate>
-    </Router>
+    <Provider store={store}>
+      <Router>
+        <ConnectivityGate>
+          <App />
+        </ConnectivityGate>
+      </Router>
+    </Provider>
   </StrictMode>,
 );
 
