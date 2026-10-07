@@ -1519,7 +1519,7 @@ export default function DashboardLayout() {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
-                className="z-10000 w-80 rounded-xl p-2"
+                className="z-10000 w-[min(20rem,calc(100vw-1rem))] rounded-xl p-2"
               >
                 <DropdownMenuLabel className="flex items-center justify-between gap-3">
                   <span>{t("notificationCenter.title")}</span>
