@@ -16,6 +16,9 @@ export const inMonth = (value: unknown, month: string) =>
 
 export const lostMinutes = (record: HrRecord, permissions: HrRecord[] = []) => {
   const date = String(record.attendanceDate).slice(0, 10);
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  if (date === today && !record.checkOut) return 0;
   const day = new Date(`${date}T12:00:00`).getDay();
   if (
     record.isWorkingDay === false ||

@@ -594,6 +594,8 @@
   },
   "windowControls": {
     "close": "Close",
+    "confirmClose": "Are you sure you want to close ERP?",
+    "confirmCloseDescription": "Any unsaved work may be lost.",
     "minimize": "Minimize",
     "maximize": "Maximize or restore"
   },
@@ -604,7 +606,7 @@
     "kurdish": "Kurdish"
   },
   "brand": {
-    "system": "NHO Enterprise System",
+    "system": "Enterprise System",
     "headlineLine1": "One system.",
     "headlineLine2": "Better care.",
     "description": "Securely connect your clinical teams, patients, inventory, and operations.",
@@ -612,7 +614,7 @@
     "connected": "Connected",
     "systemStatus": "System status",
     "secure": "Secure",
-    "services": "NHO services",
+    "services": "Services",
     "available": "All available",
     "protected": "Protected healthcare workspace",
     "encrypted": "Encrypted access for authorized personnel"
@@ -906,7 +908,7 @@
     "password": "Password"
   },
   "dashboardLocal": {
-    "analytics": "NHO analytics",
+    "analytics": "Analytics",
     "description": "Clinical performance and operational insights at a glance.",
     "employeeBudget": "Employee budget",
     "budgetAllocated": "Allocated",
@@ -2223,13 +2225,13 @@
       "closed": "This meeting has been closed.",
       "join": "Unable to join meeting",
       "cameraSecure": "Camera access requires the Electron app, localhost, or a trusted HTTPS connection.",
-      "cameraBlockedApp": "Camera access is blocked. Open system settings and allow NHO ERP to use it.",
+      "cameraBlockedApp": "Camera access is blocked. Open system settings and allow ERP to use it.",
       "cameraBlockedWeb": "Camera access is blocked. Allow it from the site permissions near the address bar, then retry.",
       "cameraMissing": "No camera was found. Connect or enable a camera, then retry.",
       "cameraBusy": "The camera is unavailable or being used by another application. Close other camera apps and retry.",
       "cameraOpen": "Unable to open the camera.{{detail}}",
       "microphoneSecure": "Microphone access requires the Electron app, localhost, or a secure HTTPS connection.",
-      "microphoneBlockedApp": "Microphone access is blocked. Open system settings and allow NHO ERP to use it.",
+      "microphoneBlockedApp": "Microphone access is blocked. Open system settings and allow ERP to use it.",
       "microphoneBlockedWeb": "Microphone access is blocked. Allow it from the site permissions near the address bar, then retry.",
       "microphoneMissing": "No microphone was found. Connect a microphone and check the system input device.",
       "microphoneBusy": "The microphone is unavailable or being used by another application. Close other audio apps and retry.",
@@ -2422,8 +2424,6 @@
     "Default work end": "Default work end",
     "Weekend days": "Weekend days",
     "Late arrival grace (minutes)": "Late arrival grace (minutes)",
-    "Attendance deduction multiplier": "Attendance deduction multiplier",
-    "Default target work minutes": "Default target work minutes",
     "Attendance deduction multiplier": "Attendance deduction multiplier",
     "Default target work minutes": "Default target work minutes",
     "Leave types": "Leave types",

@@ -9,6 +9,7 @@ export function monthlyCalculations(settings) {
     typeof value === "string" && value.slice(0, 7) === month;
   const lostMinutes = (record, permissions = []) => {
     const date = String(record.attendanceDate).slice(0, 10);
+    if (date === localDateKey(new Date()) && !record.checkOut) return 0;
     const day = new Date(`${date}T12:00:00`).getDay();
     if (
       record.isWorkingDay === false ||

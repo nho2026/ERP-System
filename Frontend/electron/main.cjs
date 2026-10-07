@@ -111,7 +111,10 @@ ipcMain.on("window:toggle-maximize", (event) => {
   if (window.isMaximized()) window.unmaximize();
   else window.maximize();
 });
-ipcMain.on("window:close", (event) => windowFromEvent(event)?.close());
+ipcMain.on("window:close", (event) => {
+  const window = windowFromEvent(event);
+  if (window && !window.isDestroyed()) window.destroy();
+});
 ipcMain.on("notification:show", (event, payload) => {
   if (!Notification.isSupported() || !payload || typeof payload !== "object")
     return;

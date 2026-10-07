@@ -594,6 +594,8 @@
   },
   "windowControls": {
     "close": "إغلاق",
+    "confirmClose": "هل أنت متأكد من إغلاق نظام ؟",
+    "confirmCloseDescription": "قد تفقد أي تغييرات غير محفوظة.",
     "minimize": "تصغير",
     "maximize": "تكبير أو استعادة"
   },
@@ -604,7 +606,7 @@
     "kurdish": "الكردية"
   },
   "brand": {
-    "system": "نظام NHO المؤسسي",
+    "system": "نظام",
     "headlineLine1": "نظام واحد.",
     "headlineLine2": "رعاية أفضل.",
     "description": "اربط الفرق السريرية والمرضى والمخزون والعمليات بأمان.",
@@ -612,7 +614,7 @@
     "connected": "متصل",
     "systemStatus": "حالة النظام",
     "secure": "آمن",
-    "services": "خدمات NHO",
+    "services": "خدمات",
     "available": "متاحة بالكامل",
     "protected": "مساحة عمل صحية محمية",
     "encrypted": "وصول مشفر للموظفين المخولين"
@@ -906,7 +908,7 @@
     "password": "كلمة المرور"
   },
   "dashboardLocal": {
-    "analytics": "تحليلات NHO",
+    "analytics": "تحليلات",
     "description": "نظرة سريعة على الأداء السريري والتشغيلي.",
     "employeeBudget": "ميزانية الموظفين",
     "budgetAllocated": "مخصص",
@@ -2223,13 +2225,13 @@
       "closed": "تم إغلاق هذا الاجتماع.",
       "join": "تعذر الانضمام إلى الاجتماع",
       "cameraSecure": "تتطلب الكاميرا تطبيق Electron أو localhost أو اتصال HTTPS موثوقًا.",
-      "cameraBlockedApp": "الكاميرا محظورة. افتح إعدادات النظام واسمح لـ NHO ERP باستخدامها.",
+      "cameraBlockedApp": "الكاميرا محظورة. افتح إعدادات النظام واسمح لـ ERP باستخدامها.",
       "cameraBlockedWeb": "الكاميرا محظورة. اسمح بها من أذونات الموقع ثم أعد المحاولة.",
       "cameraMissing": "لم يتم العثور على كاميرا. وصّل كاميرا أو فعّلها ثم أعد المحاولة.",
       "cameraBusy": "الكاميرا غير متاحة أو مستخدمة من تطبيق آخر. أغلق تطبيقات الكاميرا الأخرى وأعد المحاولة.",
       "cameraOpen": "تعذر فتح الكاميرا.{{detail}}",
       "microphoneSecure": "يتطلب الميكروفون تطبيق Electron أو localhost أو اتصال HTTPS آمنًا.",
-      "microphoneBlockedApp": "الميكروفون محظور. افتح إعدادات النظام واسمح لـ NHO ERP باستخدامه.",
+      "microphoneBlockedApp": "الميكروفون محظور. افتح إعدادات النظام واسمح لـ ERP باستخدامه.",
       "microphoneBlockedWeb": "الميكروفون محظور. اسمح به من أذونات الموقع ثم أعد المحاولة.",
       "microphoneMissing": "لم يتم العثور على ميكروفون. وصّله وتحقق من جهاز الإدخال.",
       "microphoneBusy": "الميكروفون غير متاح أو مستخدم من تطبيق آخر. أغلق تطبيقات الصوت الأخرى وأعد المحاولة.",
@@ -2422,8 +2424,6 @@
     "Default work end": "نهاية العمل الافتراضية",
     "Weekend days": "أيام العطلة الأسبوعية",
     "Late arrival grace (minutes)": "فترة السماح بالتأخير (دقائق)",
-    "Attendance deduction multiplier": "معامل خصم الحضور",
-    "Default target work minutes": "دقائق العمل المستهدفة الافتراضية",
     "Attendance deduction multiplier": "معامل خصم الحضور",
     "Default target work minutes": "دقائق العمل المستهدفة الافتراضية",
     "Leave types": "أنواع الإجازات",
